@@ -1,0 +1,2326 @@
+{
+  "version": "8",
+  "dialect": "postgres",
+  "id": "171fcc69-b2c6-41f6-adf2-0239590cdda3",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "ddl": [
+    {
+      "isRlsEnabled": false,
+      "name": "calendars",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "campus_faculty",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "campuses",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "faculties",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "queue_tasks",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "import_rows",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "inspection_details",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "inspection_histories",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "inspections",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "new_subject_alerts",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "notifications",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "semesters",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "subjects",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "subject_user",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "users",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "calendars"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "teaching_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "calendars"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "teacher_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "calendars"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "date",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "calendars"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "shift",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "calendars"
+    },
+    {
+      "type": "varchar(30)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "room",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "calendars"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "session_no",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "calendars"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "campus_faculty"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "campus_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "campus_faculty"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "faculty_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "campus_faculty"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "true",
+      "generated": null,
+      "identity": null,
+      "name": "is_active",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "campus_faculty"
+    },
+    {
+      "type": "varchar(30)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "group_key",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "campus_faculty"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "cnbm_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "campus_faculty"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "tm_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "campus_faculty"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "campuses"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "campuses"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "campuses"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "address",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "campuses"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "faculties"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "faculties"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "faculties"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "file_name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "stored_path",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "file_size",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "campus_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "uploader_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'PENDING'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "total_rows",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "inserted",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "updated",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "skipped",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "errors",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "progress",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "varchar(500)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "message",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "finished_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "job_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "row_no",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "class_code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "subject_code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "teacher_account",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "session_no",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "result",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "old_value",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "new_value",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "type": "varchar(500)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "message",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "inspection_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "teaching_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "planned_date",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "shift",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "inspector1_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "inspector2_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "inspector3_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "type": "varchar(500)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "reason",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_histories"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "inspection_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_histories"
+    },
+    {
+      "type": "varchar(25)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "action",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_histories"
+    },
+    {
+      "type": "varchar(1000)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "note",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_histories"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "actor_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_histories"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspection_histories"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "varchar(60)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "campus_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "faculty_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "semester_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "block",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "creator_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "varchar(25)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'DRAFT'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "unscheduled",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "varchar(1000)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "last_note",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "submitted_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "new_subject_alerts"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "job_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "new_subject_alerts"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "subject_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "new_subject_alerts"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "kind",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "new_subject_alerts"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "base_code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "new_subject_alerts"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "class_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "new_subject_alerts"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notifications"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notifications"
+    },
+    {
+      "type": "varchar(500)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "message",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notifications"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "link",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notifications"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "is_read",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notifications"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notifications"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "semesters"
+    },
+    {
+      "type": "varchar(10)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "term",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "semesters"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "year",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "semesters"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "ordinal",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "semesters"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "start_date",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "semesters"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "block1_end",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "semesters"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "block2_start",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "semesters"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "end_date",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "semesters"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subjects"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subjects"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subjects"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "faculty_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subjects"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "auto_created",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subjects"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subject_user"
+    },
+    {
+      "type": "varchar(30)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "class_code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subject_user"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "subject_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subject_user"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "semester_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subject_user"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "block",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subject_user"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "teacher_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subject_user"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "campus_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "subject_user"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "varchar(50)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "account",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "email",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "full_name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "staff_code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "role",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "campus_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "faculty_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "true",
+      "generated": null,
+      "identity": null,
+      "name": "active",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "head_office",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "teaching_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "subject_user",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "calendars_teaching_id_subject_user_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "calendars"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "teacher_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "calendars_teacher_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "calendars"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "campus_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "campuses",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "campus_faculty_campus_id_campuses_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "campus_faculty"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "faculty_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "faculties",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "campus_faculty_faculty_id_faculties_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "campus_faculty"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "cnbm_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "campus_faculty_cnbm_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "campus_faculty"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "tm_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "campus_faculty_tm_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "campus_faculty"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "campus_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "campuses",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "queue_tasks_campus_id_campuses_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "uploader_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "queue_tasks_uploader_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "queue_tasks"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "job_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "queue_tasks",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "import_rows_job_id_queue_tasks_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "import_rows"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "inspection_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "inspections",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "inspection_details_inspection_id_inspections_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "teaching_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "subject_user",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "inspection_details_teaching_id_subject_user_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "inspector1_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "inspection_details_inspector1_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "inspector2_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "inspection_details_inspector2_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "inspector3_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "inspection_details_inspector3_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "inspection_details"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "inspection_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "inspections",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "inspection_histories_inspection_id_inspections_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "inspection_histories"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "actor_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "inspection_histories_actor_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "inspection_histories"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "campus_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "campuses",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "inspections_campus_id_campuses_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "faculty_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "faculties",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "inspections_faculty_id_faculties_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "semester_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "semesters",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "inspections_semester_id_semesters_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "creator_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "inspections_creator_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "inspections"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "job_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "queue_tasks",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "new_subject_alerts_job_id_queue_tasks_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "new_subject_alerts"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "subject_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "subjects",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "new_subject_alerts_subject_id_subjects_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "new_subject_alerts"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "notifications_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "notifications"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "faculty_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "faculties",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "subjects_faculty_id_faculties_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "subjects"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "subject_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "subjects",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "subject_user_subject_id_subjects_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "subject_user"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "semester_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "semesters",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "subject_user_semester_id_semesters_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "subject_user"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "teacher_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "subject_user_teacher_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "subject_user"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "campus_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "campuses",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "subject_user_campus_id_campuses_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "subject_user"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "campus_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "campuses",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "users_campus_id_campuses_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "faculty_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "faculties",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "users_faculty_id_faculties_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "users"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "calendars_pkey",
+      "schema": "public",
+      "table": "calendars",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "campus_faculty_pkey",
+      "schema": "public",
+      "table": "campus_faculty",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "campuses_pkey",
+      "schema": "public",
+      "table": "campuses",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "faculties_pkey",
+      "schema": "public",
+      "table": "faculties",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "queue_tasks_pkey",
+      "schema": "public",
+      "table": "queue_tasks",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "import_rows_pkey",
+      "schema": "public",
+      "table": "import_rows",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "inspection_details_pkey",
+      "schema": "public",
+      "table": "inspection_details",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "inspection_histories_pkey",
+      "schema": "public",
+      "table": "inspection_histories",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "inspections_pkey",
+      "schema": "public",
+      "table": "inspections",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "new_subject_alerts_pkey",
+      "schema": "public",
+      "table": "new_subject_alerts",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "notifications_pkey",
+      "schema": "public",
+      "table": "notifications",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "semesters_pkey",
+      "schema": "public",
+      "table": "semesters",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "subjects_pkey",
+      "schema": "public",
+      "table": "subjects",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "subject_user_pkey",
+      "schema": "public",
+      "table": "subject_user",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "users_pkey",
+      "schema": "public",
+      "table": "users",
+      "entityType": "pks"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "code"
+      ],
+      "nullsNotDistinct": false,
+      "name": "campuses_code_key",
+      "schema": "public",
+      "table": "campuses",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "code"
+      ],
+      "nullsNotDistinct": false,
+      "name": "faculties_code_key",
+      "schema": "public",
+      "table": "faculties",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "code"
+      ],
+      "nullsNotDistinct": false,
+      "name": "inspections_code_key",
+      "schema": "public",
+      "table": "inspections",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "code"
+      ],
+      "nullsNotDistinct": false,
+      "name": "subjects_code_key",
+      "schema": "public",
+      "table": "subjects",
+      "entityType": "uniques"
+    }
+  ],
+  "renames": []
+}
