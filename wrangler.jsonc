@@ -1,12 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "qldg-app",
+  "name": "qldg",
   "main": "worker.js",
   "compatibility_date": "2024-11-01",
   "compatibility_flags": [
     "nodejs_compat"
   ],
-
   // Cấu hình tài nguyên tĩnh cho Frontend Vue 3 (Vite build)
   "assets": {
     "directory": "./frontend/dist",
@@ -14,7 +13,6 @@
     "not_found_handling": "single-page-application",
     "html_handling": "auto-trailing-slash"
   },
-
   // Biến môi trường cấu hình kết nối Backend
   "vars": {
     // Địa chỉ máy chủ Spring Boot Backend (ví dụ: https://qldg-backend.onrender.com hoặc https://api.yourdomain.com)
