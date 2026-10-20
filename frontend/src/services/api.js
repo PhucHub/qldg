@@ -154,113 +154,7 @@ export const api = {
     try {
       return await request(`/plans/classify?${q.toString()}`)
     } catch {
-      return {
-        quota: { totalTeachers: 18, requiredQuota: 3, plannedTeachers: 2, percent: 66 },
-        mandatory: [
-          {
-            teachingId: 2,
-            classCode: 'CP18301',
-            subjectCode: 'PRO2113',
-            subjectName: 'Dự án tốt nghiệp (CNTT)',
-            facultyId: 1,
-            facultyName: 'Công nghệ thông tin',
-            teacherAccount: 'linhdt',
-            teacherName: 'Đặng Thùy Linh',
-            sessionCount: 3,
-            groupType: 'MANDATORY',
-            reasonBadge: 'Lần đầu dạy'
-          },
-          {
-            teachingId: 3,
-            classCode: 'IT18302',
-            subjectCode: 'MOB1014',
-            subjectName: 'Lập trình Java 1',
-            facultyId: 1,
-            facultyName: 'Công nghệ thông tin',
-            teacherAccount: 'tunglt',
-            teacherName: 'Lê Thanh Tùng',
-            sessionCount: 4,
-            groupType: 'MANDATORY',
-            reasonBadge: 'Chưa từng dạy'
-          },
-          {
-            teachingId: 5,
-            classCode: 'CB18301',
-            subjectCode: 'ENG101',
-            subjectName: 'Tiếng Anh 1.1',
-            facultyId: 2,
-            facultyName: 'Cơ bản',
-            teacherAccount: 'huongnt',
-            teacherName: 'Nguyễn Thị Hương',
-            sessionCount: 3,
-            groupType: 'MANDATORY',
-            reasonBadge: 'Lần đầu dạy'
-          }
-        ],
-        others: [
-          {
-            teachingId: 1,
-            classCode: 'WD18301',
-            subjectCode: 'COM108',
-            subjectName: 'Nhập môn lập trình',
-            facultyId: 1,
-            facultyName: 'Công nghệ thông tin',
-            teacherAccount: 'namnv',
-            teacherName: 'Nguyễn Văn Nam',
-            sessionCount: 4,
-            groupType: 'OTHERS'
-          },
-          {
-            teachingId: 4,
-            classCode: 'IT18303',
-            subjectCode: 'WEB1013',
-            subjectName: 'Thiết kế Web với HTML5 & CSS3',
-            facultyId: 1,
-            facultyName: 'Công nghệ thông tin',
-            teacherAccount: 'hah7',
-            teacherName: 'Hoàng Anh Huy',
-            sessionCount: 4,
-            groupType: 'OTHERS'
-          },
-          {
-            teachingId: 6,
-            classCode: 'WD18302',
-            subjectCode: 'WEB2014',
-            subjectName: 'Xây dựng trang Web với JavaScript',
-            facultyId: 1,
-            facultyName: 'Công nghệ thông tin',
-            teacherAccount: 'minhtv',
-            teacherName: 'Trần Văn Minh',
-            sessionCount: 4,
-            groupType: 'OTHERS'
-          },
-          {
-            teachingId: 7,
-            classCode: 'CS18301',
-            subjectCode: 'MAT101',
-            subjectName: 'Toán rời rạc',
-            facultyId: 2,
-            facultyName: 'Cơ bản',
-            teacherAccount: 'nhungpt_hn',
-            teacherName: 'Phạm Thu Nhung',
-            sessionCount: 3,
-            groupType: 'OTHERS'
-          },
-          {
-            teachingId: 8,
-            classCode: 'UD18301',
-            subjectCode: 'SOF203',
-            subjectName: 'Lập trình Java 2',
-            facultyId: 1,
-            facultyName: 'Công nghệ thông tin',
-            teacherAccount: 'haidv',
-            teacherName: 'Đỗ Văn Hải',
-            sessionCount: 4,
-            groupType: 'OTHERS'
-          }
-        ],
-        alreadyPlanned: []
-      }
+      return mock.getMockClassGroups(semesterId, block, facultyId)
     }
   },
 
@@ -273,7 +167,7 @@ export const api = {
     try {
       return await request(`/plans/unscheduled-candidates?${q.toString()}`)
     } catch {
-      return mock.MOCK_UNSCHEDULED_CANDIDATES
+      return mock.getMockUnscheduledCandidates(semesterId, block, facultyId)
     }
   },
 

@@ -344,7 +344,10 @@ onMounted(async () => {
   try {
     const me = await api.getMe()
     myFaculties.value = me.faculties || []
-    selectedSemesterId.value = null // Mặc định: -- Chọn kỳ học --
+    semesters.value = await api.getSemesters()
+    if (semesters.value && semesters.value.length > 0) {
+      selectedSemesterId.value = semesters.value[0].id
+    }
     await fetchCandidates()
   } catch (e) {
     console.error(e)

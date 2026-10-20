@@ -347,7 +347,9 @@ onMounted(async () => {
     const me = await api.getMe()
     myFaculties.value = me.faculties || []
     semesters.value = await api.getSemesters()
-    selectedSemesterId.value = null // Mặc định: -- Chọn kỳ học --
+    if (semesters.value && semesters.value.length > 0) {
+      selectedSemesterId.value = semesters.value[0].id // Mặc định: Fall 2026
+    }
     await fetchClassifications()
   } catch (e) {
     console.error(e)
@@ -367,7 +369,15 @@ async function fetchClassifications() {
     othersList.value = res.others || []
     alreadyPlannedList.value = res.alreadyPlanned || []
     selectedTeachingIds.value = mandatoryList.value.map(c => c.teachingId)
-    activeTab.value = 'mandatory'
+    // Tự động chuyển tab thông minh nếu nhóm hiện tại không có lớp để người dùng thấy ngay kết quả
+    if (activeTab.value === 'mandatory' && mandatoryList.value.length === 0 && othersList.value.length > 0) {
+      activeTab.value = 'others'
+    } else if (activeTab.value === 'others' && othersList.value.length === 0 && mandatoryList.value.length > 0) {
+      activeTab.value = 'mandatory'
+    } else if (activeTab.value === 'planned' && alreadyPlannedList.value.length === 0) {
+      if (mandatoryList.value.length > 0) activeTab.value = 'mandatory'
+      else if (othersList.value.length > 0) activeTab.value = 'others'
+    }
     classified.value = true
     currentPage.value = 1
   } catch (e) {

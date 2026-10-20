@@ -5,3 +5,4 @@ backend/uploads/
 mysql-data/
 *.log
 *.err
+.wrangler/

@@ -463,102 +463,419 @@ export function deleteMockPlan(id) {
 }
 
 // ==========================================
-// MOCK CANDIDATES CHO KẾ HOẠCH ĐỘT XUẤT (UC-12) (+ 5 LỚP MỚI)
+// TỔNG HỢP LỚP HỌC MẪU (ALL_MOCK_CLASSES)
+// Phân chia theo Kỳ học, Block và Bộ môn để lọc chính xác
 // ==========================================
-export const MOCK_UNSCHEDULED_CANDIDATES = [
+export const ALL_MOCK_CLASSES = [
+  // --- CNTT (facultyId: 1) - Fall 2026 (semesterId: 1) - Block 1 ---
   {
-    teachingId: 4,
-    classCode: 'IT18303',
-    subjectCode: 'WEB1013',
-    subjectName: 'Thiết kế Web với HTML5 & CSS3',
-    teacherAccount: 'hah7',
-    teacherName: 'Hoàng Anh Huy',
-    sessionCount: 4,
-    plannedDate: '2026-10-21',
-    shift: 4,
+    teachingId: 2,
+    classCode: 'CP18301',
+    subjectCode: 'PRO2113',
+    subjectName: 'Dự án tốt nghiệp (CNTT)',
     facultyId: 1,
-    facultyName: 'Công nghệ thông tin'
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 1,
+    block: 1,
+    teacherAccount: 'linhdt',
+    teacherName: 'Đặng Thùy Linh',
+    sessionCount: 3,
+    groupType: 'MANDATORY',
+    reasonBadge: 'Lần đầu dạy môn này'
   },
-  {
-    teachingId: 5,
-    classCode: 'CB18301',
-    subjectCode: 'ENG101',
-    subjectName: 'Tiếng Anh 1.1',
-    teacherAccount: 'huongnt',
-    teacherName: 'Nguyễn Thị Hương',
-    sessionCount: 2,
-    plannedDate: '2026-10-22',
-    shift: 1,
-    facultyId: 2,
-    facultyName: 'Cơ bản'
-  },
-  // 5 lớp học mới bổ sung:
   {
     teachingId: 3,
     classCode: 'IT18302',
     subjectCode: 'MOB1014',
     subjectName: 'Lập trình Java 1',
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 1,
+    block: 1,
     teacherAccount: 'tunglt',
     teacherName: 'Lê Thanh Tùng',
     sessionCount: 4,
-    plannedDate: '2026-10-23',
-    shift: 2,
-    facultyId: 1,
-    facultyName: 'Công nghệ thông tin'
+    groupType: 'MANDATORY',
+    reasonBadge: 'Chưa từng dạy môn này'
   },
   {
-    teachingId: 6,
-    classCode: 'WD18302',
-    subjectCode: 'WEB2014',
-    subjectName: 'Xây dựng trang Web với JavaScript',
-    teacherAccount: 'minhtv',
-    teacherName: 'Trần Văn Minh',
+    teachingId: 1,
+    classCode: 'WD18301',
+    subjectCode: 'COM108',
+    subjectName: 'Nhập môn lập trình',
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 1,
+    block: 1,
+    teacherAccount: 'namnv',
+    teacherName: 'Nguyễn Văn Nam',
     sessionCount: 4,
-    plannedDate: '2026-10-24',
-    shift: 3,
-    facultyId: 1,
-    facultyName: 'Công nghệ thông tin'
-  },
-  {
-    teachingId: 7,
-    classCode: 'CS18301',
-    subjectCode: 'MAT101',
-    subjectName: 'Toán rời rạc',
-    teacherAccount: 'nhungpt_hn',
-    teacherName: 'Phạm Thu Nhung',
-    sessionCount: 3,
-    plannedDate: '2026-10-25',
-    shift: 1,
-    facultyId: 2,
-    facultyName: 'Cơ bản'
+    groupType: 'OTHERS'
   },
   {
     teachingId: 8,
     classCode: 'UD18301',
     subjectCode: 'SOF203',
     subjectName: 'Lập trình Java 2',
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 1,
+    block: 1,
     teacherAccount: 'haidv',
     teacherName: 'Đỗ Văn Hải',
     sessionCount: 4,
-    plannedDate: '2026-10-26',
-    shift: 2,
+    groupType: 'OTHERS'
+  },
+
+  // --- CNTT (facultyId: 1) - Fall 2026 (semesterId: 1) - Block 2 ---
+  {
+    teachingId: 4,
+    classCode: 'IT18303',
+    subjectCode: 'WEB1013',
+    subjectName: 'Thiết kế Web với HTML5 & CSS3',
     facultyId: 1,
-    facultyName: 'Công nghệ thông tin'
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 1,
+    block: 2,
+    teacherAccount: 'hah7',
+    teacherName: 'Hoàng Anh Huy',
+    sessionCount: 4,
+    groupType: 'OTHERS'
   },
   {
-    teachingId: 2,
-    classCode: 'CP18301',
+    teachingId: 6,
+    classCode: 'WD18302',
+    subjectCode: 'WEB2014',
+    subjectName: 'Xây dựng trang Web với JavaScript',
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 1,
+    block: 2,
+    teacherAccount: 'minhtv',
+    teacherName: 'Trần Văn Minh',
+    sessionCount: 4,
+    groupType: 'OTHERS'
+  },
+  {
+    teachingId: 9,
+    classCode: 'CP18302',
     subjectCode: 'PRO2113',
     subjectName: 'Dự án tốt nghiệp (CNTT)',
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 1,
+    block: 2,
     teacherAccount: 'linhdt',
     teacherName: 'Đặng Thùy Linh',
     sessionCount: 3,
-    plannedDate: '2026-10-27',
-    shift: 3,
+    groupType: 'MANDATORY',
+    reasonBadge: 'Lần đầu dạy môn này'
+  },
+
+  // --- Cơ bản (facultyId: 2) - Fall 2026 (semesterId: 1) - Block 1 ---
+  {
+    teachingId: 5,
+    classCode: 'CB18301',
+    subjectCode: 'ENG101',
+    subjectName: 'Tiếng Anh 1.1',
+    facultyId: 2,
+    facultyName: 'Cơ bản',
+    semesterId: 1,
+    block: 1,
+    teacherAccount: 'huongnt',
+    teacherName: 'Nguyễn Thị Hương',
+    sessionCount: 3,
+    groupType: 'MANDATORY',
+    reasonBadge: 'Lần đầu dạy môn này'
+  },
+  {
+    teachingId: 10,
+    classCode: 'CB18302',
+    subjectCode: 'VIE101',
+    subjectName: 'Kỹ năng học tập & Làm việc nhóm',
+    facultyId: 2,
+    facultyName: 'Cơ bản',
+    semesterId: 1,
+    block: 1,
+    teacherAccount: 'nhungpt4',
+    teacherName: 'Phạm Thị Nhung',
+    sessionCount: 2,
+    groupType: 'OTHERS'
+  },
+
+  // --- Cơ bản (facultyId: 2) - Fall 2026 (semesterId: 1) - Block 2 ---
+  {
+    teachingId: 7,
+    classCode: 'CS18301',
+    subjectCode: 'MAT101',
+    subjectName: 'Toán rời rạc',
+    facultyId: 2,
+    facultyName: 'Cơ bản',
+    semesterId: 1,
+    block: 2,
+    teacherAccount: 'nhungpt_hn',
+    teacherName: 'Phạm Thu Nhung',
+    sessionCount: 3,
+    groupType: 'OTHERS'
+  },
+
+  // --- Tiếng Anh (facultyId: 3) - Fall 2026 (semesterId: 1) ---
+  {
+    teachingId: 11,
+    classCode: 'TA18301',
+    subjectCode: 'ENG102',
+    subjectName: 'Tiếng Anh 1.2',
+    facultyId: 3,
+    facultyName: 'Tiếng Anh',
+    semesterId: 1,
+    block: 1,
+    teacherAccount: 'huongnt',
+    teacherName: 'Nguyễn Thị Hương',
+    sessionCount: 3,
+    groupType: 'MANDATORY',
+    reasonBadge: 'Chưa từng dạy'
+  },
+  {
+    teachingId: 12,
+    classCode: 'TA18302',
+    subjectCode: 'ENG201',
+    subjectName: 'Tiếng Anh chuyên ngành CNTT',
+    facultyId: 3,
+    facultyName: 'Tiếng Anh',
+    semesterId: 1,
+    block: 2,
+    teacherAccount: 'nhungpt_hn',
+    teacherName: 'Phạm Thu Nhung',
+    sessionCount: 3,
+    groupType: 'OTHERS'
+  },
+
+  // --- Thiết kế đồ họa (facultyId: 5) - Fall 2026 (semesterId: 1) ---
+  {
+    teachingId: 13,
+    classCode: 'TK18301',
+    subjectCode: 'MUL101',
+    subjectName: 'Nhập môn Thiết kế đồ họa',
+    facultyId: 5,
+    facultyName: 'Thiết kế đồ họa',
+    semesterId: 1,
+    block: 1,
+    teacherAccount: 'hah7',
+    teacherName: 'Hoàng Anh Huy',
+    sessionCount: 4,
+    groupType: 'MANDATORY',
+    reasonBadge: 'Lần đầu dạy môn này'
+  },
+  {
+    teachingId: 14,
+    classCode: 'TK18302',
+    subjectCode: 'MUL102',
+    subjectName: 'Thiết kế đồ họa với Photoshop',
+    facultyId: 5,
+    facultyName: 'Thiết kế đồ họa',
+    semesterId: 1,
+    block: 2,
+    teacherAccount: 'tunglt',
+    teacherName: 'Lê Thanh Tùng',
+    sessionCount: 4,
+    groupType: 'OTHERS'
+  },
+
+  // --- Tiếng Trung (facultyId: 4) - Fall 2026 (semesterId: 1) ---
+  {
+    teachingId: 18,
+    classCode: 'TT18301',
+    subjectCode: 'CHI101',
+    subjectName: 'Tiếng Trung giao tiếp 1',
+    facultyId: 4,
+    facultyName: 'Tiếng Trung',
+    semesterId: 1,
+    block: 1,
+    teacherAccount: 'huongnt',
+    teacherName: 'Nguyễn Thị Hương',
+    sessionCount: 3,
+    groupType: 'MANDATORY',
+    reasonBadge: 'Lần đầu dạy môn này'
+  },
+  {
+    teachingId: 19,
+    classCode: 'TT18302',
+    subjectCode: 'CHI102',
+    subjectName: 'Tiếng Trung giao tiếp 2',
+    facultyId: 4,
+    facultyName: 'Tiếng Trung',
+    semesterId: 1,
+    block: 2,
+    teacherAccount: 'huongnt',
+    teacherName: 'Nguyễn Thị Hương',
+    sessionCount: 3,
+    groupType: 'OTHERS'
+  },
+
+  // --- Quản trị kinh doanh (facultyId: 6) - Fall 2026 (semesterId: 1) ---
+  {
+    teachingId: 20,
+    classCode: 'QK18301',
+    subjectCode: 'MAR101',
+    subjectName: 'Marketing căn bản',
+    facultyId: 6,
+    facultyName: 'Quản trị kinh doanh',
+    semesterId: 1,
+    block: 1,
+    teacherAccount: 'tuanna',
+    teacherName: 'Nguyễn Anh Tuấn',
+    sessionCount: 4,
+    groupType: 'MANDATORY',
+    reasonBadge: 'Chưa từng dạy môn này'
+  },
+  {
+    teachingId: 21,
+    classCode: 'QK18302',
+    subjectCode: 'BUS102',
+    subjectName: 'Quản trị tác nghiệp doanh nghiệp',
+    facultyId: 6,
+    facultyName: 'Quản trị kinh doanh',
+    semesterId: 1,
+    block: 2,
+    teacherAccount: 'tuanna',
+    teacherName: 'Nguyễn Anh Tuấn',
+    sessionCount: 4,
+    groupType: 'OTHERS'
+  },
+
+  // --- Kỳ Summer 2026 (semesterId: 2) ---
+  {
+    teachingId: 15,
+    classCode: 'SU18301',
+    subjectCode: 'COM108',
+    subjectName: 'Nhập môn lập trình (Hè)',
     facultyId: 1,
-    facultyName: 'Công nghệ thông tin'
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 2,
+    block: 1,
+    teacherAccount: 'namnv',
+    teacherName: 'Nguyễn Văn Nam',
+    sessionCount: 4,
+    groupType: 'MANDATORY',
+    reasonBadge: 'Dạy kỳ hè'
+  },
+  {
+    teachingId: 16,
+    classCode: 'SU18302',
+    subjectCode: 'MOB1014',
+    subjectName: 'Lập trình Java 1 (Hè)',
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 2,
+    block: 2,
+    teacherAccount: 'tunglt',
+    teacherName: 'Lê Thanh Tùng',
+    sessionCount: 4,
+    groupType: 'OTHERS'
+  },
+
+  // --- Kỳ Spring 2026 (semesterId: 3) ---
+  {
+    teachingId: 17,
+    classCode: 'SP18301',
+    subjectCode: 'COM108',
+    subjectName: 'Nhập môn lập trình (Xuân)',
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 3,
+    block: 1,
+    teacherAccount: 'namnv',
+    teacherName: 'Nguyễn Văn Nam',
+    sessionCount: 4,
+    groupType: 'OTHERS'
   }
 ]
+
+// Hàm lọc lớp cho trang Lập kế hoạch dự giờ chính thức (UC-09, UC-10)
+export function getMockClassGroups(semesterId, block, facultyId) {
+  let list = [...ALL_MOCK_CLASSES]
+
+  // Lọc theo kỳ học: nếu có chọn kỳ học cụ thể
+  if (semesterId && Number(semesterId) > 0) {
+    list = list.filter(c => Number(c.semesterId) === Number(semesterId))
+  }
+
+  // Lọc theo Block: 0 = tất cả, 1 = Block 1, 2 = Block 2
+  if (block && Number(block) > 0) {
+    list = list.filter(c => Number(c.block) === Number(block))
+  }
+
+  // Lọc theo Bộ môn: nếu có chọn bộ môn cụ thể
+  if (facultyId && Number(facultyId) > 0) {
+    list = list.filter(c => Number(c.facultyId) === Number(facultyId))
+  }
+
+  const mandatory = list.filter(c => c.groupType === 'MANDATORY')
+  const others = list.filter(c => c.groupType === 'OTHERS')
+  const alreadyPlanned = list.filter(c => c.groupType === 'ALREADY_PLANNED')
+
+  const teacherSet = new Set(list.map(c => c.teacherAccount))
+  const totalTeachers = teacherSet.size
+  const requiredQuota = totalTeachers > 0 ? Math.max(1, Math.ceil(totalTeachers * 0.15)) : 0
+  const plannedTeachers = totalTeachers > 0 ? Math.min(totalTeachers, Math.round(requiredQuota * 0.6)) : 0
+  const percent = requiredQuota > 0 ? Math.min(100, Math.round((plannedTeachers / requiredQuota) * 100)) : 0
+
+  return {
+    quota: {
+      totalTeachers: totalTeachers || (list.length > 0 ? list.length : 0),
+      requiredQuota: requiredQuota,
+      plannedTeachers: plannedTeachers,
+      percent: percent
+    },
+    mandatory,
+    others,
+    alreadyPlanned
+  }
+}
+
+// Hàm lọc lớp cho kế hoạch đột xuất (UC-12)
+export function getMockUnscheduledCandidates(semesterId, block, facultyId) {
+  let list = [...ALL_MOCK_CLASSES]
+
+  if (semesterId && Number(semesterId) > 0) {
+    list = list.filter(c => Number(c.semesterId) === Number(semesterId))
+  }
+
+  if (block && Number(block) > 0) {
+    list = list.filter(c => Number(c.block) === Number(block))
+  }
+
+  if (facultyId && Number(facultyId) > 0) {
+    list = list.filter(c => Number(c.facultyId) === Number(facultyId))
+  }
+
+  // Nhóm theo từng giảng viên theo format UnscheduledPlanView yêu cầu
+  const groupMap = new Map()
+  for (const c of list) {
+    if (!groupMap.has(c.teacherAccount)) {
+      groupMap.set(c.teacherAccount, {
+        teacherId: c.teachingId + 100,
+        teacherAccount: c.teacherAccount,
+        teacherName: c.teacherName,
+        facultyName: c.facultyName,
+        classes: []
+      })
+    }
+    groupMap.get(c.teacherAccount).classes.push({
+      teachingId: c.teachingId,
+      classCode: c.classCode,
+      subjectCode: c.subjectCode,
+      subjectName: c.subjectName,
+      facultyId: c.facultyId,
+      facultyName: c.facultyName,
+      sessionCount: c.sessionCount,
+      plannedDate: '2026-10-25',
+      shift: 2
+    })
+  }
+
+  return Array.from(groupMap.values())
+}
 
 // ==========================================
 // QUẢN LÝ IMPORT LỊCH GIẢNG DẠY (MOCK CLIENT-SIDE)
