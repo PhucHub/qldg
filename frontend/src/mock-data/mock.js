@@ -1,4 +1,8 @@
-// Mock data phục vụ chạy độc lập khi chưa bật backend hoặc demo nhanh
+import * as XLSX from 'xlsx'
+
+// ==========================================
+// MOCK USERS (+ 5 GIÁO VIÊN MỚI ĐƯỢC THÊM)
+// ==========================================
 export const MOCK_USERS = [
   { id: 1, account: 'loanth', fullName: 'Hoàng Thị Loan', role: 'TBDT', staffCode: '00246900', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: '', label: 'loanth - Hoàng Thị Loan (TBDT, DNA)' },
   { id: 2, account: 'tuanna', fullName: 'Nguyễn Anh Tuấn', role: 'TCQLDT', staffCode: '00246901', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: '', label: 'tuanna - Nguyễn Anh Tuấn (TCQLDT, DNA)' },
@@ -6,7 +10,13 @@ export const MOCK_USERS = [
   { id: 4, account: 'haidv', fullName: 'Đỗ Văn Hải', role: 'TM', staffCode: '00246911', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: 'CNTT', label: 'haidv - Đỗ Văn Hải (TM CNTT, DNA)' },
   { id: 5, account: 'nhungpt4', fullName: 'Phạm Thị Nhung', role: 'CNBM', staffCode: '00246920', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: 'CB', label: 'nhungpt4 - Phạm Thị Nhung (CNBM Nhóm CB, DNA)' },
   { id: 6, account: 'namnv', fullName: 'Nguyễn Văn Nam', role: 'GV', staffCode: '00246931', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: 'CNTT', label: 'namnv - Nguyễn Văn Nam (GV CNTT, DNA)' },
-  { id: 7, account: 'ho_admin', fullName: 'Nguyễn Văn Hùng', role: 'HEAD_OFFICE', staffCode: '00100001', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: '', headOffice: true, label: 'ho_admin - Nguyễn Văn Hùng (Super Admin)' }
+  { id: 7, account: 'ho_admin', fullName: 'Nguyễn Văn Hùng', role: 'HEAD_OFFICE', staffCode: '00100001', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: '', headOffice: true, label: 'ho_admin - Nguyễn Văn Hùng (Super Admin)' },
+  // 5 Giáo viên mới bổ sung:
+  { id: 8, account: 'linhdt', fullName: 'Đặng Thùy Linh', role: 'GV', staffCode: '00246932', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: 'CNTT', label: 'linhdt - Đặng Thùy Linh (GV CNTT, DNA)' },
+  { id: 9, account: 'tunglt', fullName: 'Lê Thanh Tùng', role: 'GV', staffCode: '00246933', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: 'CNTT', label: 'tunglt - Lê Thanh Tùng (GV CNTT, DNA)' },
+  { id: 10, account: 'hah7', fullName: 'Hoàng Anh Huy', role: 'GV', staffCode: '00246934', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: 'CNTT', label: 'hah7 - Hoàng Anh Huy (GV CNTT, DNA)' },
+  { id: 11, account: 'huongnt', fullName: 'Nguyễn Thị Hương', role: 'GV', staffCode: '00246935', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: 'CB', label: 'huongnt - Nguyễn Thị Hương (GV Nhóm CB, DNA)' },
+  { id: 12, account: 'minhtv', fullName: 'Trần Văn Minh', role: 'GV', staffCode: '00388902', campusCode: 'hcm', campusName: 'CĐ FPT Polytechnic TP.HCM', facultyCode: 'CNTT', label: 'minhtv - Trần Văn Minh (GV CNTT, TP.HCM)' }
 ]
 
 export const MOCK_SEMESTERS = [
@@ -285,23 +295,25 @@ export const INITIAL_MOCK_PLANS = [
   }
 ]
 
-// Quản lý lưu trữ Mock State trong LocalStorage (để người dùng thao tác thật trên Cloudflare)
-const STORAGE_KEY = 'qldg_mock_plans_store'
+// ==========================================
+// QUẢN LÝ LƯU TRỮ KẾ HOẠCH DỰ GIỜ (LOCAL STORAGE)
+// ==========================================
+const PLANS_STORAGE_KEY = 'qldg_mock_plans_store'
 
 function getMockStore() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(PLANS_STORAGE_KEY)
     if (raw) return JSON.parse(raw)
   } catch (e) {
     console.error('Lỗi đọc mock store:', e)
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_MOCK_PLANS))
+  localStorage.setItem(PLANS_STORAGE_KEY, JSON.stringify(INITIAL_MOCK_PLANS))
   return INITIAL_MOCK_PLANS
 }
 
 function saveMockStore(plans) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(plans))
+    localStorage.setItem(PLANS_STORAGE_KEY, JSON.stringify(plans))
   } catch (e) {
     console.error('Lỗi lưu mock store:', e)
   }
@@ -450,6 +462,9 @@ export function deleteMockPlan(id) {
   return true
 }
 
+// ==========================================
+// MOCK CANDIDATES CHO KẾ HOẠCH ĐỘT XUẤT (UC-12) (+ 5 LỚP MỚI)
+// ==========================================
 export const MOCK_UNSCHEDULED_CANDIDATES = [
   {
     teachingId: 4,
@@ -476,5 +491,302 @@ export const MOCK_UNSCHEDULED_CANDIDATES = [
     shift: 1,
     facultyId: 2,
     facultyName: 'Cơ bản'
+  },
+  // 5 lớp học mới bổ sung:
+  {
+    teachingId: 3,
+    classCode: 'IT18302',
+    subjectCode: 'MOB1014',
+    subjectName: 'Lập trình Java 1',
+    teacherAccount: 'tunglt',
+    teacherName: 'Lê Thanh Tùng',
+    sessionCount: 4,
+    plannedDate: '2026-10-23',
+    shift: 2,
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin'
+  },
+  {
+    teachingId: 6,
+    classCode: 'WD18302',
+    subjectCode: 'WEB2014',
+    subjectName: 'Xây dựng trang Web với JavaScript',
+    teacherAccount: 'minhtv',
+    teacherName: 'Trần Văn Minh',
+    sessionCount: 4,
+    plannedDate: '2026-10-24',
+    shift: 3,
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin'
+  },
+  {
+    teachingId: 7,
+    classCode: 'CS18301',
+    subjectCode: 'MAT101',
+    subjectName: 'Toán rời rạc',
+    teacherAccount: 'nhungpt_hn',
+    teacherName: 'Phạm Thu Nhung',
+    sessionCount: 3,
+    plannedDate: '2026-10-25',
+    shift: 1,
+    facultyId: 2,
+    facultyName: 'Cơ bản'
+  },
+  {
+    teachingId: 8,
+    classCode: 'UD18301',
+    subjectCode: 'SOF203',
+    subjectName: 'Lập trình Java 2',
+    teacherAccount: 'haidv',
+    teacherName: 'Đỗ Văn Hải',
+    sessionCount: 4,
+    plannedDate: '2026-10-26',
+    shift: 2,
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin'
+  },
+  {
+    teachingId: 2,
+    classCode: 'CP18301',
+    subjectCode: 'PRO2113',
+    subjectName: 'Dự án tốt nghiệp (CNTT)',
+    teacherAccount: 'linhdt',
+    teacherName: 'Đặng Thùy Linh',
+    sessionCount: 3,
+    plannedDate: '2026-10-27',
+    shift: 3,
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin'
   }
 ]
+
+// ==========================================
+// QUẢN LÝ IMPORT LỊCH GIẢNG DẠY (MOCK CLIENT-SIDE)
+// ==========================================
+const JOBS_STORAGE_KEY = 'qldg_mock_jobs_store'
+const JOB_ROWS_STORAGE_KEY = 'qldg_mock_job_rows_store'
+const NOTIS_STORAGE_KEY = 'qldg_mock_notis_store'
+
+export function getStoredImportJobs(page = 0, size = 10) {
+  let list = []
+  try {
+    const raw = localStorage.getItem(JOBS_STORAGE_KEY)
+    list = raw ? JSON.parse(raw) : [...MOCK_JOBS]
+  } catch (e) {
+    list = [...MOCK_JOBS]
+  }
+  const from = page * size
+  const content = list.slice(from, from + size)
+  return {
+    content,
+    totalElements: list.length,
+    totalPages: Math.ceil(list.length / size) || 1,
+    number: page
+  }
+}
+
+export function saveStoredImportJobs(jobs) {
+  try {
+    localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobs))
+  } catch (e) {
+    console.error('Lỗi lưu mock jobs:', e)
+  }
+}
+
+export function getMockJobDetail(jobId) {
+  let list = []
+  try {
+    const raw = localStorage.getItem(JOBS_STORAGE_KEY)
+    list = raw ? JSON.parse(raw) : [...MOCK_JOBS]
+  } catch {
+    list = [...MOCK_JOBS]
+  }
+  const found = list.find(j => j.id === Number(jobId))
+  return found || list[0] || MOCK_JOBS[0]
+}
+
+export function getMockJobRows(jobId, { page = 0, size = 20, result = 'ALL', search = '' } = {}) {
+  let rowsMap = {}
+  try {
+    const raw = localStorage.getItem(JOB_ROWS_STORAGE_KEY)
+    if (raw) rowsMap = JSON.parse(raw)
+  } catch {}
+
+  let rows = rowsMap[jobId] || MOCK_JOB_ROWS
+  if (result && result !== 'ALL') {
+    rows = rows.filter(r => r.result === result)
+  }
+  if (search && search.trim()) {
+    const q = search.trim().toLowerCase()
+    rows = rows.filter(r =>
+      (r.classCode && r.classCode.toLowerCase().includes(q)) ||
+      (r.subjectCode && r.subjectCode.toLowerCase().includes(q)) ||
+      (r.teacherAccount && r.teacherAccount.toLowerCase().includes(q))
+    )
+  }
+
+  const from = page * size
+  const content = rows.slice(from, from + size)
+  return {
+    content,
+    totalElements: rows.length,
+    totalPages: Math.ceil(rows.length / size) || 1,
+    currentPage: page
+  }
+}
+
+export function saveStoredJobRows(jobId, rows) {
+  try {
+    let rowsMap = {}
+    const raw = localStorage.getItem(JOB_ROWS_STORAGE_KEY)
+    if (raw) rowsMap = JSON.parse(raw)
+    rowsMap[jobId] = rows
+    localStorage.setItem(JOB_ROWS_STORAGE_KEY, JSON.stringify(rowsMap))
+  } catch (e) {
+    console.error('Lỗi lưu mock job rows:', e)
+  }
+}
+
+export function getMockJobAlerts(jobId) {
+  return MOCK_JOB_ALERTS
+}
+
+// Xử lý đọc file Excel thực tế bằng SheetJS và lưu vào Mock Store
+export async function importScheduleFileMock(file) {
+  let totalRows = 0
+  let generatedRows = []
+
+  try {
+    const buffer = await file.arrayBuffer()
+    const workbook = XLSX.read(buffer, { type: 'array' })
+    const sheetName = workbook.SheetNames[0]
+    const worksheet = workbook.Sheets[sheetName]
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+
+    if (jsonData && jsonData.length > 1) {
+      totalRows = jsonData.length - 1
+      for (let i = 1; i < Math.min(jsonData.length, 50); i++) {
+        const row = jsonData[i]
+        if (!row || row.length === 0) continue
+        generatedRows.push({
+          id: i,
+          rowNo: i + 1,
+          classCode: String(row[0] || 'WD1830' + (i % 5)),
+          subjectCode: String(row[1] || 'COM10' + (i % 3)),
+          teacherAccount: String(row[3] || 'namnv'),
+          sessionNo: Number(row[7]) || (i % 4) + 1,
+          result: i % 12 === 0 ? 'SKIPPED' : i % 8 === 0 ? 'UPDATED_ROOM' : 'INSERTED',
+          oldValue: i % 8 === 0 ? 'F201' : null,
+          newValue: i % 8 === 0 ? 'B203' : `${row[4] || '2026-10-25'} (Ca ${row[5] || 2}, ${row[6] || 'F201'})`,
+          message: i % 12 === 0 ? 'Trùng hoàn toàn buổi học đã có' : i % 8 === 0 ? 'Đổi phòng học sang B203' : 'Thêm mới buổi học thành công'
+        })
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi đọc nội dung file Excel bằng SheetJS, áp dụng cấu hình ước lượng:', e)
+  }
+
+  if (totalRows === 0) totalRows = 145
+  const inserted = Math.round(totalRows * 0.85)
+  const updated = Math.round(totalRows * 0.10)
+  const skipped = Math.max(0, totalRows - inserted - updated)
+
+  let list = []
+  try {
+    const raw = localStorage.getItem(JOBS_STORAGE_KEY)
+    list = raw ? JSON.parse(raw) : [...MOCK_JOBS]
+  } catch {
+    list = [...MOCK_JOBS]
+  }
+
+  const newId = list.length > 0 ? Math.max(...list.map(j => j.id)) + 1 : 1
+  const newJob = {
+    id: newId,
+    fileName: file.name,
+    fileSize: file.size,
+    status: 'DONE',
+    totalRows,
+    inserted,
+    updated,
+    skipped,
+    errors: 0,
+    progress: 100,
+    message: `Thành công: ${inserted}, Cập nhật: ${updated}, Bỏ qua: ${skipped}, Lỗi: 0`,
+    createdAt: new Date().toISOString(),
+    finishedAt: new Date().toISOString(),
+    uploader: { fullName: 'Nguyễn Anh Tuấn', account: 'tuanna' }
+  }
+
+  list.unshift(newJob)
+  saveStoredImportJobs(list)
+
+  // Lưu rows tương ứng
+  saveStoredJobRows(newId, generatedRows.length > 0 ? generatedRows : MOCK_JOB_ROWS)
+
+  // Thêm thông báo chuông
+  addMockNotification({
+    id: Date.now(),
+    message: `File lịch dạy '${file.name}' đã xử lý xong. Hoàn thành ${totalRows} dòng không có lỗi.`,
+    link: `/import/${newId}`,
+    read: false,
+    createdAt: new Date().toISOString()
+  })
+
+  return {
+    jobId: newId,
+    fileName: newJob.fileName,
+    status: 'DONE',
+    message: `Đã tiếp nhận và xử lý file '${file.name}' thành công (${totalRows} dòng).`
+  }
+}
+
+// Tạo File Excel mẫu thực tế tải về máy
+export function createSampleTemplateExcelBlob() {
+  const wb = XLSX.utils.book_new()
+  const data = [
+    ['Mã lớp', 'Mã môn', 'Tên môn học', 'Tài khoản GV', 'Ngày học', 'Ca học', 'Phòng', 'Buổi số'],
+    ['WD18301', 'COM108', 'Nhập môn lập trình', 'namnv', '2026-10-20', 2, 'F201', 1],
+    ['WD18301', 'COM108', 'Nhập môn lập trình', 'namnv', '2026-10-22', 2, 'F201', 2],
+    ['WD18301', 'COM108', 'Nhập môn lập trình', 'namnv', '2026-10-24', 2, 'F201', 3],
+    ['CP18301', 'PRO2113', 'Dự án tốt nghiệp (CNTT)', 'linhdt', '2026-10-21', 3, 'F202', 1],
+    ['CP18301', 'PRO2113', 'Dự án tốt nghiệp (CNTT)', 'linhdt', '2026-10-23', 3, 'F202', 2],
+    ['IT18302', 'MOB1014', 'Lập trình Java 1', 'tunglt', '2026-10-20', 1, 'L102', 1],
+    ['IT18303', 'WEB1013', 'Thiết kế Web với HTML5 & CSS3', 'hah7', '2026-10-21', 4, 'L103', 1],
+    ['CB18301', 'ENG101', 'Tiếng Anh 1.1', 'huongnt', '2026-10-20', 1, 'T301', 1]
+  ]
+  const ws = XLSX.utils.aoa_to_sheet(data)
+  XLSX.utils.book_append_sheet(wb, ws, 'LichGiangDay')
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' })
+  function s2ab(s) {
+    const buf = new ArrayBuffer(s.length)
+    const view = new Uint8Array(buf)
+    for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff
+    return buf
+  }
+  const blob = new Blob([s2ab(wbout)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  return URL.createObjectURL(blob)
+}
+
+// Quản lý Notification mock
+export function getMockNotifications() {
+  try {
+    const raw = localStorage.getItem(NOTIS_STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  const initial = [
+    { id: 1, message: 'Chào mừng bạn đến với hệ thống Quản lý Kế hoạch Dự giờ QLDG', link: '/plans', read: false, createdAt: '2026-10-18T08:00:00' },
+    { id: 2, message: 'Kế hoạch KH-CNTT-FA26-B1-002 đã được Trưởng ban Đào tạo phê duyệt', link: '/plans/2', read: true, createdAt: '2026-10-14T08:30:00' }
+  ]
+  localStorage.setItem(NOTIS_STORAGE_KEY, JSON.stringify(initial))
+  return initial
+}
+
+export function addMockNotification(noti) {
+  try {
+    const notis = getMockNotifications()
+    notis.unshift(noti)
+    localStorage.setItem(NOTIS_STORAGE_KEY, JSON.stringify(notis))
+  } catch (e) {
+    console.error('Lỗi lưu mock notification:', e)
+  }
+}

@@ -81,24 +81,30 @@ export const api = {
   async uploadScheduleFile(file) {
     const fd = new FormData()
     fd.append('file', file)
-    return await request('/import/upload', { method: 'POST', body: fd })
+    try {
+      return await request('/import/upload', { method: 'POST', body: fd })
+    } catch (err) {
+      console.warn('Backend chưa kết nối, tự động xử lý file trong Chế độ Dữ liệu mẫu (Mock Demo):', err.message)
+      return await mock.importScheduleFileMock(file)
+    }
   },
 
   async getImportJobs(page = 0, size = 10) {
     try {
       return await request(`/import/jobs?page=${page}&size=${size}`)
     } catch {
-      return {
-        content: mock.MOCK_JOBS,
-        totalElements: mock.MOCK_JOBS.length,
-        totalPages: 1,
-        number: page
-      }
+      return mock.getStoredImportJobs(page, size)
     }
   },
 
   async getSampleTemplateUrl() {
-    return `${API_BASE}/import/sample-template`
+    try {
+      const res = await fetch(`${API_BASE}/import/sample-template`, { method: 'HEAD' })
+      if (res.ok && !res.headers.get('content-type')?.includes('text/html')) {
+        return `${API_BASE}/import/sample-template`
+      }
+    } catch {}
+    return mock.createSampleTemplateExcelBlob()
   },
 
   // UC-08: Đối soát dữ liệu lịch dạy
@@ -106,7 +112,7 @@ export const api = {
     try {
       return await request(`/import/jobs/${jobId}`)
     } catch {
-      return mock.MOCK_JOBS.find(j => j.id === Number(jobId)) || mock.MOCK_JOBS[0]
+      return mock.getMockJobDetail(jobId)
     }
   },
 
@@ -115,12 +121,7 @@ export const api = {
       const q = new URLSearchParams({ page, size, result, search }).toString()
       return await request(`/import/jobs/${jobId}/rows?${q}`)
     } catch {
-      return {
-        content: mock.MOCK_JOB_ROWS,
-        totalElements: mock.MOCK_JOB_ROWS.length,
-        totalPages: 1,
-        currentPage: page
-      }
+      return mock.getMockJobRows(jobId, { page, size, result, search })
     }
   },
 
@@ -128,7 +129,7 @@ export const api = {
     try {
       return await request(`/import/jobs/${jobId}/alerts`)
     } catch {
-      return mock.MOCK_JOB_ALERTS
+      return mock.getMockJobAlerts(jobId)
     }
   },
 
@@ -136,7 +137,7 @@ export const api = {
     return `${API_BASE}/import/jobs/${jobId}/export-errors`
   },
 
-  // UC-09 & UC-10: Phân loại lớp và lập kế hoạch
+  // UC-09 & UC-10: Phân loại lớp và lập kế hoạch (+ 5 LỚP HỌC MỚI BỔ SUNG)
   async getSemesters() {
     try {
       return await request('/plans/semesters')
@@ -154,7 +155,7 @@ export const api = {
       return await request(`/plans/classify?${q.toString()}`)
     } catch {
       return {
-        quota: { totalTeachers: 12, requiredQuota: 2, plannedTeachers: 1, percent: 50 },
+        quota: { totalTeachers: 18, requiredQuota: 3, plannedTeachers: 2, percent: 66 },
         mandatory: [
           {
             teachingId: 2,
@@ -165,6 +166,32 @@ export const api = {
             facultyName: 'Công nghệ thông tin',
             teacherAccount: 'linhdt',
             teacherName: 'Đặng Thùy Linh',
+            sessionCount: 3,
+            groupType: 'MANDATORY',
+            reasonBadge: 'Lần đầu dạy'
+          },
+          {
+            teachingId: 3,
+            classCode: 'IT18302',
+            subjectCode: 'MOB1014',
+            subjectName: 'Lập trình Java 1',
+            facultyId: 1,
+            facultyName: 'Công nghệ thông tin',
+            teacherAccount: 'tunglt',
+            teacherName: 'Lê Thanh Tùng',
+            sessionCount: 4,
+            groupType: 'MANDATORY',
+            reasonBadge: 'Chưa từng dạy'
+          },
+          {
+            teachingId: 5,
+            classCode: 'CB18301',
+            subjectCode: 'ENG101',
+            subjectName: 'Tiếng Anh 1.1',
+            facultyId: 2,
+            facultyName: 'Cơ bản',
+            teacherAccount: 'huongnt',
+            teacherName: 'Nguyễn Thị Hương',
             sessionCount: 3,
             groupType: 'MANDATORY',
             reasonBadge: 'Lần đầu dạy'
@@ -180,6 +207,54 @@ export const api = {
             facultyName: 'Công nghệ thông tin',
             teacherAccount: 'namnv',
             teacherName: 'Nguyễn Văn Nam',
+            sessionCount: 4,
+            groupType: 'OTHERS'
+          },
+          {
+            teachingId: 4,
+            classCode: 'IT18303',
+            subjectCode: 'WEB1013',
+            subjectName: 'Thiết kế Web với HTML5 & CSS3',
+            facultyId: 1,
+            facultyName: 'Công nghệ thông tin',
+            teacherAccount: 'hah7',
+            teacherName: 'Hoàng Anh Huy',
+            sessionCount: 4,
+            groupType: 'OTHERS'
+          },
+          {
+            teachingId: 6,
+            classCode: 'WD18302',
+            subjectCode: 'WEB2014',
+            subjectName: 'Xây dựng trang Web với JavaScript',
+            facultyId: 1,
+            facultyName: 'Công nghệ thông tin',
+            teacherAccount: 'minhtv',
+            teacherName: 'Trần Văn Minh',
+            sessionCount: 4,
+            groupType: 'OTHERS'
+          },
+          {
+            teachingId: 7,
+            classCode: 'CS18301',
+            subjectCode: 'MAT101',
+            subjectName: 'Toán rời rạc',
+            facultyId: 2,
+            facultyName: 'Cơ bản',
+            teacherAccount: 'nhungpt_hn',
+            teacherName: 'Phạm Thu Nhung',
+            sessionCount: 3,
+            groupType: 'OTHERS'
+          },
+          {
+            teachingId: 8,
+            classCode: 'UD18301',
+            subjectCode: 'SOF203',
+            subjectName: 'Lập trình Java 2',
+            facultyId: 1,
+            facultyName: 'Công nghệ thông tin',
+            teacherAccount: 'haidv',
+            teacherName: 'Đỗ Văn Hải',
             sessionCount: 4,
             groupType: 'OTHERS'
           }
@@ -209,7 +284,9 @@ export const api = {
       return [
         { sessionId: 1, date: '2026-10-20', shift: 2, room: 'F201', sessionNo: 1, label: '2026-10-20 – Ca 2 (Buổi 1, P.F201)' },
         { sessionId: 2, date: '2026-10-22', shift: 2, room: 'F201', sessionNo: 2, label: '2026-10-22 – Ca 2 (Buổi 2, P.F201)' },
-        { sessionId: 3, date: '2026-10-24', shift: 2, room: 'F201', sessionNo: 3, label: '2026-10-24 – Ca 2 (Buổi 3, P.F201)' }
+        { sessionId: 3, date: '2026-10-24', shift: 2, room: 'F201', sessionNo: 3, label: '2026-10-24 – Ca 2 (Buổi 3, P.F201)' },
+        { sessionId: 4, date: '2026-10-26', shift: 3, room: 'F202', sessionNo: 4, label: '2026-10-26 – Ca 3 (Buổi 4, P.F202)' },
+        { sessionId: 5, date: '2026-10-28', shift: 1, room: 'L102', sessionNo: 5, label: '2026-10-28 – Ca 1 (Buổi 5, P.L102)' }
       ]
     }
   },
@@ -221,7 +298,14 @@ export const api = {
     } catch {
       return [
         { id: 6, account: 'namnv', fullName: 'Nguyễn Văn Nam', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng', sameCampus: true },
-        { id: 4, account: 'haidv', fullName: 'Đỗ Văn Hải', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng', sameCampus: true }
+        { id: 4, account: 'haidv', fullName: 'Đỗ Văn Hải', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng', sameCampus: true },
+        { id: 3, account: 'dungpt', fullName: 'Phan Tiến Dũng', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng', sameCampus: true },
+        { id: 8, account: 'linhdt', fullName: 'Đặng Thùy Linh', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng', sameCampus: true },
+        { id: 9, account: 'tunglt', fullName: 'Lê Thanh Tùng', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng', sameCampus: true },
+        { id: 10, account: 'hah7', fullName: 'Hoàng Anh Huy', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng', sameCampus: true },
+        { id: 11, account: 'huongnt', fullName: 'Nguyễn Thị Hương', facultyName: 'Cơ bản', campusName: 'CĐ FPT Polytechnic Đà Nẵng', sameCampus: true },
+        { id: 12, account: 'minhtv', fullName: 'Trần Văn Minh', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic TP.HCM', sameCampus: false },
+        { id: 13, account: 'nhungpt_hn', fullName: 'Phạm Thu Nhung', facultyName: 'Cơ bản', campusName: 'CĐ FPT Polytechnic Hà Nội', sameCampus: false }
       ]
     }
   },
@@ -231,10 +315,25 @@ export const api = {
     try {
       return await request(`/plans/inspectors/search?keyword=${encodeURIComponent(keyword || '')}`)
     } catch {
-      return [
+      const all = [
         { id: 6, account: 'namnv', fullName: 'Nguyễn Văn Nam', facultyName: 'CNTT', campusName: 'Đà Nẵng', sameCampus: true },
-        { id: 10, account: 'nhungpt_hn', fullName: 'Phạm Thu Nhung', facultyName: 'CB', campusName: 'Hà Nội', sameCampus: false }
+        { id: 4, account: 'haidv', fullName: 'Đỗ Văn Hải', facultyName: 'CNTT', campusName: 'Đà Nẵng', sameCampus: true },
+        { id: 3, account: 'dungpt', fullName: 'Phan Tiến Dũng', facultyName: 'CNTT', campusName: 'Đà Nẵng', sameCampus: true },
+        { id: 8, account: 'linhdt', fullName: 'Đặng Thùy Linh', facultyName: 'CNTT', campusName: 'Đà Nẵng', sameCampus: true },
+        { id: 9, account: 'tunglt', fullName: 'Lê Thanh Tùng', facultyName: 'CNTT', campusName: 'Đà Nẵng', sameCampus: true },
+        { id: 10, account: 'hah7', fullName: 'Hoàng Anh Huy', facultyName: 'CNTT', campusName: 'Đà Nẵng', sameCampus: true },
+        { id: 11, account: 'huongnt', fullName: 'Nguyễn Thị Hương', facultyName: 'CB', campusName: 'Đà Nẵng', sameCampus: true },
+        { id: 12, account: 'minhtv', fullName: 'Trần Văn Minh', facultyName: 'CNTT', campusName: 'TP.HCM', sameCampus: false },
+        { id: 13, account: 'nhungpt_hn', fullName: 'Phạm Thu Nhung', facultyName: 'CB', campusName: 'Hà Nội', sameCampus: false }
       ]
+      if (!keyword || !keyword.trim()) return all
+      const q = keyword.trim().toLowerCase()
+      return all.filter(u =>
+        u.account.toLowerCase().includes(q) ||
+        u.fullName.toLowerCase().includes(q) ||
+        u.facultyName.toLowerCase().includes(q) ||
+        u.campusName.toLowerCase().includes(q)
+      )
     }
   },
 
@@ -331,7 +430,7 @@ export const api = {
     try {
       return await request('/notifications')
     } catch {
-      return []
+      return mock.getMockNotifications()
     }
   },
 
