@@ -187,7 +187,11 @@ export const api = {
     if (semesterId) q.append('semesterId', semesterId)
     if (block !== undefined && block !== null && block !== '') q.append('block', block)
     if (facultyId) q.append('facultyId', facultyId)
-    return await request(`/plans/unscheduled-candidates?${q.toString()}`)
+    try {
+      return await request(`/plans/unscheduled-candidates?${q.toString()}`)
+    } catch {
+      return mock.MOCK_UNSCHEDULED_CANDIDATES
+    }
   },
 
   async getValidSessions(teachingId) {
@@ -228,21 +232,29 @@ export const api = {
 
   // UC-10, UC-12: Lưu & Gửi kế hoạch
   async savePlanDraft(data) {
-    return await request('/plans', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, submitAction: 'DRAFT' })
-    })
+    try {
+      return await request('/plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, submitAction: 'DRAFT' })
+      })
+    } catch {
+      return mock.saveOrSubmitMockPlan(data, false)
+    }
   },
 
   async submitPlan(data, planId = null) {
     const url = planId ? `/plans/${planId}` : '/plans'
     const method = planId ? 'PUT' : 'POST'
-    return await request(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, submitAction: 'SUBMIT' })
-    })
+    try {
+      return await request(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, submitAction: 'SUBMIT' })
+      })
+    } catch {
+      return mock.saveOrSubmitMockPlan(data, true, planId)
+    }
   },
 
   // UC-13: Luồng trình duyệt kế hoạch
@@ -252,35 +264,59 @@ export const api = {
     if (block !== undefined && block !== null && block !== '') q.append('block', block)
     if (status) q.append('status', status)
     if (facultyId) q.append('facultyId', facultyId)
-    return await request(`/plans?${q.toString()}`)
+    try {
+      return await request(`/plans?${q.toString()}`)
+    } catch {
+      return mock.getMockPlansGrouped({ semesterId, block, facultyId, status })
+    }
   },
 
   async getPlanDetail(id) {
-    return await request(`/plans/${id}`)
+    try {
+      return await request(`/plans/${id}`)
+    } catch {
+      return mock.getMockPlanDetail(id)
+    }
   },
 
   async approvePlan(id) {
-    return await request(`/plans/${id}/approve`, { method: 'POST' })
+    try {
+      return await request(`/plans/${id}/approve`, { method: 'POST' })
+    } catch {
+      return mock.updateMockPlanStatus(id, 'APPROVED', 'Đã phê duyệt kế hoạch')
+    }
   },
 
   async requestPlanEdit(id, note) {
-    return await request(`/plans/${id}/request-edit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ note })
-    })
+    try {
+      return await request(`/plans/${id}/request-edit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note })
+      })
+    } catch {
+      return mock.updateMockPlanStatus(id, 'REJECTED_NEED_EDIT', note)
+    }
   },
 
   async rejectPlan(id, reason) {
-    return await request(`/plans/${id}/reject`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason })
-    })
+    try {
+      return await request(`/plans/${id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
+      })
+    } catch {
+      return mock.updateMockPlanStatus(id, 'CANCELLED', reason)
+    }
   },
 
   async deletePlan(id) {
-    return await request(`/plans/${id}`, { method: 'DELETE' })
+    try {
+      return await request(`/plans/${id}`, { method: 'DELETE' })
+    } catch {
+      return mock.deleteMockPlan(id)
+    }
   },
 
   async getNotifications() {

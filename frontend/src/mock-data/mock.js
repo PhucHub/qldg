@@ -20,7 +20,8 @@ export const MOCK_FACULTIES = [
   { id: 2, code: 'CB', name: 'Cơ bản' },
   { id: 3, code: 'TA', name: 'Tiếng Anh' },
   { id: 4, code: 'TT', name: 'Tiếng Trung' },
-  { id: 5, code: 'TKDH', name: 'Thiết kế đồ họa' }
+  { id: 5, code: 'TKDH', name: 'Thiết kế đồ họa' },
+  { id: 6, code: 'QTKD', name: 'Quản trị kinh doanh' }
 ]
 
 export const MOCK_JOBS = [
@@ -69,4 +70,411 @@ export const MOCK_JOB_ROWS = [
 export const MOCK_JOB_ALERTS = [
   { id: 1, subjectCode: 'COM1081', subjectName: 'Nhập môn lập trình nâng cao', kind: 'UPDATE_VERSION', baseCode: 'COM108', classCount: 4 },
   { id: 2, subjectCode: 'AI2010', subjectName: '[Chưa đặt tên - AI2010]', kind: 'NEW', baseCode: null, classCount: 2 }
+]
+
+// ==========================================
+// DỮ LIỆU MẪU KẾ HOẠCH DỰ GIỜ (MOCK PLANS)
+// ==========================================
+export const INITIAL_MOCK_PLANS = [
+  {
+    id: 1,
+    code: 'KH-CNTT-FA26-B1-001',
+    semesterId: 1,
+    semesterName: 'Fall 2026',
+    block: 1,
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    creatorAccount: 'dungpt',
+    creatorName: 'Phan Tiến Dũng',
+    classCount: 2,
+    status: 'SUBMITTED',
+    unscheduled: false,
+    createdAt: '2026-10-15T08:30:00',
+    submittedAt: '2026-10-16T09:00:00',
+    lastNote: 'Kính gửi Trưởng ban đào tạo phê duyệt kế hoạch đợt 1',
+    items: [
+      {
+        id: 101,
+        teachingId: 1,
+        classCode: 'WD18301',
+        subjectCode: 'COM108',
+        subjectName: 'Nhập môn lập trình',
+        teacherAccount: 'namnv',
+        teacherName: 'Nguyễn Văn Nam',
+        plannedDate: '2026-10-22',
+        shift: 2,
+        inspector1: { account: 'dungpt', fullName: 'Phan Tiến Dũng', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector2: { account: 'haidv', fullName: 'Đỗ Văn Hải', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector3: null,
+        reason: 'Lần đầu dạy môn này'
+      },
+      {
+        id: 102,
+        teachingId: 2,
+        classCode: 'CP18301',
+        subjectCode: 'PRO2113',
+        subjectName: 'Dự án tốt nghiệp (CNTT)',
+        teacherAccount: 'linhdt',
+        teacherName: 'Đặng Thùy Linh',
+        plannedDate: '2026-10-23',
+        shift: 3,
+        inspector1: { account: 'dungpt', fullName: 'Phan Tiến Dũng', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector2: { account: 'namnv', fullName: 'Nguyễn Văn Nam', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector3: null,
+        reason: 'Môn đồ án'
+      }
+    ],
+    histories: [
+      { id: 1, action: 'CREATE_DRAFT', actorName: 'Phan Tiến Dũng', note: 'Tạo bản nháp kế hoạch', createdAt: '2026-10-15T08:30:00' },
+      { id: 2, action: 'SUBMIT', actorName: 'Phan Tiến Dũng', note: 'Kính gửi Trưởng ban đào tạo phê duyệt', createdAt: '2026-10-16T09:00:00' }
+    ]
+  },
+  {
+    id: 2,
+    code: 'KH-CNTT-FA26-B1-002',
+    semesterId: 1,
+    semesterName: 'Fall 2026',
+    block: 1,
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    creatorAccount: 'haidv',
+    creatorName: 'Đỗ Văn Hải',
+    classCount: 1,
+    status: 'APPROVED',
+    unscheduled: false,
+    createdAt: '2026-10-12T10:00:00',
+    submittedAt: '2026-10-13T14:00:00',
+    lastNote: 'Đã phê duyệt đầy đủ các tiêu chí',
+    items: [
+      {
+        id: 201,
+        teachingId: 3,
+        classCode: 'IT18302',
+        subjectCode: 'MOB1014',
+        subjectName: 'Lập trình Java 1',
+        teacherAccount: 'tunglt',
+        teacherName: 'Lê Thanh Tùng',
+        plannedDate: '2026-10-20',
+        shift: 1,
+        inspector1: { account: 'haidv', fullName: 'Đỗ Văn Hải', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector2: { account: 'namnv', fullName: 'Nguyễn Văn Nam', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector3: null,
+        reason: 'Chưa từng dạy'
+      }
+    ],
+    histories: [
+      { id: 1, action: 'CREATE_DRAFT', actorName: 'Đỗ Văn Hải', note: 'Khởi tạo kế hoạch nhóm lập trình Java', createdAt: '2026-10-12T10:00:00' },
+      { id: 2, action: 'SUBMIT', actorName: 'Đỗ Văn Hải', note: 'Gửi phê duyệt', createdAt: '2026-10-13T14:00:00' },
+      { id: 3, action: 'APPROVE', actorName: 'Hoàng Thị Loan', note: 'Đã duyệt kế hoạch', createdAt: '2026-10-14T08:30:00' }
+    ]
+  },
+  {
+    id: 3,
+    code: 'KH-DX-CNTT-FA26-001',
+    semesterId: 1,
+    semesterName: 'Fall 2026',
+    block: 1,
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    creatorAccount: 'dungpt',
+    creatorName: 'Phan Tiến Dũng',
+    classCount: 1,
+    status: 'DRAFT',
+    unscheduled: true,
+    createdAt: '2026-10-18T11:00:00',
+    submittedAt: null,
+    lastNote: 'Kế hoạch dự giờ đột xuất kiểm tra nề nếp',
+    items: [
+      {
+        id: 301,
+        teachingId: 4,
+        classCode: 'IT18303',
+        subjectCode: 'WEB1013',
+        subjectName: 'Thiết kế Web với HTML5 & CSS3',
+        teacherAccount: 'hah7',
+        teacherName: 'Hoàng Anh Huy',
+        plannedDate: '2026-10-21',
+        shift: 4,
+        inspector1: { account: 'dungpt', fullName: 'Phan Tiến Dũng', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector2: { account: 'haidv', fullName: 'Đỗ Văn Hải', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector3: null,
+        reason: 'Dự giờ đột xuất kiểm tra nề nếp theo yêu cầu TBĐT'
+      }
+    ],
+    histories: [
+      { id: 1, action: 'CREATE_DRAFT', actorName: 'Phan Tiến Dũng', note: 'Lập dự thảo đột xuất', createdAt: '2026-10-18T11:00:00' }
+    ]
+  },
+  {
+    id: 4,
+    code: 'KH-CB-FA26-B1-001',
+    semesterId: 1,
+    semesterName: 'Fall 2026',
+    block: 1,
+    facultyId: 2,
+    facultyName: 'Cơ bản',
+    creatorAccount: 'nhungpt4',
+    creatorName: 'Phạm Thị Nhung',
+    classCount: 1,
+    status: 'APPROVED',
+    unscheduled: false,
+    createdAt: '2026-10-14T09:00:00',
+    submittedAt: '2026-10-14T15:00:00',
+    lastNote: 'Đã duyệt toàn bộ',
+    items: [
+      {
+        id: 401,
+        teachingId: 5,
+        classCode: 'CB18301',
+        subjectCode: 'ENG101',
+        subjectName: 'Tiếng Anh 1.1',
+        teacherAccount: 'huongnt',
+        teacherName: 'Nguyễn Thị Hương',
+        plannedDate: '2026-10-20',
+        shift: 1,
+        inspector1: { account: 'nhungpt4', fullName: 'Phạm Thị Nhung', facultyName: 'Cơ bản', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector2: { account: 'nhungpt_hn', fullName: 'Phạm Thu Nhung', facultyName: 'Cơ bản', campusName: 'CĐ FPT Polytechnic Hà Nội' },
+        inspector3: null,
+        reason: 'Dự giờ định kỳ'
+      }
+    ],
+    histories: [
+      { id: 1, action: 'CREATE_DRAFT', actorName: 'Phạm Thị Nhung', note: 'Khởi tạo kế hoạch bộ môn Cơ bản', createdAt: '2026-10-14T09:00:00' },
+      { id: 2, action: 'SUBMIT', actorName: 'Phạm Thị Nhung', note: 'Gửi phê duyệt', createdAt: '2026-10-14T15:00:00' },
+      { id: 3, action: 'APPROVE', actorName: 'Hoàng Thị Loan', note: 'Duyệt kế hoạch Cơ bản', createdAt: '2026-10-15T10:00:00' }
+    ]
+  },
+  {
+    id: 5,
+    code: 'KH-CNTT-FA26-B1-003',
+    semesterId: 1,
+    semesterName: 'Fall 2026',
+    block: 1,
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    creatorAccount: 'dungpt',
+    creatorName: 'Phan Tiến Dũng',
+    classCount: 1,
+    status: 'REJECTED_NEED_EDIT',
+    unscheduled: false,
+    createdAt: '2026-10-17T08:00:00',
+    submittedAt: '2026-10-17T09:30:00',
+    lastNote: 'Cần bổ sung giảng viên dự giờ thứ 2 cùng chuyên môn cho lớp WD18301',
+    items: [
+      {
+        id: 501,
+        teachingId: 1,
+        classCode: 'WD18301',
+        subjectCode: 'COM108',
+        subjectName: 'Nhập môn lập trình',
+        teacherAccount: 'namnv',
+        teacherName: 'Nguyễn Văn Nam',
+        plannedDate: '2026-10-24',
+        shift: 2,
+        inspector1: { account: 'dungpt', fullName: 'Phan Tiến Dũng', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector2: null,
+        inspector3: null,
+        reason: 'Cần bổ sung GV 2'
+      }
+    ],
+    histories: [
+      { id: 1, action: 'CREATE_DRAFT', actorName: 'Phan Tiến Dũng', note: 'Tạo kế hoạch bổ sung', createdAt: '2026-10-17T08:00:00' },
+      { id: 2, action: 'SUBMIT', actorName: 'Phan Tiến Dũng', note: 'Gửi phê duyệt', createdAt: '2026-10-17T09:30:00' },
+      { id: 3, action: 'REQUEST_EDIT', actorName: 'Hoàng Thị Loan', note: 'Cần bổ sung giảng viên dự giờ thứ 2 cùng chuyên môn cho lớp WD18301', createdAt: '2026-10-17T14:00:00' }
+    ]
+  }
+]
+
+// Quản lý lưu trữ Mock State trong LocalStorage (để người dùng thao tác thật trên Cloudflare)
+const STORAGE_KEY = 'qldg_mock_plans_store'
+
+function getMockStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch (e) {
+    console.error('Lỗi đọc mock store:', e)
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_MOCK_PLANS))
+  return INITIAL_MOCK_PLANS
+}
+
+function saveMockStore(plans) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(plans))
+  } catch (e) {
+    console.error('Lỗi lưu mock store:', e)
+  }
+}
+
+export function getMockPlansGrouped({ semesterId, block, facultyId, status } = {}) {
+  const all = getMockStore()
+  let filtered = [...all]
+
+  if (semesterId) filtered = filtered.filter(p => Number(p.semesterId) === Number(semesterId))
+  if (block && Number(block) > 0) filtered = filtered.filter(p => Number(p.block) === Number(block))
+  if (facultyId) filtered = filtered.filter(p => Number(p.facultyId) === Number(facultyId))
+  if (status && status !== 'ALL') filtered = filtered.filter(p => p.status === status)
+
+  // Gom theo bộ môn
+  const grouped = {}
+  for (const p of filtered) {
+    const facName = p.facultyName || 'Bộ môn chung'
+    if (!grouped[facName]) grouped[facName] = []
+    grouped[facName].push({
+      id: p.id,
+      code: p.code,
+      facultyId: p.facultyId,
+      facultyName: p.facultyName,
+      creatorAccount: p.creatorAccount,
+      creatorName: p.creatorName,
+      classCount: p.items ? p.items.length : (p.classCount || 1),
+      status: p.status,
+      unscheduled: p.unscheduled,
+      createdAt: p.createdAt,
+      submittedAt: p.submittedAt,
+      lastNote: p.lastNote
+    })
+  }
+  return grouped
+}
+
+export function getMockPlanDetail(id) {
+  const all = getMockStore()
+  const p = all.find(x => x.id === Number(id))
+  if (!p) throw new Error('Không tìm thấy kế hoạch dự giờ')
+  return p
+}
+
+export function saveOrSubmitMockPlan(data, isSubmit = false, planId = null) {
+  const all = [...getMockStore()]
+  let existingIndex = planId ? all.findIndex(x => x.id === Number(planId)) : -1
+
+  const sem = MOCK_SEMESTERS.find(s => s.id === Number(data.semesterId)) || MOCK_SEMESTERS[0]
+  const fac = MOCK_FACULTIES.find(f => f.id === Number(data.facultyId)) || MOCK_FACULTIES[0]
+
+  const mappedItems = (data.items || []).map((it, idx) => ({
+    id: it.id || Date.now() + idx,
+    teachingId: it.teachingId || idx + 1,
+    classCode: it.classCode || 'Lớp ' + (idx + 1),
+    subjectCode: it.subjectCode || 'MH00' + (idx + 1),
+    subjectName: it.subjectName || 'Môn học mẫu',
+    teacherAccount: it.teacherAccount || 'namnv',
+    teacherName: it.teacherName || 'Nguyễn Văn Nam',
+    plannedDate: it.plannedDate || '2026-10-25',
+    shift: it.shift || 2,
+    inspector1: it.inspector1 || { account: 'dungpt', fullName: 'Phan Tiến Dũng', facultyName: fac.name, campusName: 'Đà Nẵng' },
+    inspector2: it.inspector2 || null,
+    inspector3: it.inspector3 || null,
+    reason: it.reason || ''
+  }))
+
+  const status = isSubmit ? 'SUBMITTED' : 'DRAFT'
+  const now = new Date().toISOString()
+
+  if (existingIndex >= 0) {
+    const p = all[existingIndex]
+    p.items = mappedItems
+    p.classCount = mappedItems.length
+    p.status = status
+    if (isSubmit) p.submittedAt = now
+    p.histories = p.histories || []
+    p.histories.push({
+      id: Date.now(),
+      action: isSubmit ? 'SUBMIT' : 'UPDATE_DRAFT',
+      actorName: 'Người dùng',
+      note: isSubmit ? 'Trình duyệt kế hoạch' : 'Cập nhật bản nháp',
+      createdAt: now
+    })
+    saveMockStore(all)
+    return p
+  } else {
+    const newId = all.length > 0 ? Math.max(...all.map(x => x.id)) + 1 : 1
+    const prefix = data.unscheduled ? 'KH-DX' : 'KH'
+    const newCode = `${prefix}-${fac.code}-${sem.shortCode}-B${data.block || 1}-${String(newId).padStart(3, '0')}`
+    const newPlan = {
+      id: newId,
+      code: newCode,
+      semesterId: sem.id,
+      semesterName: sem.name,
+      block: data.block || 1,
+      facultyId: fac.id,
+      facultyName: fac.name,
+      creatorAccount: 'dungpt',
+      creatorName: 'Phan Tiến Dũng',
+      classCount: mappedItems.length,
+      status,
+      unscheduled: !!data.unscheduled,
+      createdAt: now,
+      submittedAt: isSubmit ? now : null,
+      lastNote: isSubmit ? 'Kính gửi Trưởng ban Đào tạo phê duyệt' : 'Bản nháp kế hoạch',
+      items: mappedItems,
+      histories: [
+        {
+          id: Date.now(),
+          action: isSubmit ? 'SUBMIT' : 'CREATE_DRAFT',
+          actorName: 'Phan Tiến Dũng',
+          note: isSubmit ? 'Tạo mới và gửi phê duyệt' : 'Khởi tạo bản nháp',
+          createdAt: now
+        }
+      ]
+    }
+    all.unshift(newPlan)
+    saveMockStore(all)
+    return newPlan
+  }
+}
+
+export function updateMockPlanStatus(id, newStatus, note = '') {
+  const all = [...getMockStore()]
+  const p = all.find(x => x.id === Number(id))
+  if (!p) throw new Error('Không tìm thấy kế hoạch')
+
+  p.status = newStatus
+  p.lastNote = note || (newStatus === 'APPROVED' ? 'Đã duyệt kế hoạch' : newStatus === 'CANCELLED' ? 'Đã từ chối' : 'Yêu cầu sửa')
+  p.histories = p.histories || []
+  p.histories.push({
+    id: Date.now(),
+    action: newStatus,
+    actorName: 'Hoàng Thị Loan',
+    note: p.lastNote,
+    createdAt: new Date().toISOString()
+  })
+  saveMockStore(all)
+  return p
+}
+
+export function deleteMockPlan(id) {
+  const all = getMockStore().filter(x => x.id !== Number(id))
+  saveMockStore(all)
+  return true
+}
+
+export const MOCK_UNSCHEDULED_CANDIDATES = [
+  {
+    teachingId: 4,
+    classCode: 'IT18303',
+    subjectCode: 'WEB1013',
+    subjectName: 'Thiết kế Web với HTML5 & CSS3',
+    teacherAccount: 'hah7',
+    teacherName: 'Hoàng Anh Huy',
+    sessionCount: 4,
+    plannedDate: '2026-10-21',
+    shift: 4,
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin'
+  },
+  {
+    teachingId: 5,
+    classCode: 'CB18301',
+    subjectCode: 'ENG101',
+    subjectName: 'Tiếng Anh 1.1',
+    teacherAccount: 'huongnt',
+    teacherName: 'Nguyễn Thị Hương',
+    sessionCount: 2,
+    plannedDate: '2026-10-22',
+    shift: 1,
+    facultyId: 2,
+    facultyName: 'Cơ bản'
+  }
 ]
