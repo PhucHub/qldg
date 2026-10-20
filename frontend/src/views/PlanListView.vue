@@ -3,22 +3,11 @@
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
         <h1 class="page-title">Quản lý kế hoạch dự giờ</h1>
-        <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
-          Phạm vi quản lý: <strong style="color: var(--primary);">{{ roleScopeText }}</strong>
-        </div>
       </div>
       <div v-if="canCreatePlan">
         <router-link to="/plans/create" class="btn btn-primary">
           + Lập kế hoạch mới
         </router-link>
-      </div>
-    </div>
-
-    <!-- Banner vai trò TC&QLĐT (chỉ xem, không duyệt, không sửa) -->
-    <div v-if="currentUser.role === 'TCQLDT'" class="card" style="background: #F0FDF4; border: 1px solid #BBF7D0; padding: 12px 18px; margin-bottom: 16px; font-size: 13px; color: #166534; display: flex; align-items: center; gap: 10px;">
-      <span style="font-size: 18px;">ℹ️</span>
-      <div>
-        <strong>Chế độ giám sát TC&QLĐT:</strong> Bạn đang theo dõi toàn bộ kế hoạch dự giờ của cơ sở. Quyền <strong>phê duyệt</strong> thuộc Trưởng ban Đào tạo (TBDT); quyền <strong>lập và sửa kế hoạch</strong> thuộc Chủ nhiệm bộ môn (CNBM) và Trưởng môn (TM).
       </div>
     </div>
 
@@ -290,23 +279,6 @@ const totalPages = computed(() => Math.ceil(allPlans.value.length / pageSize) ||
 const pagedPlans = computed(() => {
   const start = (currentPage.value - 1) * pageSize
   return allPlans.value.slice(start, start + pageSize)
-})
-
-const roleScopeText = computed(() => {
-  const r = currentUser.value.role
-  if (currentUser.value.headOffice) return 'TC&QLĐT Head Office (Toàn hệ thống)'
-  if (r === 'TBDT') return 'Trưởng ban Đào tạo (Toàn bộ cơ sở Đà Nẵng)'
-  if (r === 'TCQLDT') return 'TC&QLĐT Cơ sở (Toàn bộ cơ sở Đà Nẵng – Chế độ xem)'
-  if (r === 'CNBM') {
-    const list = myFaculties.value.map(f => f.name).join(', ')
-    return `Chủ nhiệm bộ môn (Nhóm quản lý: ${list})`
-  }
-  if (r === 'TM') {
-    const fac = myFaculties.value[0]?.name || 'Bộ môn'
-    return `Trưởng môn (Phụ trách: ${fac})`
-  }
-  if (r === 'GV') return 'Giảng viên'
-  return r || 'Đang xác định'
 })
 
 function canEdit(plan) {
