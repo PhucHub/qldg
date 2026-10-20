@@ -62,6 +62,18 @@ export default {
             headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
           })
         }
+      } else {
+        // Chưa cấu hình BACKEND_API_URL -> Trả về 503 JSON để SPA Frontend chuyển sang Mock Data Mode
+        return new Response(JSON.stringify({ 
+          error: 'BACKEND_NOT_CONFIGURED',
+          message: 'Máy chủ Backend chưa được kết nối. Ứng dụng tự động chuyển sang Chế độ Dữ liệu mẫu (Mock Demo Mode).' 
+        }), {
+          status: 503,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          },
+        })
       }
     }
 

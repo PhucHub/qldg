@@ -21,6 +21,10 @@ async function request(url, options = {}) {
       throw new Error(data.message || `Lỗi HTTP ${res.status}`)
     }
     const ct = res.headers.get('content-type') || ''
+    // Nếu trả về HTML (do Cloudflare SPA fallback), coi như endpoint chưa có và kích hoạt fallback sang mock data
+    if (ct.includes('text/html')) {
+      throw new Error('API endpoint trả về HTML thay vì JSON (Backend chưa kết nối)')
+    }
     if (ct.includes('application/json')) return await res.json()
     return await res.blob()
   } catch (err) {
@@ -35,15 +39,19 @@ export const api = {
     try {
       return await request('/auth/me')
     } catch {
-      const u = mock.MOCK_USERS[0]
+      const token = localStorage.getItem('qldg_token') || '1:1:TBDT'
+      const parts = token.split(':')
+      const userId = Number(parts[0]) || 1
+      const u = mock.MOCK_USERS.find(x => x.id === userId) || mock.MOCK_USERS[0]
       return {
         id: u.id,
         account: u.account,
         fullName: u.fullName,
         role: u.role,
         campus: { id: 1, code: u.campusCode, name: u.campusName },
-        faculty: null,
-        faculties: mock.MOCK_FACULTIES
+        faculty: u.facultyCode ? { code: u.facultyCode, name: u.facultyCode } : null,
+        faculties: mock.MOCK_FACULTIES,
+        headOffice: !!u.headOffice
       }
     }
   },
