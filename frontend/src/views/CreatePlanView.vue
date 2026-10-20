@@ -2,7 +2,6 @@
   <div>
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
-        <div class="page-subtitle">Kế hoạch dự giờ / Lập kế hoạch</div>
         <h1 class="page-title">{{ editPlanId ? 'Chỉnh sửa kế hoạch dự giờ' : 'Lập kế hoạch dự giờ chính thức' }}</h1>
       </div>
       <router-link to="/plans/unscheduled" class="btn btn-outline-danger" style="font-weight: 600;">
@@ -19,30 +18,33 @@
 
     <!-- BƯỚC 1: CHỌN LỚP (UC-09) -->
     <div v-if="step === 1">
+      <QuotaWidget :quota="quota" />
+
       <div class="card filter-bar">
         <div class="form-group">
           <label class="form-label">Kỳ học</label>
-          <select v-model="selectedSemesterId" class="form-control">
+          <select v-model="selectedSemesterId" class="form-control" @change="onFilterChange">
+            <option :value="null">-- Chọn kỳ học --</option>
             <option v-for="s in semesters" :key="s.id" :value="s.id">{{ s.name || (s.term + ' ' + s.year) }}</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Block</label>
-          <select v-model="selectedBlock" class="form-control">
+          <select v-model="selectedBlock" class="form-control" @change="onFilterChange">
+            <option :value="0">-- Tất cả block --</option>
             <option :value="1">Block 1</option>
             <option :value="2">Block 2</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Bộ môn</label>
-          <select v-model="selectedFacultyId" class="form-control">
+          <select v-model="selectedFacultyId" class="form-control" @change="onFilterChange">
+            <option :value="null">-- Chọn bộ môn --</option>
             <option v-for="f in myFaculties" :key="f.id" :value="f.id">{{ f.name }}</option>
           </select>
         </div>
         <button class="btn btn-primary" @click="fetchClassifications">Xem danh sách lớp</button>
       </div>
-
-      <QuotaWidget :quota="quota" />
 
       <div v-if="classified" class="card" style="padding: 0; overflow: hidden;">
         <!-- Tabs 3 nhóm lớp -->
@@ -68,21 +70,22 @@
             <thead>
               <tr>
                 <th v-if="activeTab !== 'planned'" style="width: 44px;">
-                  <input type="checkbox" :checked="allVisibleChecked" :disabled="!visibleRows.length" @change="toggleAllVisible($event.target.checked)" />
+                  <input type="checkbox" :checked="allVisibleChecked" :disabled="!pagedRows.length" @change="toggleAllVisible($event.target.checked)" />
                 </th>
                 <th>Mã lớp</th>
                 <th>Môn học</th>
+                <th>Bộ môn</th>
                 <th>Giảng viên</th>
                 <th v-if="activeTab !== 'planned'">Số buổi</th>
                 <th>{{ activeTab === 'planned' ? 'Thuộc kế hoạch' : 'Ghi chú' }}</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-if="visibleRows.length === 0">
-                <td colspan="6" class="empty-row">Không có lớp nào.</td>
+              <tr v-if="pagedRows.length === 0">
+                <td colspan="7" class="empty-row">Không có lớp nào.</td>
               </tr>
               <tr
-                v-for="c in visibleRows"
+                v-for="c in pagedRows"
                 :key="c.teachingId"
                 :class="{ 'row-selected': selectedTeachingIds.includes(c.teachingId), 'row-muted': activeTab === 'planned' }"
                 @click="activeTab !== 'planned' && toggleOne(c.teachingId)"
@@ -92,16 +95,37 @@
                 </td>
                 <td style="font-weight: 600;">{{ c.classCode }}</td>
                 <td>{{ c.subjectCode }} – {{ c.subjectName }}</td>
+                <td><span class="badge badge-gray">{{ c.facultyName || 'Bộ môn' }}</span></td>
                 <td>{{ c.teacherName }} <span class="muted">({{ c.teacherAccount }})</span></td>
                 <td v-if="activeTab !== 'planned'">{{ c.sessionCount }}</td>
                 <td>
-                  <span v-if="activeTab === 'mandatory'" class="badge badge-red">{{ c.reasonBadge }}</span>
+                  <span v-if="activeTab === 'mandatory'" class="badge badge-red">{{ c.reasonBadge || 'Bắt buộc' }}</span>
                   <span v-else-if="activeTab === 'others'" class="muted">—</span>
                   <span v-else class="badge badge-gray">{{ c.existingPlanCode }}</span>
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Phân trang 4 lớp 1 trang -->
+        <div v-if="totalPages > 1" class="pagination-bar">
+          <div class="pagination-info">
+            Hiển thị <strong>{{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> trên tổng <strong>{{ filteredList.length }}</strong> lớp
+          </div>
+          <div class="pagination-controls">
+            <button class="pagination-btn" :disabled="currentPage <= 1" @click="currentPage--">« Trước</button>
+            <button
+              v-for="p in totalPages"
+              :key="p"
+              class="pagination-btn"
+              :class="{ active: currentPage === p }"
+              @click="currentPage = p"
+            >
+              {{ p }}
+            </button>
+            <button class="pagination-btn" :disabled="currentPage >= totalPages" @click="currentPage++">Sau »</button>
+          </div>
         </div>
       </div>
 
@@ -118,33 +142,13 @@
 
     <!-- BƯỚC 2: PHÂN CÔNG (UC-10, UC-11) -->
     <div v-if="step === 2">
-    <QuotaWidget :quota="dynamicQuota" />
-    <div class="assign-layout">
-      <!-- Trái: GV bộ môn để kéo -->
-      <div class="card inspector-panel">
-        <div class="card-title" style="margin-bottom: 4px;">Giảng viên bộ môn</div>
-        <div class="muted" style="font-size: 11px; margin-bottom: 10px;">Kéo thẻ vào ô GV của lớp.</div>
-        <input v-model="inspectorSearch" class="form-control" placeholder="Tìm tên / account..." style="font-size: 12px; margin-bottom: 10px;" />
-        <div class="inspector-list">
-          <div
-            v-for="ins in filteredFacultyInspectors"
-            :key="ins.id"
-            class="draggable-card"
-            draggable="true"
-            @dragstart="onDragStart($event, ins)"
-          >
-            <div style="font-weight: 600; font-size: 13px;">{{ ins.account }}</div>
-            <div class="muted" style="font-size: 11px;">{{ ins.fullName }}</div>
-          </div>
-        </div>
-      </div>
+      <QuotaWidget :quota="dynamicQuota" />
 
-      <!-- Phải: mỗi lớp 1 thẻ -->
-      <div>
+      <div class="card" style="padding: 16px 20px; margin-bottom: 16px;">
         <div class="assign-header">
           <div>
-            <strong>{{ planItems.length }}</strong> lớp
-            <span class="muted"> · Đã phân công đủ </span>
+            <strong>{{ planItems.length }}</strong> lớp được chọn
+            <span class="muted"> · Đã phân công đủ: </span>
             <strong :style="{ color: completeCount === planItems.length ? 'var(--success)' : 'var(--primary)' }">
               {{ completeCount }}/{{ planItems.length }}
             </strong>
@@ -152,8 +156,9 @@
           <button class="btn btn-secondary" style="font-size: 12px;" @click="step = 1">← Chọn lại lớp</button>
         </div>
 
+        <!-- Danh sách thẻ lớp (phân trang 4 lớp 1 trang nếu nhiều) -->
         <div
-          v-for="item in planItems"
+          v-for="item in pagedPlanItems"
           :key="item.teachingId"
           class="class-card"
           :class="{ complete: isComplete(item), invalid: submitAttempted && !isComplete(item) }"
@@ -175,33 +180,63 @@
               </select>
             </div>
 
+            <!-- Phân công GV 1, 2, 3 qua Dropdown trực tiếp hoặc tìm kiếm -->
             <div v-for="slot in [1, 2, 3]" :key="slot">
               <div class="slot-label">GV {{ slot }} <span v-if="slot < 3" class="req">*</span><span v-else class="muted">(tùy chọn)</span></div>
-              <div
-                class="drop-target-box"
-                :class="{ 'has-value': item['inspector' + slot], 'is-invalid': submitAttempted && slot < 3 && !item['inspector' + slot] }"
-                @dragover.prevent
-                @drop="onDropInspector(item, slot, $event)"
-              >
-                <div v-if="item['inspector' + slot]" class="assigned-chip">
-                  <span>{{ item['inspector' + slot].account }}</span>
-                  <button class="chip-remove" title="Bỏ" @click="item['inspector' + slot] = null">✕</button>
-                </div>
-                <div v-else class="drop-placeholder">
-                  Kéo thả hoặc <button class="btn-link" @click="openCrossSearch(item, slot)">tìm</button>
-                </div>
+
+              <!-- Nếu đã chọn GV -->
+              <div v-if="item['inspector' + slot]" class="assigned-chip">
+                <span>{{ item['inspector' + slot].account }}</span>
+                <span class="muted" style="font-size: 11px; font-weight: normal;" v-if="item['inspector' + slot].fullName">
+                  ({{ item['inspector' + slot].fullName }})
+                </span>
+                <button type="button" class="chip-remove" title="Bỏ chọn" @click="removeInspector(item, slot)">✕</button>
+              </div>
+
+              <!-- Nếu chưa chọn: Dropdown chọn nhanh GV bộ môn hoặc Tìm GV chéo -->
+              <div v-else class="slot-select-box">
+                <select
+                  class="form-control"
+                  style="font-size: 12px;"
+                  :class="{ 'is-invalid': submitAttempted && slot < 3 && !item['inspector' + slot] }"
+                  @change="onInspectorSelect(item, slot, $event)"
+                >
+                  <option value="">-- Chọn GV {{ slot }} --</option>
+                  <option v-for="ins in facultyInspectors" :key="ins.id" :value="ins.id">
+                    {{ ins.account }} - {{ ins.fullName }}
+                  </option>
+                  <option value="__SEARCH_OTHER__">🔍 Tìm GV khác (chéo bộ môn/cơ sở)...</option>
+                </select>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="sticky-footer" style="justify-content: flex-end; gap: 12px;">
-          <button class="btn btn-secondary" :disabled="saving" @click="savePlan('DRAFT')">Lưu nháp</button>
-          <button class="btn btn-primary" :disabled="saving" @click="promptSubmit">Gửi trình duyệt →</button>
+        <!-- Phân trang Step 2 nếu > 4 lớp -->
+        <div v-if="totalStep2Pages > 1" class="pagination-bar" style="border-top: none; padding: 12px 0;">
+          <div class="pagination-info">
+            Trang <strong>{{ step2Page }}</strong> / <strong>{{ totalStep2Pages }}</strong>
+          </div>
+          <div class="pagination-controls">
+            <button class="pagination-btn" :disabled="step2Page <= 1" @click="step2Page--">« Trước</button>
+            <button
+              v-for="p in totalStep2Pages"
+              :key="p"
+              class="pagination-btn"
+              :class="{ active: step2Page === p }"
+              @click="step2Page = p"
+            >
+              {{ p }}
+            </button>
+            <button class="pagination-btn" :disabled="step2Page >= totalStep2Pages" @click="step2Page++">Sau »</button>
+          </div>
         </div>
       </div>
-    </div>
 
+      <div class="sticky-footer" style="justify-content: flex-end; gap: 12px;">
+        <button class="btn btn-secondary" :disabled="saving" @click="savePlan('DRAFT')">Lưu nháp</button>
+        <button class="btn btn-primary" :disabled="saving" @click="promptSubmit">Gửi trình duyệt →</button>
+      </div>
     </div>
 
     <InspectorSearchModal :is-open="modalOpen" @close="modalOpen = false" @select="onCrossInspectorSelected" />
@@ -228,6 +263,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { api } from '../services/api.js'
+import { toast } from '../services/toast.js'
 import QuotaWidget from '../components/QuotaWidget.vue'
 import InspectorSearchModal from '../components/InspectorSearchModal.vue'
 
@@ -238,9 +274,9 @@ const editPlanId = route.query.editId ? Number(route.query.editId) : null
 const step = ref(1)
 const semesters = ref([])
 const myFaculties = ref([])
-const selectedSemesterId = ref(1)
-const selectedBlock = ref(1)
-const selectedFacultyId = ref(1)
+const selectedSemesterId = ref(null)
+const selectedBlock = ref(0) // Mặc định: -- Tất cả block --
+const selectedFacultyId = ref(null) // Mặc định: -- Chọn bộ môn --
 
 const quota = ref({ totalTeachers: 0, requiredQuota: 0, plannedTeachers: 0, percent: 0 })
 const mandatoryList = ref([])
@@ -251,8 +287,12 @@ const classified = ref(false)
 const activeTab = ref('mandatory')
 const classSearch = ref('')
 
+// Phân trang 4 lớp 1 trang
+const pageSize = 4
+const currentPage = ref(1)
+const step2Page = ref(1)
+
 const facultyInspectors = ref([])
-const inspectorSearch = ref('')
 const planItems = ref([])
 const saving = ref(false)
 const submitAttempted = ref(false)
@@ -269,37 +309,55 @@ const tabs = computed(() => [
 ])
 const currentTab = computed(() => tabs.value.find(t => t.key === activeTab.value))
 
-const visibleRows = computed(() => {
+const filteredList = computed(() => {
   const q = classSearch.value.trim().toLowerCase()
   const list = currentTab.value.list
   if (!q) return list
   return list.filter(c =>
-    [c.classCode, c.subjectCode, c.subjectName, c.teacherName, c.teacherAccount]
+    [c.classCode, c.subjectCode, c.subjectName, c.teacherName, c.teacherAccount, c.facultyName]
       .some(v => (v || '').toLowerCase().includes(q))
   )
 })
 
+const totalPages = computed(() => Math.ceil(filteredList.value.length / pageSize) || 1)
+
+const pagedRows = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredList.value.slice(start, start + pageSize)
+})
+
 const allVisibleChecked = computed(() =>
-  visibleRows.value.length > 0 && visibleRows.value.every(c => selectedTeachingIds.value.includes(c.teachingId))
+  pagedRows.value.length > 0 && pagedRows.value.every(c => selectedTeachingIds.value.includes(c.teachingId))
 )
 const selectedMandatoryCount = computed(() =>
   mandatoryList.value.filter(c => selectedTeachingIds.value.includes(c.teachingId)).length
 )
 
-watch(activeTab, () => { classSearch.value = '' })
+watch(activeTab, () => {
+  classSearch.value = ''
+  currentPage.value = 1
+})
+
+watch(classSearch, () => {
+  currentPage.value = 1
+})
 
 onMounted(async () => {
   try {
     const me = await api.getMe()
     myFaculties.value = me.faculties || []
-    if (myFaculties.value.length) selectedFacultyId.value = myFaculties.value[0].id
     semesters.value = await api.getSemesters()
-    if (semesters.value.length) selectedSemesterId.value = semesters.value[0].id
+    selectedSemesterId.value = null // Mặc định: -- Chọn kỳ học --
     await fetchClassifications()
   } catch (e) {
     console.error(e)
   }
 })
+
+function onFilterChange() {
+  currentPage.value = 1
+  fetchClassifications()
+}
 
 async function fetchClassifications() {
   try {
@@ -311,8 +369,9 @@ async function fetchClassifications() {
     selectedTeachingIds.value = mandatoryList.value.map(c => c.teachingId)
     activeTab.value = 'mandatory'
     classified.value = true
+    currentPage.value = 1
   } catch (e) {
-    alert('Lỗi tải danh sách lớp: ' + e.message)
+    toast.error('Lỗi tải danh sách lớp: ' + e.message)
   }
 }
 
@@ -324,13 +383,18 @@ function toggleOne(id) {
 
 function toggleAllVisible(checked) {
   const ids = new Set(selectedTeachingIds.value)
-  visibleRows.value.forEach(c => (checked ? ids.add(c.teachingId) : ids.delete(c.teachingId)))
+  pagedRows.value.forEach(c => (checked ? ids.add(c.teachingId) : ids.delete(c.teachingId)))
   selectedTeachingIds.value = [...ids]
 }
 
 async function proceedToStep2() {
   step.value = 2
-  facultyInspectors.value = await api.getInspectorsInFaculty(selectedFacultyId.value)
+  step2Page.value = 1
+  try {
+    facultyInspectors.value = await api.getInspectorsInFaculty(selectedFacultyId.value)
+  } catch {
+    facultyInspectors.value = []
+  }
   const chosen = [...mandatoryList.value, ...othersList.value]
     .filter(c => selectedTeachingIds.value.includes(c.teachingId))
 
@@ -342,6 +406,7 @@ async function proceedToStep2() {
       classCode: c.classCode,
       subjectCode: c.subjectCode,
       teacherName: c.teacherName,
+      facultyId: c.facultyId,
       availableSessions: sessions,
       selectedSessionId: first ? first.sessionId : null,
       plannedDate: first ? first.date : null,
@@ -353,10 +418,10 @@ async function proceedToStep2() {
   }))
 }
 
-const filteredFacultyInspectors = computed(() => {
-  const q = inspectorSearch.value.toLowerCase().trim()
-  if (!q) return facultyInspectors.value
-  return facultyInspectors.value.filter(i => i.account.toLowerCase().includes(q) || i.fullName.toLowerCase().includes(q))
+const totalStep2Pages = computed(() => Math.ceil(planItems.value.length / 4) || 1)
+const pagedPlanItems = computed(() => {
+  const start = (step2Page.value - 1) * 4
+  return planItems.value.slice(start, start + 4)
 })
 
 const dynamicQuota = computed(() => {
@@ -377,20 +442,31 @@ function onSessionChange(item) {
   const s = item.availableSessions.find(x => x.sessionId === item.selectedSessionId)
   item.plannedDate = s ? s.date : null
   item.shift = s ? s.shift : null
+  toast.info(`Đã chọn buổi dự cho lớp ${item.classCode}`)
 }
 
-function onDragStart(e, inspector) {
-  e.dataTransfer.setData('text/plain', JSON.stringify(inspector))
-}
-
-function onDropInspector(item, slot, e) {
-  const raw = e.dataTransfer.getData('text/plain')
-  if (!raw) return
-  try {
-    item['inspector' + slot] = JSON.parse(raw)
-  } catch (err) {
-    console.error('Lỗi nhận thả giảng viên:', err)
+function onInspectorSelect(item, slot, event) {
+  const val = event.target.value
+  if (!val) {
+    item['inspector' + slot] = null
+    return
   }
+  if (val === '__SEARCH_OTHER__') {
+    event.target.value = ''
+    openCrossSearch(item, slot)
+    return
+  }
+  const ins = facultyInspectors.value.find(x => x.id === Number(val))
+  if (ins) {
+    item['inspector' + slot] = ins
+    toast.success(`Đã phân công GV ${ins.account} vào lớp ${item.classCode}`)
+  }
+}
+
+function removeInspector(item, slot) {
+  const old = item['inspector' + slot]
+  item['inspector' + slot] = null
+  toast.info(`Đã bỏ phân công GV ${old ? old.account : ''}`)
 }
 
 function openCrossSearch(item, slot) {
@@ -400,15 +476,19 @@ function openCrossSearch(item, slot) {
 }
 
 function onCrossInspectorSelected(user) {
-  if (targetItem.value) targetItem.value['inspector' + targetSlot.value] = user
+  if (targetItem.value) {
+    targetItem.value['inspector' + targetSlot.value] = user
+    toast.success(`Đã phân công GV ${user.account} vào lớp ${targetItem.value.classCode}`)
+  }
+  modalOpen.value = false
 }
 
 async function savePlan(action) {
   saving.value = true
   const payload = {
-    facultyId: selectedFacultyId.value,
+    facultyId: selectedFacultyId.value || planItems.value[0]?.facultyId || (myFaculties.value[0]?.id ?? 1),
     semesterId: selectedSemesterId.value,
-    block: selectedBlock.value,
+    block: selectedBlock.value || 1,
     unscheduled: false,
     items: planItems.value.map(it => ({
       teachingId: it.teachingId,
@@ -422,14 +502,16 @@ async function savePlan(action) {
   try {
     if (action === 'DRAFT') {
       await api.savePlanDraft(payload)
-      alert('Đã lưu bản nháp')
+      toast.success('Đã lưu bản nháp kế hoạch dự giờ thành công!')
     } else {
       await api.submitPlan(payload, editPlanId)
-      alert('Đã gửi trình duyệt tới TBĐT')
+      toast.success('Kế hoạch dự giờ đã được gửi trình duyệt thành công!')
     }
-    router.push('/plans')
+    setTimeout(() => {
+      router.push('/plans')
+    }, 600)
   } catch (err) {
-    alert('Lỗi: ' + err.message)
+    toast.error('Lỗi: ' + err.message)
   } finally {
     saving.value = false
   }
@@ -439,7 +521,7 @@ function promptSubmit() {
   submitAttempted.value = true
   const bad = planItems.value.find(it => !isComplete(it))
   if (bad) {
-    alert(`Lớp ${bad.classCode} chưa đủ buổi dự, GV1 và GV2.`)
+    toast.warning(`Lớp ${bad.classCode} chưa đủ buổi dự, GV1 hoặc GV2!`)
     return
   }
   showConfirmSubmit.value = true
@@ -500,10 +582,7 @@ async function executeSubmit() {
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); z-index: 5;
 }
 
-.assign-layout { display: grid; grid-template-columns: 240px 1fr; gap: 20px; align-items: flex-start; }
-.inspector-panel { padding: 16px; position: sticky; top: 16px; }
-.inspector-list { display: flex; flex-direction: column; gap: 6px; max-height: 60vh; overflow-y: auto; }
-.assign-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; }
+.assign-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 14px; }
 
 .class-card {
   background: #FFF; border: 1px solid var(--border); border-left: 4px solid var(--border);
@@ -515,33 +594,17 @@ async function executeSubmit() {
   display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border-light, #F3F4F6);
 }
 .class-code { font-weight: 700; color: var(--primary); font-size: 15px; }
-.class-card-body { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 12px; padding: 12px 16px; }
+.class-card-body { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 12px; padding: 12px 16px; align-items: start; }
 .slot-label { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
 
-.draggable-card {
-  padding: 8px 12px; background: #FFF; border: 1px solid var(--border); border-radius: var(--radius); cursor: grab;
-}
-.draggable-card:hover { border-color: var(--primary); background: var(--primary-bg); }
-
-.drop-target-box {
-  min-height: 36px; border: 1px dashed var(--border); border-radius: var(--radius); padding: 4px; background: #FAFAFA;
-  display: flex; align-items: center; justify-content: center;
-}
-.drop-target-box.is-invalid { border-color: var(--danger); background: var(--danger-bg); }
-.drop-target-box.has-value { border-style: solid; border-color: var(--primary); background: #FFF; }
 .assigned-chip {
   display: inline-flex; align-items: center; gap: 6px; background: var(--primary-bg); color: var(--primary);
-  padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;
+  padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid rgba(37, 99, 235, 0.2);
+  width: 100%; box-sizing: border-box; justify-content: space-between;
 }
-.chip-remove { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 11px; }
-.drop-placeholder { font-size: 11px; color: var(--text-muted); }
-.btn-link {
-  background: none; border: none; color: var(--primary); font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0;
-}
+.chip-remove { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 12px; font-weight: bold; padding: 0 4px; }
 
 @media (max-width: 1100px) {
-  .assign-layout { grid-template-columns: 1fr; }
-  .inspector-panel { position: static; }
   .class-card-body { grid-template-columns: 1fr 1fr; }
   .filter-bar { grid-template-columns: 1fr 1fr; }
 }

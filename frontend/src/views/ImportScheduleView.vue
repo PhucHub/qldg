@@ -1,7 +1,6 @@
 <template>
   <div>
     <div class="page-header">
-      <div class="page-subtitle">Quản lý đào tạo / Lịch dạy</div>
       <h1 class="page-title">Import lịch giảng dạy</h1>
     </div>
 
@@ -145,6 +144,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { api } from '../services/api.js'
+import { toast } from '../services/toast.js'
 
 const semesterReady = ref(true)
 const selectedFile = ref(null)
@@ -208,11 +208,13 @@ async function uploadFile() {
   try {
     const res = await api.uploadScheduleFile(selectedFile.value)
     successMsg.value = res.message || 'Đã tiếp nhận file vào hàng đợi xử lý nền. Bạn có thể đóng trình duyệt.'
+    toast.success('Import file lịch dạy thành công!')
     selectedFile.value = null
     if (fileInputRef.value) fileInputRef.value.value = ''
     await fetchJobs()
   } catch (err) {
     errorMsg.value = err.message || 'Tải file thất bại'
+    toast.error('Lỗi: ' + errorMsg.value)
   } finally {
     uploading.value = false
   }

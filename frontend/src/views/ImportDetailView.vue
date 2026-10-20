@@ -2,7 +2,6 @@
   <div>
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
-        <div class="page-subtitle">Import lịch dạy / Chi tiết đối soát</div>
         <h1 class="page-title">{{ job.fileName || 'Chi tiết file lịch dạy' }}</h1>
       </div>
       <div>
@@ -105,12 +104,12 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-if="rows.length === 0">
+              <tr v-if="pagedRows.length === 0">
                 <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
                   Không có dòng dữ liệu nào khớp bộ lọc.
                 </td>
               </tr>
-              <tr v-for="r in rows" :key="r.id">
+              <tr v-for="r in pagedRows" :key="r.id">
                 <td>#{{ r.rowNo }}</td>
                 <td style="font-weight: 600;">{{ r.classCode }}</td>
                 <td>{{ r.subjectCode }}</td>
@@ -139,6 +138,26 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Phân trang 4 dòng 1 trang -->
+        <div v-if="totalRowPages > 1" class="pagination-bar">
+          <div class="pagination-info">
+            Trang <strong>{{ rowPage }}</strong> / <strong>{{ totalRowPages }}</strong> (Tổng <strong>{{ rows.length }}</strong> dòng)
+          </div>
+          <div class="pagination-controls">
+            <button class="pagination-btn" :disabled="rowPage <= 1" @click="rowPage--">« Trước</button>
+            <button
+              v-for="p in totalRowPages"
+              :key="p"
+              class="pagination-btn"
+              :class="{ active: rowPage === p }"
+              @click="rowPage = p"
+            >
+              {{ p }}
+            </button>
+            <button class="pagination-btn" :disabled="rowPage >= totalRowPages" @click="rowPage++">Sau »</button>
+          </div>
         </div>
       </div>
     </div>
@@ -188,9 +207,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../services/api.js'
+import { toast } from '../services/toast.js'
 
 const route = useRoute()
 const jobId = route.params.id
@@ -203,6 +223,14 @@ const searchQuery = ref('')
 const selectedResultType = ref('ALL')
 const exportErrorsUrl = ref('')
 
+// Phân trang 4 dòng 1 trang
+const rowPage = ref(1)
+const totalRowPages = computed(() => Math.ceil(rows.value.length / 4) || 1)
+const pagedRows = computed(() => {
+  const start = (rowPage.value - 1) * 4
+  return rows.value.slice(start, start + 4)
+})
+
 onMounted(async () => {
   exportErrorsUrl.value = await api.getExportErrorsUrl(jobId)
   await loadJob()
@@ -214,12 +242,13 @@ async function loadJob() {
   try {
     job.value = await api.getJobDetail(jobId)
   } catch (e) {
-    console.error(e)
+    toast.error('Lỗi tải thông tin phiên import: ' + e.message)
   }
 }
 
 async function fetchRows() {
   try {
+    rowPage.value = 1
     const res = await api.getJobRows(jobId, {
       page: 0,
       size: 50,
@@ -228,7 +257,7 @@ async function fetchRows() {
     })
     rows.value = res.content || []
   } catch (e) {
-    console.error(e)
+    toast.error('Lỗi tải chi tiết đối soát: ' + e.message)
   }
 }
 

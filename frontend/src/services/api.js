@@ -138,7 +138,9 @@ export const api = {
   },
 
   async getClassGroups(semesterId, block, facultyId) {
-    const q = new URLSearchParams({ semesterId, block })
+    const q = new URLSearchParams()
+    if (semesterId) q.append('semesterId', semesterId)
+    if (block !== undefined && block !== null && block !== '') q.append('block', block)
     if (facultyId) q.append('facultyId', facultyId)
     try {
       return await request(`/plans/classify?${q.toString()}`)
@@ -181,7 +183,9 @@ export const api = {
 
   // UC-12: Kế hoạch đột xuất
   async getUnscheduledCandidates(semesterId, block, facultyId) {
-    const q = new URLSearchParams({ semesterId, block })
+    const q = new URLSearchParams()
+    if (semesterId) q.append('semesterId', semesterId)
+    if (block !== undefined && block !== null && block !== '') q.append('block', block)
     if (facultyId) q.append('facultyId', facultyId)
     return await request(`/plans/unscheduled-candidates?${q.toString()}`)
   },
@@ -200,7 +204,8 @@ export const api = {
 
   async getInspectorsInFaculty(facultyId) {
     try {
-      return await request(`/plans/inspectors/in-faculty?facultyId=${facultyId}`)
+      const q = facultyId ? `?facultyId=${facultyId}` : ''
+      return await request(`/plans/inspectors/in-faculty${q}`)
     } catch {
       return [
         { id: 6, account: 'namnv', fullName: 'Nguyễn Văn Nam', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng', sameCampus: true },
@@ -212,7 +217,7 @@ export const api = {
   // UC-11: Tìm giảng viên toàn hệ thống
   async searchInspectors(keyword) {
     try {
-      return await request(`/plans/inspectors/search?keyword=${encodeURIComponent(keyword)}`)
+      return await request(`/plans/inspectors/search?keyword=${encodeURIComponent(keyword || '')}`)
     } catch {
       return [
         { id: 6, account: 'namnv', fullName: 'Nguyễn Văn Nam', facultyName: 'CNTT', campusName: 'Đà Nẵng', sameCampus: true },
@@ -241,8 +246,11 @@ export const api = {
   },
 
   // UC-13: Luồng trình duyệt kế hoạch
-  async getPlans({ semesterId, block, facultyId = null, status = 'ALL' }) {
-    const q = new URLSearchParams({ semesterId, block, status })
+  async getPlans({ semesterId, block, facultyId = null, status = 'ALL' } = {}) {
+    const q = new URLSearchParams()
+    if (semesterId) q.append('semesterId', semesterId)
+    if (block !== undefined && block !== null && block !== '') q.append('block', block)
+    if (status) q.append('status', status)
     if (facultyId) q.append('facultyId', facultyId)
     return await request(`/plans?${q.toString()}`)
   },

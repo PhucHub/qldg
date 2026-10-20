@@ -21,12 +21,13 @@ public class PlanController {
     private final InspectionHistoryRepo historyRepo;
     private final SemesterRepo semesterRepo;
     private final FacultyRepo facultyRepo;
+    private final NotificationRepo notiRepo;
 
     public PlanController(
             InspectionPlanService planService, SecurityScopeService scopeService,
             InspectionRepo inspectionRepo, InspectionDetailRepo detailRepo,
             InspectionHistoryRepo historyRepo, SemesterRepo semesterRepo,
-            FacultyRepo facultyRepo) {
+            FacultyRepo facultyRepo, NotificationRepo notiRepo) {
         this.planService = planService;
         this.scopeService = scopeService;
         this.inspectionRepo = inspectionRepo;
@@ -34,6 +35,7 @@ public class PlanController {
         this.historyRepo = historyRepo;
         this.semesterRepo = semesterRepo;
         this.facultyRepo = facultyRepo;
+        this.notiRepo = notiRepo;
     }
 
     /** Danh sách các kỳ học */
@@ -45,8 +47,8 @@ public class PlanController {
     /** UC-09 & UC-10: Phân loại lớp và widget chỉ tiêu 15% */
     @GetMapping("/classify")
     public ResponseEntity<?> classify(
-            @RequestParam Long semesterId,
-            @RequestParam int block,
+            @RequestParam(required = false) Long semesterId,
+            @RequestParam(required = false, defaultValue = "0") int block,
             @RequestParam(required = false) Long facultyId,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         AppUser u = scopeService.resolveUser(authHeader);
@@ -62,8 +64,8 @@ public class PlanController {
     /** UC-12: Danh sách lớp cho kế hoạch đột xuất */
     @GetMapping("/unscheduled-candidates")
     public ResponseEntity<?> getUnscheduledCandidates(
-            @RequestParam Long semesterId,
-            @RequestParam int block,
+            @RequestParam(required = false) Long semesterId,
+            @RequestParam(required = false, defaultValue = "0") int block,
             @RequestParam(required = false) Long facultyId,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         AppUser u = scopeService.resolveUser(authHeader);
@@ -80,23 +82,26 @@ public class PlanController {
         return ResponseEntity.ok(planService.getValidSessionsForTeaching(teachingId));
     }
 
-    /** Giảng viên trong bộ môn (cho danh sách kéo thả) */
+    /** Giảng viên trong bộ môn hoặc cơ sở */
     @GetMapping("/inspectors/in-faculty")
     public ResponseEntity<?> getInspectorsInFaculty(
-            @RequestParam Long facultyId,
+            @RequestParam(required = false) Long facultyId,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         AppUser u = scopeService.resolveUser(authHeader);
         if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
-        return ResponseEntity.ok(planService.searchInspectorsGlobal("", u.campus.id).stream()
-                .filter(c -> c.sameCampus() && facultyRepo.findById(facultyId)
-                        .map(f -> f.code.equalsIgnoreCase(c.facultyCode())).orElse(false))
-                .toList());
+        var stream = planService.searchInspectorsGlobal("", u.campus.id).stream()
+                .filter(c -> c.sameCampus());
+        if (facultyId != null && facultyId > 0) {
+            String fCode = facultyRepo.findById(facultyId).map(f -> f.code).orElse("");
+            stream = stream.filter(c -> fCode.equalsIgnoreCase(c.facultyCode()));
+        }
+        return ResponseEntity.ok(stream.toList());
     }
 
-    /** UC-11: Tìm người dự chéo toàn hệ thống */
+    /** UC-11: Tìm người dự chéo toàn hệ thống (khi keyword rỗng sẽ trả về toàn bộ giảng viên) */
     @GetMapping("/inspectors/search")
     public ResponseEntity<?> searchInspectors(
-            @RequestParam String keyword,
+            @RequestParam(required = false, defaultValue = "") String keyword,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         AppUser u = scopeService.resolveUser(authHeader);
         Long campusId = u != null ? u.campus.id : 1L;
@@ -106,15 +111,19 @@ public class PlanController {
     /** UC-13: Danh sách kế hoạch dự giờ gom theo bộ môn */
     @GetMapping
     public ResponseEntity<?> listPlans(
-            @RequestParam Long semesterId,
-            @RequestParam int block,
+            @RequestParam(required = false) Long semesterId,
+            @RequestParam(required = false, defaultValue = "0") int block,
             @RequestParam(required = false) Long facultyId,
             @RequestParam(required = false) String status,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         AppUser u = scopeService.resolveUser(authHeader);
         if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
-        List<Faculty> myF = scopeService.myFaculties(u);
-        List<Long> scopeIds = (facultyId != null) ? List.of(facultyId) : myF.stream().map(f -> f.id).toList();
+        List<Long> scopeIds;
+        if (facultyId != null && facultyId > 0) {
+            scopeIds = List.of(facultyId);
+        } else {
+            scopeIds = facultyRepo.findAll().stream().map(f -> f.id).toList();
+        }
 
         List<Inspection> list = inspectionRepo.findList(u.campus.id, semesterId, block, scopeIds);
         if (status != null && !status.isBlank() && !"ALL".equalsIgnoreCase(status)) {
@@ -306,7 +315,6 @@ public class PlanController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         AppUser u = scopeService.resolveUser(authHeader);
         if (u == null) return ResponseEntity.ok(List.of());
-        List<Notification> list = historyRepo.findAll().isEmpty() ? List.of() : null; // Dùng NotificationRepo
-        return ResponseEntity.ok(scopeService.myFaculties(u)); // fallback
+        return ResponseEntity.ok(notiRepo.findByUserIdOrderByCreatedAtDesc(u.id));
     }
 }

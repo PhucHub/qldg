@@ -63,10 +63,29 @@ public class InspectionPlanService {
     /** UC-09 & UC-10: Tính chỉ tiêu 15% và phân loại 3 nhóm lớp */
     public ClassificationResultDto classifyClasses(
             Long campusId, Long semesterId, int block, Long facultyId, List<Long> scopeFacultyIds) {
-        Semester semester = semesterRepo.findById(semesterId).orElseThrow();
-        List<Long> targetFacultyIds = (facultyId != null) ? List.of(facultyId) : scopeFacultyIds;
+        Semester resolvedSemester;
+        if (semesterId == null) {
+            resolvedSemester = semesterRepo.findAllByOrderByOrdinalDesc().stream().findFirst().orElseThrow();
+            semesterId = resolvedSemester.id;
+        } else {
+            resolvedSemester = semesterRepo.findById(semesterId).orElse(null);
+            if (resolvedSemester == null) {
+                resolvedSemester = semesterRepo.findAllByOrderByOrdinalDesc().stream().findFirst().orElseThrow();
+                semesterId = resolvedSemester.id;
+            }
+        }
+        final int curOrdinal = resolvedSemester.ordinal;
+        List<Long> targetFacultyIds = (facultyId != null && facultyId > 0) ? List.of(facultyId) : scopeFacultyIds;
+        if (targetFacultyIds == null || targetFacultyIds.isEmpty()) {
+            targetFacultyIds = facultyRepo.findAll().stream().map(f -> f.id).toList();
+        }
 
-        List<Teaching> teachings = teachingRepo.findForFaculties(campusId, semesterId, block, targetFacultyIds);
+        List<Teaching> teachings;
+        if (targetFacultyIds.isEmpty()) {
+            teachings = teachingRepo.findByCampusIdAndSemesterIdAndBlock(campusId, semesterId, block);
+        } else {
+            teachings = teachingRepo.findForFaculties(campusId, semesterId, block, targetFacultyIds);
+        }
 
         // Lọc chỉ các lớp có lịch dạy thật (ca 1-6)
         teachings = teachings.stream().filter(t -> calendarRepo.existsByTeachingId(t.id)).toList();
@@ -109,7 +128,7 @@ public class InspectionPlanService {
             // Thuật toán: Lần đầu dạy / Nghỉ 6 kỳ liên tiếp
             List<Teaching> history = teachingRepo.findHistoryByTeacherAndSubject(t.teacher.id, t.subject.code);
             // Lọc ra các kỳ trước kỳ hiện tại
-            List<Teaching> past = history.stream().filter(h -> h.semester.ordinal < semester.ordinal).toList();
+            List<Teaching> past = history.stream().filter(h -> h.semester.ordinal < curOrdinal).toList();
 
             if (past.isEmpty()) {
                 // Chưa từng dạy mã này -> Lần đầu dạy (COM1081 khác COM108 tính là mới)
@@ -120,7 +139,7 @@ public class InspectionPlanService {
                         count, "MANDATORY", "Lần đầu dạy", null));
             } else {
                 int lastOrdinal = past.get(0).semester.ordinal;
-                int gap = semester.ordinal - lastOrdinal;
+                int gap = curOrdinal - lastOrdinal;
                 if (gap >= 7) {
                     mandatory.add(new ClassItemDto(
                             t.id, t.classCode, t.subject.code, t.subject.name,
@@ -143,8 +162,20 @@ public class InspectionPlanService {
     /** UC-12: Danh sách lớp cho kế hoạch đột xuất (gom theo GV, hiện nhãn) */
     public List<Map<String, Object>> getUnscheduledCandidates(
             Long campusId, Long semesterId, int block, Long facultyId, List<Long> scopeFacultyIds) {
-        List<Long> targetFacultyIds = (facultyId != null) ? List.of(facultyId) : scopeFacultyIds;
-        List<Teaching> teachings = teachingRepo.findForFaculties(campusId, semesterId, block, targetFacultyIds);
+        if (semesterId == null) {
+            semesterId = semesterRepo.findAllByOrderByOrdinalDesc().stream().map(s -> s.id).findFirst().orElse(1L);
+        }
+        List<Long> targetFacultyIds = (facultyId != null && facultyId > 0) ? List.of(facultyId) : scopeFacultyIds;
+        if (targetFacultyIds == null || targetFacultyIds.isEmpty()) {
+            targetFacultyIds = facultyRepo.findAll().stream().map(f -> f.id).toList();
+        }
+
+        List<Teaching> teachings;
+        if (targetFacultyIds.isEmpty()) {
+            teachings = teachingRepo.findByCampusIdAndSemesterIdAndBlock(campusId, semesterId, block);
+        } else {
+            teachings = teachingRepo.findForFaculties(campusId, semesterId, block, targetFacultyIds);
+        }
         List<InspectionDetail> activeDetails = detailRepo.findActiveInBlock(semesterId, block);
         Map<Long, String> classToPlan = activeDetails.stream()
                 .collect(Collectors.toMap(d -> d.teaching.id, d -> d.inspection.code, (a, b) -> a));
@@ -165,6 +196,7 @@ public class InspectionPlanService {
                 c.put("classCode", t.classCode);
                 c.put("subjectCode", t.subject.code);
                 c.put("subjectName", t.subject.name);
+                c.put("facultyId", t.subject.faculty.id);
                 c.put("facultyName", t.subject.faculty.name);
                 c.put("alreadyPlanned", plan != null);
                 c.put("existingPlanCode", plan);
@@ -192,13 +224,14 @@ public class InspectionPlanService {
                 .toList();
     }
 
-    /** UC-11: Tìm người dự chéo toàn hệ thống (>= 2 ký tự) */
+    /** UC-11: Tìm người dự chéo toàn hệ thống (nếu rỗng thì trả về toàn bộ giảng viên) */
     public List<InspectorCandidateDto> searchInspectorsGlobal(String keyword, Long currentCampusId) {
-        if (keyword == null || keyword.trim().length() < 2) return List.of();
-        List<AppUser> users = userRepo.searchInspectorsGlobal(keyword.trim());
-        // Giảng viên cùng cơ sở xếp lên đầu
+        String kw = (keyword == null) ? "" : keyword.trim();
+        List<AppUser> users = userRepo.searchInspectorsGlobal(kw);
+        // Giảng viên cùng cơ sở xếp lên đầu, sau đó theo account
         return users.stream()
-                .sorted(Comparator.comparing((AppUser u) -> !u.campus.id.equals(currentCampusId)))
+                .sorted(Comparator.comparing((AppUser u) -> !u.campus.id.equals(currentCampusId))
+                        .thenComparing(u -> u.account != null ? u.account : ""))
                 .map(u -> new InspectorCandidateDto(
                         u.id, u.account, u.fullName, u.staffCode,
                         u.faculty != null ? u.faculty.code : "",
@@ -220,8 +253,31 @@ public class InspectionPlanService {
 
     @Transactional
     public Inspection savePlan(Long planId, PlanSaveReq req, AppUser actor) {
-        Faculty faculty = facultyRepo.findById(req.facultyId).orElseThrow();
-        Semester semester = semesterRepo.findById(req.semesterId).orElseThrow();
+        Long targetFacultyId = req.facultyId();
+        if (targetFacultyId == null && req.items() != null && !req.items().isEmpty()) {
+            Teaching firstTeaching = teachingRepo.findById(req.items().get(0).teachingId()).orElse(null);
+            if (firstTeaching != null && firstTeaching.subject != null && firstTeaching.subject.faculty != null) {
+                targetFacultyId = firstTeaching.subject.faculty.id;
+            }
+        }
+        if (targetFacultyId == null) {
+            targetFacultyId = actor.faculty != null ? actor.faculty.id : 1L;
+        }
+        Faculty faculty = facultyRepo.findById(targetFacultyId).orElseThrow();
+
+        Long targetSemesterId = req.semesterId();
+        if (targetSemesterId == null) {
+            targetSemesterId = semesterRepo.findAllByOrderByOrdinalDesc().stream().map(s -> s.id).findFirst().orElse(1L);
+        }
+        Semester semester = semesterRepo.findById(targetSemesterId).orElseThrow();
+
+        int targetBlock = req.block() > 0 ? req.block() : 1;
+        if (req.items() != null && !req.items().isEmpty()) {
+            Teaching firstTeaching = teachingRepo.findById(req.items().get(0).teachingId()).orElse(null);
+            if (firstTeaching != null && firstTeaching.block > 0) {
+                targetBlock = firstTeaching.block;
+            }
+        }
 
         Inspection plan;
         if (planId != null && planId > 0) {
@@ -234,14 +290,14 @@ public class InspectionPlanService {
             plan.campus = actor.campus;
             plan.faculty = faculty;
             plan.semester = semester;
-            plan.block = req.block;
+            plan.block = targetBlock;
             plan.creator = actor;
             plan.unscheduled = req.unscheduled;
 
             // Sinh mã kế hoạch: KH-DA-CNTT-FA26-B1 (hoặc thêm đuôi -DX)
             String base = String.format("KH-%s-%s-%s-B%d",
                     actor.campus.code.toUpperCase(), faculty.code.toUpperCase(),
-                    semester.shortCode(), req.block);
+                    semester.shortCode(), targetBlock);
             if (req.unscheduled) base += "-DX";
             String code = base;
             int seq = 1;

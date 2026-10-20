@@ -99,24 +99,33 @@ body {
 }
 
 .sidebar-header {
-  padding: 16px 20px;
+  padding: 8px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border);
-  height: 64px;
+  height: 68px;
 }
 
 .sidebar-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
   overflow: hidden;
+  flex: 1;
 }
 
 .sidebar-logo img {
-  height: 32px;
+  height: 48px;
+  max-height: 48px;
+  width: auto;
+  max-width: 150px;
   object-fit: contain;
+  display: block;
+}
+
+.sidebar.collapsed .sidebar-logo img {
+  height: 36px;
+  max-width: 40px;
 }
 
 .sidebar-logo-text {
@@ -290,11 +299,7 @@ body {
 }
 
 .page-subtitle {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  display: none;
 }
 
 .page-title {
@@ -654,26 +659,55 @@ table.data-table tr:hover td {
   background: #FAFAFA;
 }
 
-/* Toast */
-.toast-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
+/* Pagination chung */
+.pagination-bar {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 2000;
-}
-
-.toast {
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
   background: #FFF;
-  border-left: 4px solid var(--primary);
-  padding: 12px 18px;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-top: 1px solid var(--border);
   font-size: 13px;
-  min-width: 280px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
-
-.toast.toast-success { border-left-color: var(--success); }
-.toast.toast-error { border-left-color: var(--danger); }
+.pagination-info {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pagination-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #FFF;
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pagination-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-bg);
+}
+.pagination-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #FFF;
+  font-weight: 600;
+}
+.pagination-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

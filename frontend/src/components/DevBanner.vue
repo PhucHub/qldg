@@ -19,6 +19,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { api } from '../services/api.js'
+import { toast } from '../services/toast.js'
 
 const devMode = ref(true)
 const users = ref([])
@@ -44,9 +45,12 @@ async function switchUser() {
     const res = await api.createDevToken(selectedUserId.value)
     localStorage.setItem('qldg_token', res.token)
     currentToken.value = res.token
-    window.location.reload()
+    toast.success('Đang chuyển đổi tài khoản...')
+    setTimeout(() => {
+      window.location.reload()
+    }, 300)
   } catch (e) {
-    alert('Không thể đổi user: ' + e.message)
+    toast.error('Không thể đổi user: ' + e.message)
   }
 }
 </script>

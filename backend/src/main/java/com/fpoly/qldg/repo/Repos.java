@@ -54,10 +54,15 @@ public interface Repos {
         Optional<Teaching> findByClassCodeAndSubjectIdAndSemesterIdAndBlockAndTeacherId(
                 String classCode, Long subjectId, Long semesterId, int block, Long teacherId);
 
-        List<Teaching> findByCampusIdAndSemesterIdAndBlock(Long campusId, Long semesterId, int block);
+        @Query("SELECT t FROM Teaching t WHERE t.campus.id = :campusId AND t.semester.id = :semesterId " +
+               "AND (:block = 0 OR t.block = :block)")
+        List<Teaching> findByCampusIdAndSemesterIdAndBlock(
+                @Param("campusId") Long campusId,
+                @Param("semesterId") Long semesterId,
+                @Param("block") int block);
 
         @Query("SELECT t FROM Teaching t WHERE t.campus.id = :campusId AND t.semester.id = :semesterId " +
-               "AND t.block = :block AND t.subject.faculty.id IN :facultyIds")
+               "AND (:block = 0 OR t.block = :block) AND t.subject.faculty.id IN :facultyIds")
         List<Teaching> findForFaculties(
                 @Param("campusId") Long campusId,
                 @Param("semesterId") Long semesterId,
@@ -100,8 +105,9 @@ public interface Repos {
     interface InspectionRepo extends JpaRepository<Inspection, Long> {
         Optional<Inspection> findByCode(String code);
 
-        @Query("SELECT i FROM Inspection i WHERE i.campus.id = :campusId AND i.semester.id = :semesterId " +
-               "AND i.block = :block AND i.faculty.id IN :facultyIds ORDER BY i.createdAt DESC")
+        @Query("SELECT i FROM Inspection i WHERE i.campus.id = :campusId " +
+               "AND (:semesterId IS NULL OR :semesterId = 0L OR i.semester.id = :semesterId) " +
+               "AND (:block = 0 OR i.block = :block) AND i.faculty.id IN :facultyIds ORDER BY i.createdAt DESC")
         List<Inspection> findList(
                 @Param("campusId") Long campusId,
                 @Param("semesterId") Long semesterId,
@@ -120,7 +126,7 @@ public interface Repos {
         List<InspectionDetail> findByInspectionId(Long inspectionId);
 
         @Query("SELECT d FROM InspectionDetail d WHERE d.teaching.semester.id = :semesterId " +
-               "AND d.teaching.block = :block AND d.inspection.status <> 'CANCELLED'")
+               "AND (:block = 0 OR d.teaching.block = :block) AND d.inspection.status <> 'CANCELLED'")
         List<InspectionDetail> findActiveInBlock(
                 @Param("semesterId") Long semesterId,
                 @Param("block") int block);

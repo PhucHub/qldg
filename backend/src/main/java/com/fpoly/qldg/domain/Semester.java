@@ -21,12 +21,20 @@ public class Semester {
     public LocalDate block2Start;
     public LocalDate endDate;
 
-    public String name() {
+    public String getName() {
         return term.charAt(0) + term.substring(1).toLowerCase() + " " + year;
     }
 
-    public String shortCode() { // FA26, SP26, SU26
+    public String name() {
+        return getName();
+    }
+
+    public String getShortCode() { // FA26, SP26, SU26
         return term.substring(0, 2) + String.valueOf(year).substring(2);
+    }
+
+    public String shortCode() {
+        return getShortCode();
     }
 
     public LocalDate blockStart(int block) { return block == 1 ? startDate : block2Start; }

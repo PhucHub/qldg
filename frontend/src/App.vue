@@ -3,12 +3,15 @@
     <!-- Banner Dev Fake Token -->
     <DevBanner />
 
+    <!-- Global Toast Container (Top center, 3s) -->
+    <ToastContainer />
+
     <div class="app-layout">
       <!-- SIDEBAR (Theo ảnh 1: nền trắng, logo, bo góc, thu gọn được) -->
       <aside class="sidebar" :class="{ collapsed: isSidebarCollapsed }">
         <div class="sidebar-header">
           <div class="sidebar-logo">
-            <img src="/fpt-logo.png" alt="FPT Education Logo" />
+            <img src="/fpt-logo.png" alt="FPT Education Logo" style="height: 48px; max-height: 48px; width: auto; object-fit: contain;" />
           </div>
           <button class="btn-icon" :title="isSidebarCollapsed ? 'Mở rộng' : 'Thu gọn'" @click="isSidebarCollapsed = !isSidebarCollapsed">
             {{ isSidebarCollapsed ? '»' : '«' }}
@@ -119,7 +122,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from './services/api.js'
+import { toast } from './services/toast.js'
 import DevBanner from './components/DevBanner.vue'
+import ToastContainer from './components/ToastContainer.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -161,6 +166,9 @@ const canViewPlans = computed(() => {
   return r === 'CNBM' || r === 'TM' || r === 'TBDT' || r === 'TCQLDT' || currentUser.value.headOffice
 })
 
+let initialNotiLoad = true
+const seenNotiIds = new Set()
+
 onMounted(async () => {
   try {
     currentUser.value = await api.getMe()
@@ -173,7 +181,17 @@ onMounted(async () => {
 
 async function loadNotifications() {
   try {
-    notifications.value = await api.getNotifications()
+    const list = await api.getNotifications()
+    if (!initialNotiLoad) {
+      for (const n of list) {
+        if (!n.read && !seenNotiIds.has(n.id)) {
+          toast.info(n.message, 3000)
+        }
+      }
+    }
+    list.forEach(n => seenNotiIds.add(n.id))
+    initialNotiLoad = false
+    notifications.value = list
   } catch (e) {
     console.error(e)
   }

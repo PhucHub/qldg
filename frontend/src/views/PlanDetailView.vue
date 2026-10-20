@@ -7,7 +7,6 @@
     <!-- Header trang -->
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
-        <div class="page-subtitle">Kế hoạch dự giờ / Chi tiết</div>
         <div style="display: flex; align-items: center; gap: 12px;">
           <h1 class="page-title">{{ plan.code }}</h1>
           <span v-if="plan.unscheduled" class="badge badge-red" style="font-size: 13px;">ĐỘT XUẤT</span>
@@ -68,8 +67,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(it, idx) in plan.items" :key="it.id">
-              <td>{{ idx + 1 }}</td>
+            <tr v-for="(it, idx) in pagedItems" :key="it.id">
+              <td>{{ (itemPage - 1) * 4 + idx + 1 }}</td>
               <td style="font-weight: 700; color: var(--primary);">{{ it.classCode }}</td>
               <td>{{ it.subjectCode }} – {{ it.subjectName }}</td>
               <td><strong>{{ it.teacherName }}</strong> ({{ it.teacherAccount }})</td>
@@ -105,6 +104,26 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Phân trang 4 lớp 1 trang -->
+      <div v-if="totalItemPages > 1" class="pagination-bar">
+        <div class="pagination-info">
+          Trang <strong>{{ itemPage }}</strong> / <strong>{{ totalItemPages }}</strong> (Tổng <strong>{{ (plan.items || []).length }}</strong> lớp)
+        </div>
+        <div class="pagination-controls">
+          <button class="pagination-btn" :disabled="itemPage <= 1" @click="itemPage--">« Trước</button>
+          <button
+            v-for="p in totalItemPages"
+            :key="p"
+            class="pagination-btn"
+            :class="{ active: itemPage === p }"
+            @click="itemPage = p"
+          >
+            {{ p }}
+          </button>
+          <button class="pagination-btn" :disabled="itemPage >= totalItemPages" @click="itemPage++">Sau »</button>
+        </div>
       </div>
     </div>
 
@@ -230,6 +249,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../services/api.js'
+import { toast } from '../services/toast.js'
 
 const route = useRoute()
 const planId = route.params.id
@@ -244,6 +264,14 @@ const showRejectModal = ref(false)
 
 const editNote = ref('')
 const rejectReason = ref('')
+
+// Phân trang 4 lớp 1 trang
+const itemPage = ref(1)
+const totalItemPages = computed(() => Math.ceil((plan.value.items || []).length / 4) || 1)
+const pagedItems = computed(() => {
+  const start = (itemPage.value - 1) * 4
+  return (plan.value.items || []).slice(start, start + 4)
+})
 
 onMounted(async () => {
   try {
@@ -260,7 +288,7 @@ async function loadPlan() {
   try {
     plan.value = await api.getPlanDetail(planId)
   } catch (e) {
-    alert('Lỗi tải kế hoạch: ' + e.message)
+    toast.error('Lỗi tải kế hoạch: ' + e.message)
   }
 }
 
@@ -274,9 +302,10 @@ async function executeApprove() {
   try {
     await api.approvePlan(planId)
     showApproveModal.value = false
+    toast.success('Kế hoạch đã được phê duyệt thành công!')
     await loadPlan()
   } catch (e) {
-    alert('Lỗi: ' + e.message)
+    toast.error('Lỗi: ' + e.message)
   }
 }
 
@@ -286,9 +315,10 @@ async function executeRequestEdit() {
     await api.requestPlanEdit(planId, editNote.value.trim())
     showEditModal.value = false
     editNote.value = ''
+    toast.warning('Đã gửi yêu cầu chỉnh sửa kế hoạch cho người lập!')
     await loadPlan()
   } catch (e) {
-    alert('Lỗi: ' + e.message)
+    toast.error('Lỗi: ' + e.message)
   }
 }
 
@@ -298,9 +328,10 @@ async function executeReject() {
     await api.rejectPlan(planId, rejectReason.value.trim())
     showRejectModal.value = false
     rejectReason.value = ''
+    toast.error('Đã từ chối kế hoạch dự giờ!')
     await loadPlan()
   } catch (e) {
-    alert('Lỗi: ' + e.message)
+    toast.error('Lỗi: ' + e.message)
   }
 }
 
