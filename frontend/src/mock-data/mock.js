@@ -1377,3 +1377,112 @@ export function getSessionEvaluationsMock(sessionId) {
   const evals = getEvaluationsStore()
   return evals.filter(e => e.sessionId === Number(sessionId))
 }
+
+// ==========================================
+// KẾT QUẢ DỰ GIỜ CHO CÁN BỘ QUẢN LÝ (HDSD mục 4.4, SRS UC-15, UC-17)
+// Dành cho: CNBM, TM, TBĐT, TCQLDT, HeadOffice
+// ==========================================
+export function getManagementInspectionsMock(userId, { semesterId, block, facultyId, statusFilter, search } = {}) {
+  const user = MOCK_USERS.find(u => u.id === Number(userId)) || MOCK_USERS[0]
+  const allowedFaculties = getMyFaculties(user)
+  const allowedFacultyIds = allowedFaculties.map(f => f.id)
+
+  const allPlans = getMockStore().filter(p => p.status === 'APPROVED')
+  const evals = getEvaluationsStore()
+  const now = Date.now()
+
+  let sessions = []
+
+  for (const p of allPlans) {
+    if (!allowedFacultyIds.includes(Number(p.facultyId))) continue
+
+    if (semesterId && Number(p.semesterId) !== Number(semesterId)) continue
+    if (block && Number(block) > 0 && Number(p.block) !== Number(block)) continue
+    if (facultyId && Number(facultyId) > 0 && Number(p.facultyId) !== Number(facultyId)) continue
+
+    for (const it of (p.items || [])) {
+      const sessionEvals = evals.filter(e => e.sessionId === it.id)
+
+      const assignedInspectors = []
+      if (it.inspector1) {
+        const ev = sessionEvals.find(e => e.inspectorAccount === it.inspector1.account)
+        assignedInspectors.push({ ...it.inspector1, roleLabel: 'GV 1', isSubmitted: !!ev, evaluation: ev || null })
+      }
+      if (it.inspector2) {
+        const ev = sessionEvals.find(e => e.inspectorAccount === it.inspector2.account)
+        assignedInspectors.push({ ...it.inspector2, roleLabel: 'GV 2', isSubmitted: !!ev, evaluation: ev || null })
+      }
+      if (it.inspector3) {
+        const ev = sessionEvals.find(e => e.inspectorAccount === it.inspector3.account)
+        assignedInspectors.push({ ...it.inspector3, roleLabel: 'GV 3', isSubmitted: !!ev, evaluation: ev || null })
+      }
+
+      const totalAssigned = assignedInspectors.length
+      const submittedCount = assignedInspectors.filter(a => a.isSubmitted).length
+      const isCompleted = totalAssigned > 0 && submittedCount === totalAssigned
+
+      const plannedTime = new Date((it.plannedDate || '2026-10-20') + 'T17:00:00').getTime()
+      const isOverdue = !isCompleted && (now - plannedTime > 72 * 3600 * 1000)
+
+      let avgScore = 0
+      let avgPercent = 0
+      if (sessionEvals.length > 0) {
+        const sum = sessionEvals.reduce((acc, c) => acc + (c.score || 0), 0)
+        avgScore = Math.round(sum / sessionEvals.length)
+        avgPercent = Math.round((avgScore / 92) * 100)
+      }
+
+      sessions.push({
+        ...it,
+        planId: p.id,
+        planCode: p.code,
+        semesterId: p.semesterId,
+        semesterName: p.semesterName,
+        block: p.block,
+        facultyId: p.facultyId,
+        facultyName: p.facultyName,
+        assignedInspectors,
+        totalAssigned,
+        submittedCount,
+        isCompleted,
+        isOverdue,
+        avgScore,
+        avgPercent,
+        evaluations: sessionEvals,
+        status: isCompleted ? 'COMPLETED' : (isOverdue ? 'OVERDUE' : 'PENDING')
+      })
+    }
+  }
+
+  const overdueCount = sessions.filter(s => s.isOverdue).length
+  const completedCount = sessions.filter(s => s.isCompleted).length
+  const pendingCount = sessions.filter(s => !s.isCompleted && !s.isOverdue).length
+
+  if (search && search.trim()) {
+    const q = search.trim().toLowerCase()
+    sessions = sessions.filter(x =>
+      (x.classCode && x.classCode.toLowerCase().includes(q)) ||
+      (x.subjectCode && x.subjectCode.toLowerCase().includes(q)) ||
+      (x.subjectName && x.subjectName.toLowerCase().includes(q)) ||
+      (x.teacherName && x.teacherName.toLowerCase().includes(q)) ||
+      (x.teacherAccount && x.teacherAccount.toLowerCase().includes(q)) ||
+      (x.planCode && x.planCode.toLowerCase().includes(q))
+    )
+  }
+
+  if (statusFilter && statusFilter !== 'ALL') {
+    if (statusFilter === 'COMPLETED') sessions = sessions.filter(x => x.isCompleted)
+    else if (statusFilter === 'PENDING') sessions = sessions.filter(x => !x.isCompleted && !x.isOverdue)
+    else if (statusFilter === 'OVERDUE') sessions = sessions.filter(x => x.isOverdue)
+  }
+
+  return {
+    sessions,
+    totalSessions: sessions.length,
+    overdueCount,
+    completedCount,
+    pendingCount,
+    allowedFaculties
+  }
+}
+

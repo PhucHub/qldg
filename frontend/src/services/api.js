@@ -375,5 +375,23 @@ export const api = {
     } catch {
       return mock.getSessionEvaluationsMock(sessionId)
     }
+  },
+
+  // UC-15 & UC-17: Kết quả dự giờ toàn bộ môn / cơ sở cho Cán bộ Quản lý (CNBM, TM, TBĐT, TCQLDT, HeadOffice)
+  async getManagementInspections(params = {}) {
+    try {
+      const q = new URLSearchParams()
+      if (params.semesterId) q.append('semesterId', params.semesterId)
+      if (params.block) q.append('block', params.block)
+      if (params.facultyId) q.append('facultyId', params.facultyId)
+      if (params.statusFilter) q.append('statusFilter', params.statusFilter)
+      if (params.search) q.append('search', params.search)
+      return await request(`/inspections/management?${q.toString()}`)
+    } catch {
+      const token = localStorage.getItem('qldg_token') || '1:1:TBDT'
+      const parts = token.split(':')
+      const userId = parseInt(parts[0], 10) || 1
+      return mock.getManagementInspectionsMock(userId, params)
+    }
   }
 }

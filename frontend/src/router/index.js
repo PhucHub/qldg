@@ -6,6 +6,7 @@ import CreatePlanView from '../views/CreatePlanView.vue'
 import UnscheduledPlanView from '../views/UnscheduledPlanView.vue'
 import PlanDetailView from '../views/PlanDetailView.vue'
 import MyInspectionsView from '../views/MyInspectionsView.vue'
+import InspectionResultsView from '../views/InspectionResultsView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 
 const routes = [
@@ -17,7 +18,10 @@ const routes = [
       return role === 'GV' ? '/my-inspections' : '/plans'
     }
   },
-  { path: '/my-inspections', name: 'MyInspections', component: MyInspectionsView, meta: { title: 'Lịch dự giờ của tôi', roles: ['GV', 'CNBM', 'TM', 'TBDT', 'TCQLDT', 'HEAD_OFFICE'] } },
+  // UC-15 & UC-16: Lịch dự giờ của tôi - Dành riêng cho GV
+  { path: '/my-inspections', name: 'MyInspections', component: MyInspectionsView, meta: { title: 'Lịch dự giờ của tôi', roles: ['GV'] } },
+  // UC-15 & UC-17: Kết quả dự giờ - Dành cho các cấp Quản lý (CNBM, TM, TBĐT, TCQLDT, HeadOffice)
+  { path: '/inspection-results', name: 'InspectionResults', component: InspectionResultsView, meta: { title: 'Kết quả dự giờ', roles: ['CNBM', 'TM', 'TBDT', 'TCQLDT', 'HEAD_OFFICE'] } },
   { path: '/import', name: 'ImportSchedule', component: ImportScheduleView, meta: { title: 'Import lịch giảng dạy', roles: ['TCQLDT', 'TBDT', 'HEAD_OFFICE'] } },
   { path: '/import/:id', name: 'ImportDetail', component: ImportDetailView, meta: { title: 'Chi tiết đối soát lịch dạy', roles: ['TCQLDT', 'TBDT', 'HEAD_OFFICE'] } },
   { path: '/plans', name: 'PlanList', component: PlanListView, meta: { title: 'Quản lý KH dự giờ', roles: ['CNBM', 'TM', 'TBDT', 'TCQLDT', 'HEAD_OFFICE'] } },
@@ -37,9 +41,14 @@ router.beforeEach((to, from, next) => {
   const parts = token.split(':')
   const userRole = parts[2] || 'TBDT'
 
-  // Nếu là GV cố truy cập /plans thì tự động chuyển hướng sang /my-inspections
-  if (userRole === 'GV' && (to.path === '/plans' || to.path.startsWith('/plans/'))) {
+  // 1. Nếu là GV cố truy cập /plans hoặc /inspection-results thì tự động chuyển hướng sang /my-inspections
+  if (userRole === 'GV' && (to.path.startsWith('/plans') || to.path === '/inspection-results')) {
     return next({ path: '/my-inspections' })
+  }
+
+  // 2. Nếu là vai Quản lý cố truy cập /my-inspections thì chuyển hướng sang /inspection-results
+  if (userRole !== 'GV' && to.path === '/my-inspections') {
+    return next({ path: '/inspection-results' })
   }
 
   if (to.meta && to.meta.roles) {

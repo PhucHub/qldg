@@ -19,8 +19,8 @@
         </div>
 
         <ul class="sidebar-menu">
-          <!-- UC-15: Lịch dự giờ của tôi (GV, TM, CNBM, TBĐT...) -->
-          <li class="menu-item">
+          <!-- 1. Dành riêng cho Giảng viên (GV): Lịch dự giờ của tôi (UC-15 cá nhân) -->
+          <li v-if="currentUser.role === 'GV'" class="menu-item">
             <router-link to="/my-inspections" active-class="active">
               <span class="menu-icon">📅</span>
               <span v-if="!isSidebarCollapsed">Lịch dự giờ của tôi</span>
@@ -48,6 +48,14 @@
             <router-link to="/plans" active-class="active">
               <span class="menu-icon">📋</span>
               <span v-if="!isSidebarCollapsed">Quản lý KH dự giờ</span>
+            </router-link>
+          </li>
+
+          <!-- Các vai Quản lý (CNBM, TM, TBĐT, TC&QLĐT, HeadOffice) thấy Kết quả dự giờ (HDSD mục 4.4, SRS UC-15, UC-17) -->
+          <li v-if="currentUser.role !== 'GV'" class="menu-item">
+            <router-link to="/inspection-results" active-class="active">
+              <span class="menu-icon">📊</span>
+              <span v-if="!isSidebarCollapsed">Kết quả dự giờ</span>
             </router-link>
           </li>
         </ul>
