@@ -1,0 +1,11 @@
+# ==============================================================================
+# Cloudflare Pages / Netlify Redirects Rule for QLDG Frontend (Vue 3 SPA)
+# ==============================================================================
+
+# 1. Reverse Proxy API sang Backend Spring Boot (Bỏ comment khi đã có URL backend)
+# Thay https://your-backend.example.com bằng domain thật của bạn (Render, Railway, VPS...)
+# /api/*  https://your-backend.example.com/api/:splat  200
+
+# 2. Quy tắc SPA (Single Page Application) cho Vue Router (History mode)
+# Mọi đường dẫn không khớp với file tĩnh có sẵn sẽ được điều hướng về /index.html
+/*  /index.html  200
