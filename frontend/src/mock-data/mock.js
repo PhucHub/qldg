@@ -205,6 +205,36 @@ export const INITIAL_MOCK_PLANS = [
         inspector2: { account: 'namnv', fullName: 'Nguyễn Văn Nam', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
         inspector3: null,
         reason: 'Chưa từng dạy'
+      },
+      {
+        id: 202,
+        teachingId: 1,
+        classCode: 'WD18301',
+        subjectCode: 'COM108',
+        subjectName: 'Nhập môn lập trình',
+        teacherAccount: 'namnv',
+        teacherName: 'Nguyễn Văn Nam',
+        plannedDate: '2026-10-22',
+        shift: 2,
+        inspector1: { account: 'dungpt', fullName: 'Phan Tiến Dũng', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector2: { account: 'haidv', fullName: 'Đỗ Văn Hải', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector3: null,
+        reason: 'Định kỳ năm học'
+      },
+      {
+        id: 203,
+        teachingId: 8,
+        classCode: 'UD18301',
+        subjectCode: 'SOF203',
+        subjectName: 'Lập trình Java 2',
+        teacherAccount: 'linhdt',
+        teacherName: 'Đặng Thùy Linh',
+        plannedDate: '2026-10-15',
+        shift: 3,
+        inspector1: { account: 'namnv', fullName: 'Nguyễn Văn Nam', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector2: { account: 'tunglt', fullName: 'Lê Thanh Tùng', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector3: null,
+        reason: 'Lần đầu dạy môn này'
       }
     ],
     histories: [
@@ -1147,4 +1177,203 @@ export function addMockNotification(noti) {
   } catch (e) {
     console.error('Lỗi lưu mock notification:', e)
   }
+}
+
+// ==========================================
+// QUẢN LÝ LỊCH DỰ GIỜ CỦA TÔI & PHIẾU ĐÁNH GIÁ (UC-15, UC-16, UC-17)
+// ==========================================
+const EVALUATIONS_STORAGE_KEY = 'qldg_mock_evaluations_store'
+
+const INITIAL_MOCK_EVALUATIONS = [
+  {
+    id: 1,
+    sessionId: 201,
+    inspectorAccount: 'haidv',
+    inspectorName: 'Đỗ Văn Hải',
+    score: 82,
+    maxScore: 92,
+    percentage: 89,
+    status: 'SUBMITTED',
+    submittedAt: '2026-10-20T11:30:00',
+    criteriaScores: { c1: 4, c2: 4, c3: 3, c4: 4, c5: 3, c6: 4, c7: 3, c8: 4, c9: 4, c10: 3, c11: 4, c12: 3, c13: 4, c14: 3, c15: 4, c16: 3, c17: 4, c18: 3, c19: 4, c20: 3, c21: 4, c22: 3, c23: 3 },
+    note: 'Giảng viên chuẩn bị giáo án chu đáo, sinh viên tích cực tương tác và làm bài tập tốt.'
+  },
+  {
+    id: 2,
+    sessionId: 202,
+    inspectorAccount: 'dungpt',
+    inspectorName: 'Phan Tiến Dũng',
+    score: 86,
+    maxScore: 92,
+    percentage: 93,
+    status: 'SUBMITTED',
+    submittedAt: '2026-10-22T10:15:00',
+    criteriaScores: { c1: 4, c2: 4, c3: 4, c4: 4, c5: 4, c6: 4, c7: 4, c8: 3, c9: 4, c10: 4, c11: 3, c12: 4, c13: 4, c14: 3, c15: 4, c16: 4, c17: 3, c18: 4, c19: 4, c20: 4, c21: 3, c22: 4, c23: 3 },
+    note: 'Phong thái tự tin, phương pháp giảng giải trực quan, bài giảng hấp dẫn.'
+  },
+  {
+    id: 3,
+    sessionId: 202,
+    inspectorAccount: 'haidv',
+    inspectorName: 'Đỗ Văn Hải',
+    score: 84,
+    maxScore: 92,
+    percentage: 91,
+    status: 'SUBMITTED',
+    submittedAt: '2026-10-22T10:45:00',
+    criteriaScores: { c1: 4, c2: 4, c3: 3, c4: 4, c5: 3, c6: 4, c7: 4, c8: 3, c9: 4, c10: 4, c11: 3, c12: 4, c13: 4, c14: 3, c15: 4, c16: 3, c17: 4, c18: 3, c19: 4, c20: 4, c21: 3, c22: 4, c23: 4 },
+    note: 'Nội dung bám sát đề cương chi tiết, quản lý lớp chặt chẽ.'
+  }
+]
+
+function getEvaluationsStore() {
+  try {
+    const raw = localStorage.getItem(EVALUATIONS_STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch (e) {
+    console.error('Lỗi đọc mock evaluations store:', e)
+  }
+  localStorage.setItem(EVALUATIONS_STORAGE_KEY, JSON.stringify(INITIAL_MOCK_EVALUATIONS))
+  return INITIAL_MOCK_EVALUATIONS
+}
+
+function saveEvaluationsStore(evals) {
+  try {
+    localStorage.setItem(EVALUATIONS_STORAGE_KEY, JSON.stringify(evals))
+  } catch (e) {
+    console.error('Lỗi lưu mock evaluations store:', e)
+  }
+}
+
+export function getMyInspectionsMock(account, { semesterId, block, statusFilter, search } = {}) {
+  const allPlans = getMockStore().filter(p => p.status === 'APPROVED')
+  const evals = getEvaluationsStore()
+  const now = Date.now()
+
+  const asInspectorList = []
+  const asTeacherList = []
+
+  for (const p of allPlans) {
+    if (semesterId && Number(p.semesterId) !== Number(semesterId)) continue
+    if (block && Number(block) > 0 && Number(p.block) !== Number(block)) continue
+
+    for (const it of (p.items || [])) {
+      // 1. Nếu account là inspector (GV1, GV2, GV3)
+      let mySlot = null
+      if (it.inspector1 && it.inspector1.account === account) mySlot = 'GV 1'
+      else if (it.inspector2 && it.inspector2.account === account) mySlot = 'GV 2'
+      else if (it.inspector3 && it.inspector3.account === account) mySlot = 'GV 3'
+
+      if (mySlot) {
+        const myEval = evals.find(e => e.sessionId === it.id && e.inspectorAccount === account)
+        const isSubmitted = !!myEval
+        const plannedTime = new Date((it.plannedDate || '2026-10-20') + 'T17:00:00').getTime()
+        const isOverdue = !isSubmitted && (now - plannedTime > 72 * 3600 * 1000)
+
+        asInspectorList.push({
+          ...it,
+          planId: p.id,
+          planCode: p.code,
+          semesterId: p.semesterId,
+          semesterName: p.semesterName,
+          block: p.block,
+          facultyName: p.facultyName,
+          myRole: mySlot,
+          isSubmitted,
+          isOverdue,
+          evaluation: myEval || null
+        })
+      }
+
+      // 2. Nếu account là GV được dự giờ
+      if (it.teacherAccount === account) {
+        const sessionEvals = evals.filter(e => e.sessionId === it.id)
+        asTeacherList.push({
+          ...it,
+          planId: p.id,
+          planCode: p.code,
+          semesterId: p.semesterId,
+          semesterName: p.semesterName,
+          block: p.block,
+          facultyName: p.facultyName,
+          evaluations: sessionEvals,
+          hasEvaluations: sessionEvals.length > 0,
+          inspector1Submitted: sessionEvals.some(e => it.inspector1 && e.inspectorAccount === it.inspector1.account),
+          inspector2Submitted: sessionEvals.some(e => it.inspector2 && e.inspectorAccount === it.inspector2.account),
+          inspector3Submitted: sessionEvals.some(e => it.inspector3 && e.inspectorAccount === it.inspector3.account)
+        })
+      }
+    }
+  }
+
+  const overdueCount = asInspectorList.filter(x => x.isOverdue).length
+
+  const filterList = (list, isInspectorTab) => {
+    let res = [...list]
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase()
+      res = res.filter(x =>
+        (x.classCode && x.classCode.toLowerCase().includes(q)) ||
+        (x.subjectCode && x.subjectCode.toLowerCase().includes(q)) ||
+        (x.subjectName && x.subjectName.toLowerCase().includes(q)) ||
+        (x.teacherName && x.teacherName.toLowerCase().includes(q))
+      )
+    }
+    if (statusFilter && statusFilter !== 'ALL') {
+      if (isInspectorTab) {
+        if (statusFilter === 'SUBMITTED') res = res.filter(x => x.isSubmitted)
+        else if (statusFilter === 'UNSUBMITTED') res = res.filter(x => !x.isSubmitted && !x.isOverdue)
+        else if (statusFilter === 'OVERDUE') res = res.filter(x => x.isOverdue)
+      } else {
+        if (statusFilter === 'HAS_EVAL') res = res.filter(x => x.hasEvaluations)
+        else if (statusFilter === 'NO_EVAL') res = res.filter(x => !x.hasEvaluations)
+      }
+    }
+    return res
+  }
+
+  return {
+    asInspector: filterList(asInspectorList, true),
+    asTeacher: filterList(asTeacherList, false),
+    overdueCount,
+    totalInspector: asInspectorList.length,
+    totalTeacher: asTeacherList.length
+  }
+}
+
+export function submitEvaluationMock({ sessionId, inspectorAccount, score, criteriaScores, note }) {
+  const evals = [...getEvaluationsStore()]
+  const existingIdx = evals.findIndex(e => e.sessionId === Number(sessionId) && e.inspectorAccount === inspectorAccount)
+  const user = MOCK_USERS.find(u => u.account === inspectorAccount) || { fullName: inspectorAccount }
+
+  const totalScore = Number(score) || 82
+  const maxScore = 92
+  const percentage = Math.round((totalScore / maxScore) * 100)
+
+  const newEval = {
+    id: existingIdx >= 0 ? evals[existingIdx].id : Date.now(),
+    sessionId: Number(sessionId),
+    inspectorAccount,
+    inspectorName: user.fullName,
+    score: totalScore,
+    maxScore,
+    percentage,
+    status: 'SUBMITTED',
+    submittedAt: new Date().toISOString(),
+    criteriaScores: criteriaScores || {},
+    note: note || 'Đã hoàn thành đánh giá tiết dạy.'
+  }
+
+  if (existingIdx >= 0) {
+    evals[existingIdx] = newEval
+  } else {
+    evals.push(newEval)
+  }
+  saveEvaluationsStore(evals)
+  return newEval
+}
+
+export function getSessionEvaluationsMock(sessionId) {
+  const evals = getEvaluationsStore()
+  return evals.filter(e => e.sessionId === Number(sessionId))
 }

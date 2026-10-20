@@ -19,6 +19,14 @@
         </div>
 
         <ul class="sidebar-menu">
+          <!-- UC-15: Lịch dự giờ của tôi (GV, TM, CNBM, TBĐT...) -->
+          <li class="menu-item">
+            <router-link to="/my-inspections" active-class="active">
+              <span class="menu-icon">📅</span>
+              <span v-if="!isSidebarCollapsed">Lịch dự giờ của tôi</span>
+            </router-link>
+          </li>
+
           <!-- TC&QLĐT, TBĐT, Super Admin mới thấy Import lịch dạy -->
           <li v-if="canViewImport" class="menu-item">
             <router-link to="/import" active-class="active">
@@ -41,11 +49,6 @@
               <span class="menu-icon">📋</span>
               <span v-if="!isSidebarCollapsed">Quản lý KH dự giờ</span>
             </router-link>
-          </li>
-
-          <!-- Thông báo khi vai GV không có menu trong phân hệ này -->
-          <li v-if="currentUser.role === 'GV'" style="padding: 16px 12px; font-size: 12px; color: var(--text-muted); text-align: center;">
-            <span v-if="!isSidebarCollapsed">Tài khoản GV không có menu trong phân hệ Lập KH & Import.</span>
           </li>
         </ul>
       </aside>

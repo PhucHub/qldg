@@ -5,10 +5,19 @@ import PlanListView from '../views/PlanListView.vue'
 import CreatePlanView from '../views/CreatePlanView.vue'
 import UnscheduledPlanView from '../views/UnscheduledPlanView.vue'
 import PlanDetailView from '../views/PlanDetailView.vue'
+import MyInspectionsView from '../views/MyInspectionsView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 
 const routes = [
-  { path: '/', redirect: '/plans' },
+  {
+    path: '/',
+    redirect: () => {
+      const token = localStorage.getItem('qldg_token') || '1:1:TBDT'
+      const role = token.split(':')[2] || 'TBDT'
+      return role === 'GV' ? '/my-inspections' : '/plans'
+    }
+  },
+  { path: '/my-inspections', name: 'MyInspections', component: MyInspectionsView, meta: { title: 'Lịch dự giờ của tôi', roles: ['GV', 'CNBM', 'TM', 'TBDT', 'TCQLDT', 'HEAD_OFFICE'] } },
   { path: '/import', name: 'ImportSchedule', component: ImportScheduleView, meta: { title: 'Import lịch giảng dạy', roles: ['TCQLDT', 'TBDT', 'HEAD_OFFICE'] } },
   { path: '/import/:id', name: 'ImportDetail', component: ImportDetailView, meta: { title: 'Chi tiết đối soát lịch dạy', roles: ['TCQLDT', 'TBDT', 'HEAD_OFFICE'] } },
   { path: '/plans', name: 'PlanList', component: PlanListView, meta: { title: 'Quản lý KH dự giờ', roles: ['CNBM', 'TM', 'TBDT', 'TCQLDT', 'HEAD_OFFICE'] } },
@@ -27,6 +36,11 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('qldg_token') || '1:1:TBDT'
   const parts = token.split(':')
   const userRole = parts[2] || 'TBDT'
+
+  // Nếu là GV cố truy cập /plans thì tự động chuyển hướng sang /my-inspections
+  if (userRole === 'GV' && (to.path === '/plans' || to.path.startsWith('/plans/'))) {
+    return next({ path: '/my-inspections' })
+  }
 
   if (to.meta && to.meta.roles) {
     if (!to.meta.roles.includes(userRole)) {

@@ -335,5 +335,45 @@ export const api = {
     } catch {
       return null
     }
+  },
+
+  // UC-15: Lịch dự giờ của tôi & cảnh báo quá hạn 72h
+  async getMyInspections(params = {}) {
+    try {
+      const q = new URLSearchParams()
+      if (params.semesterId) q.append('semesterId', params.semesterId)
+      if (params.block) q.append('block', params.block)
+      if (params.statusFilter) q.append('statusFilter', params.statusFilter)
+      if (params.search) q.append('search', params.search)
+      return await request(`/inspections/my?${q.toString()}`)
+    } catch {
+      const token = localStorage.getItem('qldg_token') || '1:1:TBDT'
+      const parts = token.split(':')
+      const userId = parseInt(parts[0], 10) || 1
+      const currentUser = mock.MOCK_USERS.find(u => u.id === userId) || { account: 'namnv' }
+      return mock.getMyInspectionsMock(currentUser.account, params)
+    }
+  },
+
+  // UC-16: Nộp phiếu đánh giá
+  async submitEvaluation(payload) {
+    try {
+      return await request('/inspections/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+    } catch {
+      return mock.submitEvaluationMock(payload)
+    }
+  },
+
+  // UC-17: Xem các phiếu đánh giá của buổi học
+  async getSessionEvaluations(sessionId) {
+    try {
+      return await request(`/inspections/sessions/${sessionId}/evaluations`)
+    } catch {
+      return mock.getSessionEvaluationsMock(sessionId)
+    }
   }
 }
