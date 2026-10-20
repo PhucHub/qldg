@@ -50,7 +50,7 @@ export const api = {
         role: u.role,
         campus: { id: 1, code: u.campusCode, name: u.campusName },
         faculty: u.facultyCode ? { code: u.facultyCode, name: u.facultyCode } : null,
-        faculties: mock.MOCK_FACULTIES,
+        faculties: mock.getMyFaculties(u),
         headOffice: !!u.headOffice
       }
     }
@@ -268,7 +268,8 @@ export const api = {
     try {
       return await request(`/plans?${q.toString()}`)
     } catch {
-      return mock.getMockPlansGrouped({ semesterId, block, facultyId, status })
+      const me = await this.getMe()
+      return mock.getMockPlansGrouped({ semesterId, block, facultyId, status, user: me })
     }
   },
 

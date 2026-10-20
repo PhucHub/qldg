@@ -34,6 +34,41 @@ export const MOCK_FACULTIES = [
   { id: 6, code: 'QTKD', name: 'Quản trị kinh doanh' }
 ]
 
+// ==========================================
+// HÀM PHẠM VI DỮ LIỆU MY_FACULTIES() (GBR-02 & HDSD mục 1, 2, 3, 4, 5)
+// Quy định chặt chẽ phạm vi bộ môn theo vai trò:
+// - TBĐT, TC&QLĐT, Super Admin: Mọi bộ môn active của cơ sở
+// - CNBM: Cả nhóm bộ môn theo Group key (VD: CNTT gồm CNTT & TKDH; Nhóm CB gồm CB, TA, TT)
+// - Trưởng môn (TM): Đúng 1 bộ môn mình phụ trách
+// - Giảng viên (GV): Bộ môn biên chế / môn mình dạy
+// ==========================================
+export function getMyFaculties(user) {
+  if (!user) return MOCK_FACULTIES
+  // 1. TBDT, TCQLDT, HeadOffice (Super Admin): Toàn quyền xem mọi bộ môn của cơ sở
+  if (user.role === 'TBDT' || user.role === 'TCQLDT' || user.headOffice) {
+    return MOCK_FACULTIES
+  }
+  // 2. CNBM (Chủ nhiệm bộ môn): Cả nhóm bộ môn theo Group key
+  if (user.role === 'CNBM') {
+    if (user.facultyCode === 'CNTT') {
+      return MOCK_FACULTIES.filter(f => f.code === 'CNTT' || f.code === 'TKDH')
+    }
+    if (user.facultyCode === 'CB') {
+      return MOCK_FACULTIES.filter(f => f.code === 'CB' || f.code === 'TA' || f.code === 'TT')
+    }
+    return MOCK_FACULTIES.filter(f => f.code === user.facultyCode)
+  }
+  // 3. Trưởng môn (TM): Đúng 1 bộ môn mình phụ trách
+  if (user.role === 'TM') {
+    return MOCK_FACULTIES.filter(f => f.code === user.facultyCode)
+  }
+  // 4. Giảng viên (GV): Đúng bộ môn mình thuộc về
+  if (user.role === 'GV') {
+    return MOCK_FACULTIES.filter(f => f.code === user.facultyCode)
+  }
+  return MOCK_FACULTIES
+}
+
 export const MOCK_JOBS = [
   {
     id: 1,
@@ -319,9 +354,15 @@ function saveMockStore(plans) {
   }
 }
 
-export function getMockPlansGrouped({ semesterId, block, facultyId, status } = {}) {
+export function getMockPlansGrouped({ semesterId, block, facultyId, status, user } = {}) {
   const all = getMockStore()
   let filtered = [...all]
+
+  // Giới hạn kế hoạch theo đúng phạm vi my_faculties() của người dùng (GBR-02)
+  if (user && user.role !== 'TBDT' && user.role !== 'TCQLDT' && !user.headOffice) {
+    const allowedIds = getMyFaculties(user).map(f => f.id)
+    filtered = filtered.filter(p => allowedIds.includes(p.facultyId))
+  }
 
   if (semesterId) filtered = filtered.filter(p => Number(p.semesterId) === Number(semesterId))
   if (block && Number(block) > 0) filtered = filtered.filter(p => Number(p.block) === Number(block))

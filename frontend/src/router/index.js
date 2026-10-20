@@ -9,16 +9,29 @@ import PlaceholderView from '../views/PlaceholderView.vue'
 
 const routes = [
   { path: '/', redirect: '/plans' },
-  { path: '/import', name: 'ImportSchedule', component: ImportScheduleView, meta: { title: 'Import lịch giảng dạy' } },
-  { path: '/import/:id', name: 'ImportDetail', component: ImportDetailView, meta: { title: 'Chi tiết đối soát lịch dạy' } },
-  { path: '/plans', name: 'PlanList', component: PlanListView, meta: { title: 'Quản lý KH dự giờ' } },
-  { path: '/plans/create', name: 'CreatePlan', component: CreatePlanView, meta: { title: 'Lập KH dự giờ chính thức' } },
-  { path: '/plans/unscheduled', name: 'UnscheduledPlan', component: UnscheduledPlanView, meta: { title: 'Lập KH dự giờ đột xuất' } },
-  { path: '/plans/:id', name: 'PlanDetail', component: PlanDetailView, meta: { title: 'Chi tiết kế hoạch dự giờ' } },
+  { path: '/import', name: 'ImportSchedule', component: ImportScheduleView, meta: { title: 'Import lịch giảng dạy', roles: ['TCQLDT', 'TBDT', 'HEAD_OFFICE'] } },
+  { path: '/import/:id', name: 'ImportDetail', component: ImportDetailView, meta: { title: 'Chi tiết đối soát lịch dạy', roles: ['TCQLDT', 'TBDT', 'HEAD_OFFICE'] } },
+  { path: '/plans', name: 'PlanList', component: PlanListView, meta: { title: 'Quản lý KH dự giờ', roles: ['CNBM', 'TM', 'TBDT', 'TCQLDT', 'HEAD_OFFICE'] } },
+  { path: '/plans/create', name: 'CreatePlan', component: CreatePlanView, meta: { title: 'Lập KH dự giờ chính thức', roles: ['CNBM', 'TM', 'TBDT', 'HEAD_OFFICE'] } },
+  { path: '/plans/unscheduled', name: 'UnscheduledPlan', component: UnscheduledPlanView, meta: { title: 'Lập KH dự giờ đột xuất', roles: ['CNBM', 'TM', 'TBDT', 'HEAD_OFFICE'] } },
+  { path: '/plans/:id', name: 'PlanDetail', component: PlanDetailView, meta: { title: 'Chi tiết kế hoạch dự giờ', roles: ['CNBM', 'TM', 'TBDT', 'TCQLDT', 'HEAD_OFFICE'] } },
   { path: '/placeholder', name: 'Placeholder', component: PlaceholderView, meta: { title: 'Chức năng ngoài phạm vi' } }
 ]
 
 export const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('qldg_token') || '1:1:TBDT'
+  const parts = token.split(':')
+  const userRole = parts[2] || 'TBDT'
+
+  if (to.meta && to.meta.roles) {
+    if (!to.meta.roles.includes(userRole)) {
+      return next({ path: '/placeholder', query: { target: 'unauthorized', reason: 'role_denied' } })
+    }
+  }
+  next()
 })

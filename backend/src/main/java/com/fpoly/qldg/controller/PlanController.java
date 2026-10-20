@@ -53,6 +53,9 @@ public class PlanController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         AppUser u = scopeService.resolveUser(authHeader);
         if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+        if ("GV".equalsIgnoreCase(u.role)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Tài khoản Giảng viên không có quyền truy cập kế hoạch dự giờ"));
+        }
         List<Faculty> myF = scopeService.myFaculties(u);
         List<Long> scopeIds = myF.stream().map(f -> f.id).toList();
 
@@ -70,6 +73,9 @@ public class PlanController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         AppUser u = scopeService.resolveUser(authHeader);
         if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+        if ("GV".equalsIgnoreCase(u.role)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Tài khoản Giảng viên không có quyền truy cập kế hoạch dự giờ"));
+        }
         List<Faculty> myF = scopeService.myFaculties(u);
         List<Long> scopeIds = myF.stream().map(f -> f.id).toList();
         var list = planService.getUnscheduledCandidates(u.campus.id, semesterId, block, facultyId, scopeIds);
@@ -118,6 +124,9 @@ public class PlanController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         AppUser u = scopeService.resolveUser(authHeader);
         if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+        if ("GV".equalsIgnoreCase(u.role)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Tài khoản Giảng viên không có quyền truy cập kế hoạch dự giờ"));
+        }
         List<Long> scopeIds;
         if (facultyId != null && facultyId > 0) {
             scopeIds = List.of(facultyId);
@@ -157,7 +166,14 @@ public class PlanController {
 
     /** Chi tiết một bản kế hoạch (UC-13) */
     @GetMapping("/{id}")
-    public ResponseEntity<?> getPlanDetail(@PathVariable Long id) {
+    public ResponseEntity<?> getPlanDetail(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        AppUser u = scopeService.resolveUser(authHeader);
+        if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+        if ("GV".equalsIgnoreCase(u.role)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Tài khoản Giảng viên không có quyền truy cập kế hoạch dự giờ"));
+        }
         Inspection p = inspectionRepo.findById(id).orElse(null);
         if (p == null) return ResponseEntity.notFound().build();
 
@@ -221,6 +237,9 @@ public class PlanController {
         try {
             AppUser u = scopeService.resolveUser(authHeader);
             if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+            if ("GV".equalsIgnoreCase(u.role) || "TCQLDT".equalsIgnoreCase(u.role)) {
+                return ResponseEntity.status(403).body(Map.of("message", "Không có quyền tạo kế hoạch dự giờ"));
+            }
             Inspection p = planService.savePlan(null, req, u);
             return ResponseEntity.ok(Map.of("id", p.id, "code", p.code, "status", p.status));
         } catch (IllegalArgumentException e) {
@@ -236,6 +255,9 @@ public class PlanController {
         try {
             AppUser u = scopeService.resolveUser(authHeader);
             if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+            if ("GV".equalsIgnoreCase(u.role) || "TCQLDT".equalsIgnoreCase(u.role)) {
+                return ResponseEntity.status(403).body(Map.of("message", "Không có quyền chỉnh sửa kế hoạch dự giờ"));
+            }
             Inspection p = planService.savePlan(id, req, u);
             return ResponseEntity.ok(Map.of("id", p.id, "code", p.code, "status", p.status));
         } catch (IllegalArgumentException e) {
@@ -301,6 +323,9 @@ public class PlanController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         AppUser u = scopeService.resolveUser(authHeader);
         if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+        if ("GV".equalsIgnoreCase(u.role) || "TCQLDT".equalsIgnoreCase(u.role)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Không có quyền xóa kế hoạch"));
+        }
         try {
             planService.deletePlan(id, u);
             return ResponseEntity.ok(Map.of("message", "Đã xóa kế hoạch thành công"));

@@ -55,6 +55,9 @@ public class ImportController {
         try {
             AppUser uploader = scopeService.resolveUser(authHeader);
             if (uploader == null) return ResponseEntity.status(401).body(Map.of("message", "Chưa xác thực"));
+            if ("GV".equalsIgnoreCase(uploader.role) || "CNBM".equalsIgnoreCase(uploader.role) || "TM".equalsIgnoreCase(uploader.role)) {
+                return ResponseEntity.status(403).body(Map.of("message", "Chỉ TC&QLĐT hoặc TBĐT mới có quyền import lịch giảng dạy"));
+            }
             ImportJob job = importService.enqueueImport(file, uploader);
             return ResponseEntity.ok(Map.of(
                     "jobId", job.id,
@@ -76,13 +79,23 @@ public class ImportController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         AppUser u = scopeService.resolveUser(authHeader);
         if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+        if ("GV".equalsIgnoreCase(u.role)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Tài khoản Giảng viên không có quyền xem lịch sử import"));
+        }
         Page<ImportJob> p = jobRepo.findByCampusIdOrderByCreatedAtDesc(u.campus.id, PageRequest.of(page, size));
         return ResponseEntity.ok(p);
     }
 
     /** Chi tiết một lần import: Tab Tổng quan (UC-08) */
     @GetMapping("/jobs/{id}")
-    public ResponseEntity<?> getJobDetail(@PathVariable Long id) {
+    public ResponseEntity<?> getJobDetail(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        AppUser u = scopeService.resolveUser(authHeader);
+        if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+        if ("GV".equalsIgnoreCase(u.role)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Tài khoản Giảng viên không có quyền xem đối soát lịch dạy"));
+        }
         ImportJob job = jobRepo.findById(id).orElse(null);
         if (job == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(job);
@@ -95,7 +108,13 @@ public class ImportController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String result,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        AppUser u = scopeService.resolveUser(authHeader);
+        if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+        if ("GV".equalsIgnoreCase(u.role)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Tài khoản Giảng viên không có quyền xem đối soát lịch dạy"));
+        }
         // Lấy danh sách để lọc linh hoạt
         List<ImportRow> all = rowRepo.findByJobId(id);
         var stream = all.stream();
@@ -125,7 +144,14 @@ public class ImportController {
 
     /** Tab Môn học mới (UC-09) */
     @GetMapping("/jobs/{id}/alerts")
-    public ResponseEntity<?> getJobAlerts(@PathVariable Long id) {
+    public ResponseEntity<?> getJobAlerts(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        AppUser u = scopeService.resolveUser(authHeader);
+        if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+        if ("GV".equalsIgnoreCase(u.role)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Tài khoản Giảng viên không có quyền xem đối soát"));
+        }
         List<NewSubjectAlert> alerts = alertRepo.findByJobId(id);
         List<Map<String, Object>> res = alerts.stream().map(a -> {
             Map<String, Object> m = new HashMap<>();
@@ -142,7 +168,14 @@ public class ImportController {
 
     /** Xuất file Excel các dòng bị lỗi (UC-08) */
     @GetMapping("/jobs/{id}/export-errors")
-    public ResponseEntity<byte[]> exportErrors(@PathVariable Long id) throws Exception {
+    public ResponseEntity<?> exportErrors(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) throws Exception {
+        AppUser u = scopeService.resolveUser(authHeader);
+        if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+        if ("GV".equalsIgnoreCase(u.role)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Tài khoản Giảng viên không có quyền xuất danh sách lỗi"));
+        }
         List<ImportRow> errors = rowRepo.findByJobId(id).stream()
                 .filter(r -> "ERROR".equalsIgnoreCase(r.result)).toList();
 

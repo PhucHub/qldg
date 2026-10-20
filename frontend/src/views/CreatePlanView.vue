@@ -18,6 +18,26 @@
 
     <!-- BƯỚC 1: CHỌN LỚP (UC-09) -->
     <div v-if="step === 1">
+      <!-- Role indicator banner -->
+      <div v-if="currentUser.role === 'TBDT'" class="card" style="background: #EFF6FF; border: 1px solid #BFDBFE; padding: 12px 18px; margin-bottom: 16px; font-size: 13px; color: #1E40AF; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 18px;">ℹ️</span>
+        <div>
+          <strong>Quyền Trưởng ban Đào tạo (TBDT):</strong> Bạn đang lập kế hoạch thay cho bộ môn chưa có Chủ nhiệm bộ môn (CNBM) và Trưởng môn (TM) theo quy định tại HDSD mục 2.
+        </div>
+      </div>
+      <div v-else-if="currentUser.role === 'TM'" class="card" style="background: #FDF4FF; border: 1px solid #F5D0FE; padding: 12px 18px; margin-bottom: 16px; font-size: 13px; color: #86198F; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 18px;">📌</span>
+        <div>
+          <strong>Quyền Trưởng môn (TM):</strong> Bạn đang lập kế hoạch dự giờ cho đúng bộ môn mình phụ trách (<strong>{{ myFaculties[0]?.name }}</strong>). Kế hoạch sau khi gửi sẽ được chuyển tới Trưởng ban Đào tạo phê duyệt.
+        </div>
+      </div>
+      <div v-else-if="currentUser.role === 'CNBM'" class="card" style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px 18px; margin-bottom: 16px; font-size: 13px; color: #334155; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 18px;">👥</span>
+        <div>
+          <strong>Chủ nhiệm bộ môn (CNBM):</strong> Phụ trách nhóm bộ môn (<strong>{{ myFaculties.map(f => f.name).join(', ') }}</strong>). Chỉ tiêu 15% được tính trên tổng số GV có lớp dạy trong nhóm.
+        </div>
+      </div>
+
       <QuotaWidget :quota="quota" />
 
       <div class="card filter-bar">
@@ -272,6 +292,7 @@ const route = useRoute()
 const editPlanId = route.query.editId ? Number(route.query.editId) : null
 
 const step = ref(1)
+const currentUser = ref({})
 const semesters = ref([])
 const myFaculties = ref([])
 const selectedSemesterId = ref(null)
@@ -345,7 +366,18 @@ watch(classSearch, () => {
 onMounted(async () => {
   try {
     const me = await api.getMe()
+    currentUser.value = me
+    // Phân quyền chặt chẽ: TCQLDT và GV không được phép lập kế hoạch
+    if (me.role === 'TCQLDT' || me.role === 'GV') {
+      toast.error('Tài khoản của bạn không có quyền lập kế hoạch dự giờ!')
+      router.push('/plans')
+      return
+    }
     myFaculties.value = me.faculties || []
+    // Nếu là Trưởng môn (TM), tự động khóa chọn đúng bộ môn phụ trách (GBR-02)
+    if (me.role === 'TM' && myFaculties.value.length === 1) {
+      selectedFacultyId.value = myFaculties.value[0].id
+    }
     semesters.value = await api.getSemesters()
     if (semesters.value && semesters.value.length > 0) {
       selectedSemesterId.value = semesters.value[0].id // Mặc định: Fall 2026

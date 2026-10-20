@@ -21,11 +21,29 @@
     </div>
 
     <!-- Banner yêu cầu sửa của TBĐT (hiển thị cho CNBM/TM khi kế hoạch bị REJECTED_NEED_EDIT) -->
-    <div v-if="plan.status === 'REJECTED_NEED_EDIT'" class="banner-warning" style="margin-bottom: 20px;">
+    <div v-if="plan.status === 'REJECTED_NEED_EDIT'" class="banner-warning" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
       <div>
         <div style="font-weight: 700; margin-bottom: 4px;">⚠️ Trưởng ban Đào tạo yêu cầu chỉnh sửa kế hoạch:</div>
         <div>{{ plan.lastNote }}</div>
       </div>
+      <router-link
+        v-if="canEditPlan"
+        :to="`/plans/create?editId=${plan.id}`"
+        class="btn btn-primary"
+        style="white-space: nowrap; margin-left: 16px;"
+      >
+        Chỉnh sửa &amp; Gửi lại →
+      </router-link>
+    </div>
+
+    <!-- Banner bản nháp cho CNBM/TM -->
+    <div v-if="plan.status === 'DRAFT' && canEditPlan" class="card" style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 12px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <strong>Bản nháp kế hoạch:</strong> Kế hoạch này chưa được gửi trình duyệt tới Trưởng ban Đào tạo.
+      </div>
+      <router-link :to="`/plans/create?editId=${plan.id}`" class="btn btn-outline-primary" style="white-space: nowrap;">
+        Tiếp tục chỉnh sửa bản nháp →
+      </router-link>
     </div>
 
     <!-- Banner từ chối -->
@@ -296,6 +314,13 @@ const canApprove = computed(() => {
   const role = currentUser.value.role
   const isTbdt = role === 'TBDT' || currentUser.value.headOffice
   return isTbdt && plan.value.status === 'SUBMITTED'
+})
+
+const canEditPlan = computed(() => {
+  const role = currentUser.value.role
+  if (role === 'TCQLDT' || role === 'GV') return false
+  const canRole = role === 'CNBM' || role === 'TM' || role === 'TBDT' || currentUser.value.headOffice
+  return canRole && (plan.value.status === 'DRAFT' || plan.value.status === 'REJECTED_NEED_EDIT')
 })
 
 async function executeApprove() {

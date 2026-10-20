@@ -337,13 +337,23 @@ const step2Page = ref(1)
 
 const assignItems = ref([])
 const modalOpen = ref(false)
+const currentUser = ref({})
 const targetItem = ref(null)
 const targetSlot = ref(1)
 
 onMounted(async () => {
   try {
     const me = await api.getMe()
+    currentUser.value = me
+    if (me.role === 'TCQLDT' || me.role === 'GV') {
+      toast.error('Tài khoản của bạn không có quyền lập kế hoạch dự giờ!')
+      router.push('/plans')
+      return
+    }
     myFaculties.value = me.faculties || []
+    if (me.role === 'TM' && myFaculties.value.length === 1) {
+      selectedFacultyId.value = myFaculties.value[0].id
+    }
     semesters.value = await api.getSemesters()
     if (semesters.value && semesters.value.length > 0) {
       selectedSemesterId.value = semesters.value[0].id
