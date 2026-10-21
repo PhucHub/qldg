@@ -83,9 +83,9 @@
               </select>
             </div>
           </div>
-          <a v-if="job.errors > 0" :href="exportErrorsUrl" class="btn btn-outline-danger" download>
+          <button v-if="job.errors > 0" class="btn btn-outline-danger" @click="handleExportErrors">
             Tải danh sách lỗi (Excel)
-          </a>
+          </button>
         </div>
       </div>
 
@@ -209,6 +209,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import * as XLSX from 'xlsx'
 import { api } from '../services/api.js'
 import { toast } from '../services/toast.js'
 
@@ -237,6 +238,65 @@ onMounted(async () => {
   await fetchRows()
   await fetchAlerts()
 })
+
+async function handleExportErrors() {
+  try {
+    const res = await fetch(exportErrorsUrl.value)
+    if (res.ok) {
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Danh_sach_dong_loi_Job${jobId}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      toast.success('Đã tải danh sách dòng lỗi!')
+      return
+    }
+  } catch (err) {
+    console.warn('Backend export không khả dụng, sử dụng Blob fallback:', err)
+  }
+
+  // Blob fallback: Lấy dữ liệu dòng lỗi từ api/mock và xuất Excel trực tiếp
+  try {
+    const errorRes = await api.getJobRows(jobId, { page: 0, size: 500, result: 'ERROR' })
+    const errorRows = (errorRes.content || []).filter(r => r.result === 'ERROR')
+    
+    if (errorRows.length === 0) {
+      toast.info('Phiên import này không có dòng lỗi nào cần xuất.')
+      return
+    }
+
+    const dataToExport = errorRows.map(r => ({
+      'Dòng': r.rowNo,
+      'Mã lớp': r.classCode || '',
+      'Mã môn': r.subjectCode || '',
+      'Tài khoản GV': r.teacherAccount || '',
+      'Số TT buổi': r.sessionNo != null ? r.sessionNo : '',
+      'Lý do lỗi': r.message || 'Lỗi dữ liệu'
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Dong_Loi')
+    
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `Danh_sach_dong_loi_Job${jobId}.xlsx`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+    toast.success('Đã xuất file Excel danh sách lỗi thành công!')
+  } catch (e) {
+    toast.error('Lỗi khi tải danh sách lỗi: ' + e.message)
+  }
+}
 
 async function loadJob() {
   try {

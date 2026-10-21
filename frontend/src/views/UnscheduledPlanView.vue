@@ -97,13 +97,14 @@
               <tr
                 v-for="cls in pagedClasses"
                 :key="cls.teachingId"
-                :class="{ 'row-selected': cls.selected }"
+                :class="{ 'row-selected': selectedTeachingIds.includes(cls.teachingId) }"
+                @click="toggleSelectClass(cls, !selectedTeachingIds.includes(cls.teachingId))"
               >
                 <td style="text-align: center;" @click.stop>
                   <input
                     type="checkbox"
-                    v-model="cls.selected"
-                    @change="onClassToggle(cls)"
+                    :checked="selectedTeachingIds.includes(cls.teachingId)"
+                    @change="toggleSelectClass(cls, $event.target.checked)"
                   />
                 </td>
                 <td>
@@ -126,17 +127,17 @@
                   </span>
                   <span v-else class="badge badge-blue">Chưa có KH</span>
                 </td>
-                <td>
+                <td @click.stop>
                   <div class="reason-input-wrapper">
                     <input
-                      v-model="cls.reason"
+                      v-model="reasonsMap[cls.teachingId]"
                       class="form-control reason-input"
-                      :class="{ 'reason-error': attempted && cls.selected && !cls.reason.trim() }"
-                      :placeholder="cls.selected ? 'Ghi rõ lý do (VD: Sinh viên phản ánh giảng dạy, KT đột xuất)...' : 'Tích chọn để nhập lý do'"
-                      :disabled="!cls.selected"
-                      @focus="cls.selected = true"
+                      :class="{ 'reason-error': attempted && selectedTeachingIds.includes(cls.teachingId) && !getReason(cls.teachingId) }"
+                      :placeholder="selectedTeachingIds.includes(cls.teachingId) ? 'Ghi rõ lý do (VD: Sinh viên phản ánh giảng dạy, KT đột xuất)...' : 'Tích chọn để nhập lý do'"
+                      :disabled="!selectedTeachingIds.includes(cls.teachingId)"
+                      @focus="onReasonFocus(cls)"
                     />
-                    <span v-if="attempted && cls.selected && !cls.reason.trim()" class="reason-error-hint">
+                    <span v-if="attempted && selectedTeachingIds.includes(cls.teachingId) && !getReason(cls.teachingId)" class="reason-error-hint">
                       Bắt buộc nhập lý do
                     </span>
                   </div>
@@ -336,6 +337,9 @@ const pageSize = 4
 const currentPage = ref(1)
 const step2Page = ref(1)
 
+const selectedTeachingIds = ref([])
+const reasonsMap = ref({})
+
 const assignItems = ref([])
 const modalOpen = ref(false)
 const currentUser = ref({})
@@ -365,8 +369,14 @@ onMounted(async () => {
   }
 })
 
+function getReason(id) {
+  return (reasonsMap.value[id] || '').trim()
+}
+
 function onFilterChange() {
   currentPage.value = 1
+  selectedTeachingIds.value = []
+  reasonsMap.value = {}
   fetchCandidates()
 }
 
@@ -378,10 +388,9 @@ async function fetchCandidates() {
       selectedBlock.value,
       selectedFacultyId.value
     )
-    teacherGroups.value = res.map(g => ({
-      ...g,
-      classes: g.classes.map(c => ({ ...c, selected: false, reason: '' }))
-    }))
+    teacherGroups.value = res || []
+    selectedTeachingIds.value = []
+    reasonsMap.value = {}
     currentPage.value = 1
   } catch (e) {
     toast.error('Lỗi tải danh sách lớp: ' + e.message)
@@ -433,35 +442,56 @@ const pagedClasses = computed(() => {
 })
 
 const selectedClasses = computed(() => {
-  const list = []
-  teacherGroups.value.forEach(g => {
-    g.classes.forEach(c => {
-      if (c.selected) list.push({ ...c, teacherName: g.teacherName, teacherAccount: g.teacherAccount })
-    })
-  })
-  return list
+  return flatClasses.value
+    .filter(c => selectedTeachingIds.value.includes(c.teachingId))
+    .map(c => ({
+      ...c,
+      reason: getReason(c.teachingId)
+    }))
 })
 
 const missingReasonCount = computed(() => {
-  return selectedClasses.value.filter(c => !c.reason || !c.reason.trim()).length
+  return selectedClasses.value.filter(c => !c.reason).length
 })
 
 const allPageSelected = computed(() => {
   if (pagedClasses.value.length === 0) return false
-  return pagedClasses.value.every(c => c.selected)
+  return pagedClasses.value.every(c => selectedTeachingIds.value.includes(c.teachingId))
 })
 
 function toggleSelectAllPage() {
   const target = !allPageSelected.value
+  const set = new Set(selectedTeachingIds.value)
   pagedClasses.value.forEach(c => {
-    c.selected = target
-    if (!target) c.reason = ''
+    if (target) {
+      set.add(c.teachingId)
+    } else {
+      set.delete(c.teachingId)
+      delete reasonsMap.value[c.teachingId]
+    }
   })
+  selectedTeachingIds.value = Array.from(set)
 }
 
-function onClassToggle(cls) {
-  if (!cls.selected) cls.reason = ''
-  else toast.info(`Đã chọn lớp ${cls.classCode}`)
+function toggleSelectClass(cls, checked) {
+  const i = selectedTeachingIds.value.indexOf(cls.teachingId)
+  if (checked) {
+    if (i < 0) {
+      selectedTeachingIds.value.push(cls.teachingId)
+      toast.info(`Đã chọn lớp ${cls.classCode}`)
+    }
+  } else {
+    if (i >= 0) {
+      selectedTeachingIds.value.splice(i, 1)
+      delete reasonsMap.value[cls.teachingId]
+    }
+  }
+}
+
+function onReasonFocus(cls) {
+  if (!selectedTeachingIds.value.includes(cls.teachingId)) {
+    toggleSelectClass(cls, true)
+  }
 }
 
 async function proceedToAssign() {

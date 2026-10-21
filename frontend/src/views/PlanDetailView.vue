@@ -156,7 +156,7 @@
           <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--primary); margin-top: 5px;"></div>
           <div style="font-size: 13px;">
             <div style="font-weight: 600;">
-              {{ actionText(h.action) }} bởi <strong>{{ h.actor?.fullName }}</strong> ({{ h.actor?.account }})
+              {{ actionText(h.action) }} bởi <strong>{{ getActorDisplayName(h) }}</strong>
               <span style="font-size: 11px; color: var(--text-muted); margin-left: 8px;">{{ formatDate(h.createdAt) }}</span>
             </div>
             <div v-if="h.note" style="color: var(--text-muted); margin-top: 2px;">
@@ -382,15 +382,37 @@ function statusText(s) {
   }
 }
 
+function getActorDisplayName(h) {
+  if (h.actorName) return h.actorName
+  if (h.actor) {
+    if (h.actor.fullName && h.actor.account) return `${h.actor.fullName} (${h.actor.account})`
+    return h.actor.fullName || h.actor.account
+  }
+  return 'Người thực hiện'
+}
+
 function actionText(a) {
   switch (a) {
-    case 'CREATED': return 'Khởi tạo bản nháp'
-    case 'SAVED': return 'Cập nhật bản nháp'
-    case 'SUBMITTED': return 'Trình duyệt kế hoạch'
-    case 'APPROVED': return 'Phê duyệt kế hoạch'
-    case 'REJECTED_NEED_EDIT': return 'Yêu cầu sửa'
-    case 'CANCELLED': return 'Từ chối'
-    default: return a
+    case 'CREATE_DRAFT':
+    case 'CREATED':
+      return 'Khởi tạo bản nháp'
+    case 'UPDATE_DRAFT':
+    case 'SAVED':
+      return 'Cập nhật bản nháp'
+    case 'SUBMIT':
+    case 'SUBMITTED':
+      return 'Trình duyệt kế hoạch'
+    case 'APPROVE':
+    case 'APPROVED':
+      return 'Phê duyệt kế hoạch'
+    case 'REQUEST_EDIT':
+    case 'REJECTED_NEED_EDIT':
+      return 'Yêu cầu sửa'
+    case 'REJECT':
+    case 'CANCELLED':
+      return 'Từ chối'
+    default:
+      return a
   }
 }
 
