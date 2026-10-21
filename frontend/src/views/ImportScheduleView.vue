@@ -74,8 +74,11 @@
       <div class="card-title-row">
         <h2 class="card-title">Lịch sử import lịch dạy</h2>
         <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary" @click="fetchJobs">
+          <button class="btn btn-secondary" @click="refreshJobs">
             Làm mới
+          </button>
+          <button class="btn btn-outline" style="font-size: 12px;" title="Khôi phục danh sách về 2 bản ghi mặc định ban đầu (UC-7-3)" @click="resetDefaultJobs">
+            Đặt lại 2 bản ghi mặc định
           </button>
         </div>
       </div>
@@ -227,6 +230,23 @@ async function fetchJobs() {
   } catch (err) {
     console.error('Lỗi tải danh sách import:', err)
   }
+}
+
+// UC-7-3: Làm mới danh sách và hiển thị thông báo
+async function refreshJobs() {
+  loadingJobs.value = true
+  await fetchJobs()
+  loadingJobs.value = false
+  toast.success('Đã làm mới danh sách import lịch dạy')
+}
+
+// UC-7-3: Reload lại bảng và khôi phục 2 bản ghi mặc định ban đầu
+async function resetDefaultJobs() {
+  loadingJobs.value = true
+  await api.resetDefaultJobs()
+  await fetchJobs()
+  loadingJobs.value = false
+  toast.success('Đã reload lại bảng, khôi phục 2 bản ghi mặc định ban đầu (UC-7-3)')
 }
 
 function statusBadgeClass(status) {

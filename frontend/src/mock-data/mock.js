@@ -981,6 +981,22 @@ export function saveStoredImportJobs(jobs) {
   }
 }
 
+// UC-7-3: Khôi phục danh sách về 2 bản ghi mặc định ban đầu
+export function resetDefaultJobsMock() {
+  try {
+    localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(MOCK_JOBS))
+    localStorage.removeItem(JOB_ROWS_STORAGE_KEY)
+  } catch (e) {
+    console.error('Lỗi reset mock jobs:', e)
+  }
+  return {
+    content: [...MOCK_JOBS],
+    totalElements: MOCK_JOBS.length,
+    totalPages: 1,
+    number: 0
+  }
+}
+
 export function getMockJobDetail(jobId) {
   let list = []
   try {
@@ -1085,6 +1101,13 @@ export async function importScheduleFileMock(file) {
     list = raw ? JSON.parse(raw) : [...MOCK_JOBS]
   } catch {
     list = [...MOCK_JOBS]
+  }
+
+  // UC-8-1: Chống trùng lặp (Check Duplicate schedule)
+  // Nếu file đã từng import thì chặn lại và không tạo thêm lần import trùng
+  const isDuplicate = list.some(j => j.fileName.toLowerCase() === file.name.toLowerCase())
+  if (isDuplicate) {
+    throw new Error(`File lịch dạy '${file.name}' đã được import trước đó. Hệ thống tự động phát hiện và chặn trùng lặp (UC-8-1). Không tạo thêm lần import trùng.`)
   }
 
   const newId = list.length > 0 ? Math.max(...list.map(j => j.id)) + 1 : 1

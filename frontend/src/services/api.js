@@ -97,6 +97,15 @@ export const api = {
     }
   },
 
+  // UC-7-3: Khôi phục danh sách về 2 bản ghi mặc định ban đầu
+  async resetDefaultJobs() {
+    try {
+      return await request('/import/jobs/reset', { method: 'POST' })
+    } catch {
+      return mock.resetDefaultJobsMock()
+    }
+  },
+
   async getSampleTemplateUrl() {
     try {
       const res = await fetch(`${API_BASE}/import/sample-template`, { method: 'HEAD' })
