@@ -18,15 +18,15 @@ const routes = [
       return role === 'GV' ? '/my-inspections' : '/plans'
     }
   },
-  // UC-15 & UC-16: Lịch dự giờ của tôi - Dành riêng cho GV
-  { path: '/my-inspections', name: 'MyInspections', component: MyInspectionsView, meta: { title: 'Lịch dự giờ của tôi', roles: ['GV'] } },
+  // UC-15 & UC-16: Lịch dự giờ của tôi - Dành cho các vai trò tham gia dự giờ hoặc được dự (GV, CNBM, TM, TBDT)
+  { path: '/my-inspections', name: 'MyInspections', component: MyInspectionsView, meta: { title: 'Lịch dự giờ của tôi', roles: ['GV', 'CNBM', 'TM', 'TBDT'] } },
   // UC-15 & UC-17: Kết quả dự giờ - Dành cho các cấp Quản lý (CNBM, TM, TBĐT, TCQLDT, HeadOffice)
   { path: '/inspection-results', name: 'InspectionResults', component: InspectionResultsView, meta: { title: 'Kết quả dự giờ', roles: ['CNBM', 'TM', 'TBDT', 'TCQLDT', 'HEAD_OFFICE'] } },
   { path: '/import', name: 'ImportSchedule', component: ImportScheduleView, meta: { title: 'Import lịch giảng dạy', roles: ['TCQLDT', 'TBDT', 'HEAD_OFFICE'] } },
   { path: '/import/:id', name: 'ImportDetail', component: ImportDetailView, meta: { title: 'Chi tiết đối soát lịch dạy', roles: ['TCQLDT', 'TBDT', 'HEAD_OFFICE'] } },
   { path: '/plans', name: 'PlanList', component: PlanListView, meta: { title: 'Quản lý KH dự giờ', roles: ['CNBM', 'TM', 'TBDT', 'TCQLDT', 'HEAD_OFFICE'] } },
-  { path: '/plans/create', name: 'CreatePlan', component: CreatePlanView, meta: { title: 'Lập KH dự giờ chính thức', roles: ['CNBM', 'TM', 'TBDT', 'HEAD_OFFICE'] } },
-  { path: '/plans/unscheduled', name: 'UnscheduledPlan', component: UnscheduledPlanView, meta: { title: 'Lập KH dự giờ đột xuất', roles: ['CNBM', 'TM', 'TBDT', 'HEAD_OFFICE'] } },
+  { path: '/plans/create', name: 'CreatePlan', component: CreatePlanView, meta: { title: 'Lập KH dự giờ chính thức', roles: ['CNBM', 'TM', 'TBDT'] } },
+  { path: '/plans/unscheduled', name: 'UnscheduledPlan', component: UnscheduledPlanView, meta: { title: 'Lập KH dự giờ đột xuất', roles: ['CNBM', 'TM', 'TBDT'] } },
   { path: '/plans/:id', name: 'PlanDetail', component: PlanDetailView, meta: { title: 'Chi tiết kế hoạch dự giờ', roles: ['CNBM', 'TM', 'TBDT', 'TCQLDT', 'HEAD_OFFICE'] } },
   { path: '/placeholder', name: 'Placeholder', component: PlaceholderView, meta: { title: 'Chức năng ngoài phạm vi' } }
 ]
@@ -41,13 +41,13 @@ router.beforeEach((to, from, next) => {
   const parts = token.split(':')
   const userRole = parts[2] || 'TBDT'
 
-  // 1. Nếu là GV cố truy cập /plans hoặc /inspection-results thì tự động chuyển hướng sang /my-inspections
-  if (userRole === 'GV' && (to.path.startsWith('/plans') || to.path === '/inspection-results')) {
+  // 1. Nếu là GV cố truy cập /plans, /import hoặc /inspection-results thì tự động chuyển hướng sang /my-inspections
+  if (userRole === 'GV' && (to.path.startsWith('/plans') || to.path === '/inspection-results' || to.path.startsWith('/import'))) {
     return next({ path: '/my-inspections' })
   }
 
-  // 2. Nếu là vai Quản lý cố truy cập /my-inspections thì chuyển hướng sang /inspection-results
-  if (userRole !== 'GV' && to.path === '/my-inspections') {
+  // 2. Nếu là vai Admin thuần (HEAD_OFFICE) hoặc TCQLDT (vai quản trị không đi dự giờ) cố truy cập /my-inspections thì chuyển sang /inspection-results
+  if ((userRole === 'HEAD_OFFICE' || userRole === 'TCQLDT') && to.path === '/my-inspections') {
     return next({ path: '/inspection-results' })
   }
 

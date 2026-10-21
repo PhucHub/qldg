@@ -202,7 +202,29 @@
                   {{ s.submittedCount }}/{{ s.totalAssigned }} phiếu
                 </span>
               </td>
-              <td style="text-align: center;">
+              <td style="text-align: center; white-space: nowrap;">
+                <!-- Nút Nhập phiếu / Sửa phiếu của tôi nếu tài khoản hiện tại được phân công đi dự giờ -->
+                <template v-if="getMyInspectorAssignment(s)">
+                  <button
+                    v-if="!getMyInspectorAssignment(s).isSubmitted"
+                    class="btn btn-primary"
+                    style="padding: 4px 10px; font-size: 12px; margin-right: 6px;"
+                    title="Nhập phiếu đánh giá 23 tiêu chí cho tiết dạy này"
+                    @click="openEvaluationModal(s, getMyInspectorAssignment(s))"
+                  >
+                    📝 Nhập phiếu của tôi
+                  </button>
+                  <button
+                    v-else
+                    class="btn btn-outline-primary"
+                    style="padding: 4px 8px; font-size: 12px; margin-right: 6px;"
+                    title="Sửa lại phiếu đánh giá của tôi"
+                    @click="openEvaluationModal(s, getMyInspectorAssignment(s))"
+                  >
+                    ✏️ Sửa phiếu của tôi
+                  </button>
+                </template>
+
                 <button
                   class="btn btn-secondary"
                   style="padding: 4px 10px; font-size: 12px;"
@@ -316,6 +338,136 @@
         </div>
       </div>
     </div>
+
+    <!-- MODAL NHẬP / SỬA PHIẾU ĐÁNH GIÁ (UC-16) DÀNH CHO CÁN BỘ ĐI DỰ GIỜ -->
+    <div v-if="showEvaluationModal" class="modal-overlay" @click.self="closeEvaluationModal">
+      <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title">Phiếu đánh giá giờ giảng (UC-16)</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              GV được dự: <strong>{{ activeEvalSession?.teacherName }}</strong> ({{ activeEvalSession?.teacherAccount }}) &bull;
+              Môn: <strong>{{ activeEvalSession?.subjectName }} ({{ activeEvalSession?.subjectCode }})</strong> &bull;
+              Lớp: <strong>{{ activeEvalSession?.classCode }}</strong>
+            </div>
+          </div>
+          <button class="btn-icon" @click="closeEvaluationModal">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Session Details strip -->
+          <div class="banner-info" style="font-size: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-bottom: 14px;">
+            <div>Ngày: <strong>{{ formatDate(activeEvalSession?.plannedDate) }} (Ca {{ activeEvalSession?.shift }})</strong></div>
+            <div>Phòng: <strong>{{ activeEvalSession?.room || 'F201' }}</strong></div>
+            <div>Người chấm: <strong>{{ currentUser?.fullName || currentUser?.account }} ({{ myEvalInfo?.roleLabel }})</strong></div>
+            <div>Quy chuẩn: <strong>23 tiêu chí, tối đa 92đ, đạt ≥ 69đ (75%)</strong></div>
+          </div>
+
+          <!-- Quick Actions Bar -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 10px 14px; background: var(--gray-bg); border-radius: var(--radius); flex-wrap: wrap; gap: 8px;">
+            <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Thao tác nhanh cho kiểm thử:</span>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-secondary" style="font-size: 12px; padding: 4px 10px;" @click="quickFill(4)">
+                Mức 4 (Xuất sắc - 92đ)
+              </button>
+              <button type="button" class="btn btn-secondary" style="font-size: 12px; padding: 4px 10px;" @click="quickFill(3)">
+                Mức 3 (Khá - 69đ)
+              </button>
+              <button type="button" class="btn btn-secondary" style="font-size: 12px; padding: 4px 10px;" @click="quickFill(0)">
+                Xóa điểm
+              </button>
+            </div>
+          </div>
+
+          <!-- 23 Criteria List Grouped by 4 Domains -->
+          <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px;">
+            <div v-for="group in CRITERIA_GROUPS" :key="group.id" class="card" style="padding: 0; overflow: hidden; margin-bottom: 0;">
+              <div style="padding: 10px 16px; background: var(--gray-bg); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <span class="badge badge-blue">{{ group.num }}</span>
+                <span>{{ group.title }}</span>
+                <span style="font-weight: 400; color: var(--text-muted); font-size: 12px;">({{ group.items.length }} tiêu chí &bull; Thang 0 - 4)</span>
+              </div>
+
+              <div>
+                <div
+                  v-for="c in group.items"
+                  :key="c.id"
+                  style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border-light); gap: 16px; font-size: 13px;"
+                  :style="{ background: formScores[c.id] === undefined ? '#FFFDF5' : '#FFF' }"
+                >
+                  <div style="flex: 1;">
+                    <span style="font-weight: 600; margin-right: 6px; color: var(--text-muted);">#{{ c.index }}</span>
+                    <span>{{ c.text }}</span>
+                  </div>
+                  <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                    <label
+                      v-for="val in [0, 1, 2, 3, 4]"
+                      :key="val"
+                      class="score-pill"
+                      :class="{ checked: formScores[c.id] === val }"
+                      :title="SCORE_DESCRIPTIONS[val]"
+                    >
+                      <input
+                        v-model="formScores[c.id]"
+                        type="radio"
+                        :name="'mg_eval_' + c.id"
+                        :value="val"
+                        style="display: none;"
+                      />
+                      <span>{{ val }}</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nhận xét chi tiết -->
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label">
+              Nhận xét, ưu điểm & góp ý cho giảng viên <span style="color: var(--danger);">*</span>
+            </label>
+            <textarea
+              v-model="formNote"
+              rows="3"
+              class="form-control"
+              placeholder="Nhập nhận xét về tác phong, phương pháp truyền đạt, mức độ tiếp thu của sinh viên và các điểm cần khắc phục..."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Sticky Footer with Real-time Score calculation -->
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 13px;">
+              Tổng điểm: <strong>{{ totalFormScore }}/92</strong> ({{ formPercent }}%)
+            </span>
+            <span
+              class="badge"
+              :class="formPercent >= 75 ? 'badge-green' : 'badge-red'"
+            >
+              {{ formPercent >= 75 ? 'ĐẠT (≥ 75%)' : 'CHƯA ĐẠT' }}
+            </span>
+            <span v-if="unscoredCriteriaCount > 0" style="font-size: 12px; color: var(--danger);">
+              (Còn {{ unscoredCriteriaCount }}/23 câu chưa chọn)
+            </span>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" @click="closeEvaluationModal">
+              Hủy
+            </button>
+            <button
+              class="btn btn-primary"
+              :disabled="submittingEval || unscoredCriteriaCount > 0"
+              @click="submitEvaluationForm"
+            >
+              {{ submittingEval ? 'Đang gửi...' : 'Nộp phiếu đánh giá' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -323,6 +475,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { api } from '../services/api.js'
 import { toast } from '../services/toast.js'
+
+const currentUser = ref({})
 
 const SCORE_DESCRIPTIONS = {
   0: '0 - Chưa thực hiện',
@@ -418,10 +572,100 @@ const activeSession = ref(null)
 const sessionEvaluations = ref([])
 const selectedEvalIndex = ref(0)
 
+// Modal Nhập phiếu cá nhân cho người đi dự giờ
+const showEvaluationModal = ref(false)
+const activeEvalSession = ref(null)
+const myEvalInfo = ref(null)
+const formScores = reactive({})
+const formNote = ref('')
+const submittingEval = ref(false)
+
 const currentSelectedEval = computed(() => {
   if (sessionEvaluations.value.length === 0) return null
   return sessionEvaluations.value[selectedEvalIndex.value] || sessionEvaluations.value[0]
 })
+
+const unscoredCriteriaCount = computed(() => {
+  return ALL_CRITERIA.filter(c => formScores[c.id] === undefined).length
+})
+
+const totalFormScore = computed(() => {
+  return Object.values(formScores).reduce((acc, val) => acc + (Number(val) || 0), 0)
+})
+
+const formPercent = computed(() => {
+  return Math.round((totalFormScore.value / 92) * 100)
+})
+
+function getMyInspectorAssignment(session) {
+  if (!session || !currentUser.value?.account) return null
+  return (session.assignedInspectors || []).find(ins => ins.account === currentUser.value.account) || null
+}
+
+function quickFill(scoreVal) {
+  ALL_CRITERIA.forEach(c => {
+    formScores[c.id] = scoreVal
+  })
+  if (!formNote.value) {
+    formNote.value = scoreVal >= 3
+      ? 'Giảng viên chuẩn bị bài chu đáo, truyền đạt mạch lạc và kiểm soát lớp tốt.'
+      : 'Giảng viên cần tương tác nhiều hơn với sinh viên và củng cố kiến thức cuối giờ.'
+  }
+}
+
+async function openEvaluationModal(session, inspectorInfo) {
+  activeEvalSession.value = session
+  myEvalInfo.value = inspectorInfo
+  for (const key in formScores) delete formScores[key]
+  formNote.value = ''
+
+  if (inspectorInfo && inspectorInfo.evaluation) {
+    const ev = inspectorInfo.evaluation
+    formNote.value = ev.note || ''
+    if (ev.criteriaScores) {
+      Object.assign(formScores, ev.criteriaScores)
+    }
+  } else {
+    // Quick default
+    quickFill(4)
+  }
+  showEvaluationModal.value = true
+}
+
+function closeEvaluationModal() {
+  showEvaluationModal.value = false
+  activeEvalSession.value = null
+  myEvalInfo.value = null
+}
+
+async function submitEvaluationForm() {
+  if (unscoredCriteriaCount.value > 0) {
+    toast.warning(`Bạn còn ${unscoredCriteriaCount.value} tiêu chí chưa chấm điểm!`)
+    return
+  }
+  if (!formNote.value.trim()) {
+    toast.warning('Vui lòng nhập nhận xét chi tiết cho tiết dạy!')
+    return
+  }
+
+  submittingEval.value = true
+  try {
+    await api.submitEvaluation({
+      sessionId: activeEvalSession.value.id,
+      inspectorAccount: currentUser.value.account,
+      score: totalFormScore.value,
+      criteriaScores: { ...formScores },
+      note: formNote.value.trim()
+    })
+    toast.success('Đã nộp phiếu đánh giá dự giờ thành công!')
+    closeEvaluationModal()
+    await fetchData()
+  } catch (err) {
+    toast.error('Lỗi khi nộp phiếu: ' + err.message)
+  } finally {
+    submittingEval.value = false
+  }
+}
 
 let debounceTimer = null
 function debounceFetch() {
@@ -514,12 +758,43 @@ function printEvaluation() {
   window.print()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    currentUser.value = await api.getMe()
+  } catch (e) {
+    console.error(e)
+  }
   fetchData()
 })
 </script>
 
 <style scoped>
+.score-pill {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #FFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.score-pill:hover {
+  background: var(--gray-bg);
+}
+
+.score-pill.checked {
+  background: var(--primary);
+  color: #FFF;
+  border-color: var(--primary);
+}
+
 @media print {
   body * {
     visibility: hidden;

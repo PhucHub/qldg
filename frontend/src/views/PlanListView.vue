@@ -215,7 +215,7 @@ const currentPage = ref(1)
 
 const canCreatePlan = computed(() => {
   const role = currentUser.value.role
-  return role === 'CNBM' || role === 'TM' || role === 'TBDT' || currentUser.value.headOffice
+  return role === 'CNBM' || role === 'TM' || role === 'TBDT'
 })
 
 onMounted(async () => {

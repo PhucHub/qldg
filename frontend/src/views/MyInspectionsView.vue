@@ -176,14 +176,23 @@
                     >
                       Nhập phiếu
                     </button>
-                    <button
-                      v-else
-                      class="btn btn-secondary"
-                      style="padding: 4px 10px; font-size: 12px;"
-                      @click="openViewModal(item)"
-                    >
-                      Xem phiếu
-                    </button>
+                    <div v-else style="display: flex; gap: 6px; justify-content: center;">
+                      <button
+                        class="btn btn-outline-primary"
+                        style="padding: 4px 8px; font-size: 12px;"
+                        title="Chỉnh sửa lại phiếu đã nộp"
+                        @click="openEvaluationModal(item)"
+                      >
+                        Sửa phiếu
+                      </button>
+                      <button
+                        class="btn btn-secondary"
+                        style="padding: 4px 8px; font-size: 12px;"
+                        @click="openViewModal(item)"
+                      >
+                        Xem phiếu
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -622,11 +631,13 @@ const filters = reactive({
   search: ''
 })
 
-// Current logged in user name
+// Current logged in user info
+const currentUser = ref({})
 const currentUserName = computed(() => {
-  const token = localStorage.getItem('qldg_token') || '1:1:TBDT'
-  const id = parseInt(token.split(':')[0], 10)
-  return id === 6 ? 'Nguyễn Văn Nam (namnv)' : 'Giảng viên'
+  if (currentUser.value?.fullName) {
+    return `${currentUser.value.fullName} (${currentUser.value.account})`
+  }
+  return 'Người dự giờ'
 })
 
 // Modal Evaluation state
@@ -759,6 +770,15 @@ function openEvaluationModal(item) {
     delete formScores[c.id]
   }
   formNote.value = ''
+
+  if (item.evaluation) {
+    formNote.value = item.evaluation.note || ''
+    if (item.evaluation.criteriaScores) {
+      Object.assign(formScores, item.evaluation.criteriaScores)
+    }
+  } else {
+    quickFill(4)
+  }
   showEvaluationModal.value = true
 }
 
@@ -792,8 +812,7 @@ async function submitEvaluationForm() {
 
   submitting.value = true
   try {
-    const token = localStorage.getItem('qldg_token') || '6:1:GV'
-    const account = token.split(':')[0] === '6' ? 'namnv' : 'namnv'
+    const account = currentUser.value?.account || 'namnv'
     await api.submitEvaluation({
       sessionId: activeSession.value.id,
       inspectorAccount: account,
@@ -837,7 +856,12 @@ function printEvaluation() {
   window.print()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    currentUser.value = await api.getMe()
+  } catch (e) {
+    console.error(e)
+  }
   fetchData()
 })
 </script>

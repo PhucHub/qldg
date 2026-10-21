@@ -226,6 +226,8 @@ export const api = {
         { id: 9, account: 'tunglt', fullName: 'Lê Thanh Tùng', facultyName: 'CNTT', campusName: 'Đà Nẵng', sameCampus: true },
         { id: 10, account: 'hah7', fullName: 'Hoàng Anh Huy', facultyName: 'CNTT', campusName: 'Đà Nẵng', sameCampus: true },
         { id: 11, account: 'huongnt', fullName: 'Nguyễn Thị Hương', facultyName: 'CB', campusName: 'Đà Nẵng', sameCampus: true },
+        { id: 1, account: 'loanth', fullName: 'Hoàng Thị Loan', facultyName: 'Ban Đào tạo', campusName: 'Đà Nẵng', sameCampus: true },
+        { id: 5, account: 'nhungpt4', fullName: 'Phạm Thị Nhung', facultyName: 'CB', campusName: 'Đà Nẵng', sameCampus: true },
         { id: 12, account: 'minhtv', fullName: 'Trần Văn Minh', facultyName: 'CNTT', campusName: 'TP.HCM', sameCampus: false },
         { id: 13, account: 'nhungpt_hn', fullName: 'Phạm Thu Nhung', facultyName: 'CB', campusName: 'Hà Nội', sameCampus: false }
       ]

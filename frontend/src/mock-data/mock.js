@@ -203,7 +203,7 @@ export const INITIAL_MOCK_PLANS = [
         shift: 1,
         inspector1: { account: 'haidv', fullName: 'Đỗ Văn Hải', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
         inspector2: { account: 'namnv', fullName: 'Nguyễn Văn Nam', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
-        inspector3: null,
+        inspector3: { account: 'loanth', fullName: 'Hoàng Thị Loan', facultyName: 'Ban Đào tạo', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
         reason: 'Chưa từng dạy'
       },
       {
@@ -232,7 +232,7 @@ export const INITIAL_MOCK_PLANS = [
         plannedDate: '2026-10-15',
         shift: 3,
         inspector1: { account: 'namnv', fullName: 'Nguyễn Văn Nam', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
-        inspector2: { account: 'tunglt', fullName: 'Lê Thanh Tùng', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
+        inspector2: { account: 'dungpt', fullName: 'Phan Tiến Dũng', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
         inspector3: null,
         reason: 'Lần đầu dạy môn này'
       }
@@ -363,7 +363,7 @@ export const INITIAL_MOCK_PLANS = [
 // ==========================================
 // QUẢN LÝ LƯU TRỮ KẾ HOẠCH DỰ GIỜ (LOCAL STORAGE)
 // ==========================================
-const PLANS_STORAGE_KEY = 'qldg_mock_plans_store'
+const PLANS_STORAGE_KEY = 'qldg_mock_plans_store_v4'
 
 function getMockStore() {
   try {
@@ -1205,7 +1205,7 @@ export function addMockNotification(noti) {
 // ==========================================
 // QUẢN LÝ LỊCH DỰ GIỜ CỦA TÔI & PHIẾU ĐÁNH GIÁ (UC-15, UC-16, UC-17)
 // ==========================================
-const EVALUATIONS_STORAGE_KEY = 'qldg_mock_evaluations_store'
+const EVALUATIONS_STORAGE_KEY = 'qldg_mock_evaluations_store_v4'
 
 const INITIAL_MOCK_EVALUATIONS = [
   {
