@@ -271,6 +271,15 @@ export const api = {
     }
   },
 
+  async checkDuplicatePlanCode(code, excludeId = null) {
+    try {
+      const res = await request(`/plans/check-code?code=${encodeURIComponent(code)}&excludeId=${excludeId || ''}`)
+      return res.isDuplicate
+    } catch {
+      return mock.checkDuplicatePlanCode(code, excludeId)
+    }
+  },
+
   // UC-13: Luồng trình duyệt kế hoạch
   async getPlans({ semesterId, block, facultyId = null, status = 'ALL' } = {}) {
     const q = new URLSearchParams()

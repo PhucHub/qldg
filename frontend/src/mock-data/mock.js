@@ -457,6 +457,15 @@ export function saveOrSubmitMockPlan(data, isSubmit = false, planId = null) {
 
   if (existingIndex >= 0) {
     const p = all[existingIndex]
+    // Kiểm tra nếu có cập nhật code thủ công mà trùng với kế hoạch khác
+    if (data.code && data.code.trim() && data.code.trim() !== p.code) {
+      const customCode = data.code.trim()
+      const isDuplicate = all.some(x => x.id !== Number(planId) && x.code.toLowerCase() === customCode.toLowerCase())
+      if (isDuplicate) {
+        throw new Error(`Mã kế hoạch '${customCode}' đã tồn tại trong hệ thống! Không thể sửa trùng mã kế hoạch.`)
+      }
+      p.code = customCode
+    }
     p.items = mappedItems
     p.classCount = mappedItems.length
     p.status = status
@@ -473,8 +482,26 @@ export function saveOrSubmitMockPlan(data, isSubmit = false, planId = null) {
     return p
   } else {
     const newId = all.length > 0 ? Math.max(...all.map(x => x.id)) + 1 : 1
-    const suffix = data.unscheduled ? '-DX' : ''
-    const newCode = `KH-${fac.code}-${sem.shortCode}-B${data.block || 1}-${String(newId).padStart(3, '0')}${suffix}`
+    const basePrefix = data.unscheduled
+      ? `KH-DX-${fac.code}-${sem.shortCode}`
+      : `KH-${fac.code}-${sem.shortCode}-B${data.block || 1}`
+    
+    // Tự động kiểm tra trùng lặp mã kế hoạch và sinh mã duy nhất kế tiếp
+    let seq = 1
+    let newCode = `${basePrefix}-${String(seq).padStart(3, '0')}`
+    while (all.some(x => x.code === newCode)) {
+      seq++
+      newCode = `${basePrefix}-${String(seq).padStart(3, '0')}`
+    }
+
+    if (data.code && data.code.trim()) {
+      const customCode = data.code.trim()
+      if (all.some(x => x.code.toLowerCase() === customCode.toLowerCase())) {
+        throw new Error(`Mã kế hoạch '${customCode}' đã tồn tại trong hệ thống! Không thể tạo trùng mã kế hoạch.`)
+      }
+      newCode = customCode
+    }
+
     const newPlan = {
       id: newId,
       code: newCode,
@@ -506,6 +533,16 @@ export function saveOrSubmitMockPlan(data, isSubmit = false, planId = null) {
     saveMockStore(all)
     return newPlan
   }
+}
+
+/**
+ * Kiểm tra xem mã kế hoạch đã tồn tại chưa (phục vụ kiểm tra chống trùng lặp)
+ */
+export function checkDuplicatePlanCode(code, excludeId = null) {
+  if (!code) return false
+  const all = getMockStore()
+  const cleanCode = code.trim().toLowerCase()
+  return all.some(p => (!excludeId || p.id !== Number(excludeId)) && p.code.toLowerCase() === cleanCode)
 }
 
 export function updateMockPlanStatus(id, newStatus, note = '') {
