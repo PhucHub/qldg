@@ -1,214 +1,216 @@
 <template>
-  <div class="inspection-results-view">
+  <div>
     <!-- Header -->
-    <div class="view-header">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
-        <h1 class="view-title">Kết quả dự giờ & Giám sát tiến độ</h1>
-        <p class="view-desc">
-          Theo dõi toàn bộ các buổi dự giờ, giám sát cảnh báo quá hạn SLA 72 giờ và trích xuất kết quả đánh giá theo phạm vi quản lý (HDSD mục 4.4, SRS UC-15, UC-17).
-        </p>
+        <h1 class="page-title">Kết quả dự giờ & Giám sát tiến độ</h1>
       </div>
-      <div class="header-actions">
-        <button class="btn btn-outline" @click="fetchData">
-          🔄 Làm mới dữ liệu
+      <div>
+        <button class="btn btn-secondary" @click="fetchData">
+          Làm mới
         </button>
       </div>
     </div>
 
-    <!-- Cảnh báo vi phạm SLA 72h của toàn đơn vị (GBR-05) -->
-    <div v-if="overdueCount > 0" class="overdue-banner">
-      <div class="overdue-icon">⚠️</div>
-      <div class="overdue-content">
-        <div class="overdue-title">Cảnh báo vi phạm SLA 72 giờ toàn đơn vị</div>
-        <div class="overdue-text">
-          Đang có <strong>{{ overdueCount }}</strong> buổi dự giờ đã kết thúc quá hạn 72 giờ nhưng giảng viên dự giờ chưa nộp đủ phiếu! Vui lòng liên hệ và đôn đốc các giảng viên liên quan.
+    <!-- Cảnh báo vi phạm SLA 72h của toàn đơn vị -->
+    <div v-if="overdueCount > 0" class="banner-warning" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 18px;">⚠️</span>
+        <div>
+          <strong>Cảnh báo vi phạm SLA 72 giờ:</strong> Có <strong>{{ overdueCount }}</strong> buổi dự giờ đã kết thúc quá hạn 72h nhưng giảng viên chưa nộp đủ phiếu đánh giá.
         </div>
       </div>
-      <button class="btn btn-danger-banner" @click="filterOverdue">
+      <button class="btn btn-danger" style="padding: 4px 12px; font-size: 12px;" @click="filterOverdue">
         Lọc buổi trễ hạn ({{ overdueCount }})
       </button>
     </div>
 
-    <!-- Quick Stats Cards -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-num">{{ totalSessions }}</div>
-        <div class="stat-label">Tổng số buổi dự giờ</div>
+    <!-- Thống kê nhanh (Quick Stats Cards) -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px;">
+      <div class="card" style="padding: 16px; margin-bottom: 0;">
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Tổng số buổi dự giờ</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: var(--text-main);">{{ totalSessions }}</div>
       </div>
-      <div class="stat-card stat-success">
-        <div class="stat-num text-success">{{ completedCount }}</div>
-        <div class="stat-label">Đã nộp đủ phiếu</div>
+      <div class="card" style="padding: 16px; margin-bottom: 0;">
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--success); font-weight: 600;">Đã nộp đủ phiếu</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: var(--success);">{{ completedCount }}</div>
       </div>
-      <div class="stat-card stat-warning">
-        <div class="stat-num text-warning">{{ pendingCount }}</div>
-        <div class="stat-label">Đang chờ phiếu</div>
+      <div class="card" style="padding: 16px; margin-bottom: 0;">
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--primary); font-weight: 600;">Đang chờ phiếu</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: var(--primary);">{{ pendingCount }}</div>
       </div>
-      <div class="stat-card stat-danger">
-        <div class="stat-num text-danger">{{ overdueCount }}</div>
-        <div class="stat-label">Quá hạn SLA 72h</div>
+      <div class="card" style="padding: 16px; margin-bottom: 0;">
+        <div style="font-size: 11px; text-transform: uppercase; color: var(--danger); font-weight: 600;">Quá hạn SLA 72h</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: var(--danger);">{{ overdueCount }}</div>
       </div>
     </div>
 
-    <!-- Filter Card -->
-    <div class="filter-card">
-      <div class="filter-grid">
-        <div class="filter-group">
-          <label>Học kỳ</label>
-          <select v-model="filters.semesterId" @change="fetchData">
-            <option value="">Tất cả học kỳ</option>
+    <!-- Khối bộ lọc (Card) -->
+    <div class="card" style="padding: 16px 20px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: flex-end;">
+        <div class="form-group">
+          <label class="form-label">Học kỳ</label>
+          <select v-model="filters.semesterId" class="form-control" @change="fetchData">
+            <option value="">-- Tất cả học kỳ --</option>
             <option v-for="s in semesters" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
         </div>
 
-        <div class="filter-group">
-          <label>Block</label>
-          <select v-model="filters.block" @change="fetchData">
-            <option value="">Tất cả</option>
+        <div class="form-group">
+          <label class="form-label">Block</label>
+          <select v-model="filters.block" class="form-control" @change="fetchData">
+            <option value="">-- Tất cả block --</option>
             <option value="1">Block 1</option>
             <option value="2">Block 2</option>
           </select>
         </div>
 
-        <div class="filter-group">
-          <label>Bộ môn quản lý</label>
+        <div class="form-group">
+          <label class="form-label">Bộ môn quản lý</label>
           <select
             v-model="filters.facultyId"
+            class="form-control"
             :disabled="allowedFaculties.length === 1"
             @change="fetchData"
           >
-            <option v-if="allowedFaculties.length > 1" value="">Tất cả bộ môn</option>
+            <option v-if="allowedFaculties.length > 1" value="">-- Tất cả bộ môn --</option>
             <option v-for="f in allowedFaculties" :key="f.id" :value="f.id">{{ f.name }}</option>
           </select>
         </div>
 
-        <div class="filter-group">
-          <label>Trạng thái</label>
-          <select v-model="filters.statusFilter" @change="fetchData">
-            <option value="ALL">Tất cả trạng thái</option>
+        <div class="form-group">
+          <label class="form-label">Trạng thái</label>
+          <select v-model="filters.statusFilter" class="form-control" @change="fetchData">
+            <option value="ALL">-- Tất cả trạng thái --</option>
             <option value="COMPLETED">Đã hoàn thành (đủ phiếu)</option>
             <option value="PENDING">Đang chờ phiếu</option>
-            <option value="OVERDUE">⚠️ Quá hạn 72h</option>
+            <option value="OVERDUE">Quá hạn 72h</option>
           </select>
         </div>
 
-        <div class="filter-group filter-search">
-          <label>Tìm kiếm</label>
-          <div class="search-input-wrapper">
-            <input
-              v-model="filters.search"
-              type="text"
-              placeholder="Giảng viên, mã lớp, môn, kế hoạch..."
-              @input="debounceFetch"
-            />
-            <span v-if="filters.search" class="clear-search" @click="clearSearch">✕</span>
-          </div>
+        <div class="form-group">
+          <label class="form-label">Tìm kiếm</label>
+          <input
+            v-model="filters.search"
+            class="form-control"
+            placeholder="Giảng viên, mã lớp, môn, kế hoạch..."
+            @input="debounceFetch"
+          />
         </div>
       </div>
     </div>
 
-    <!-- Sessions Table Card -->
-    <div class="card">
-      <div v-if="loading" class="empty-state">Đang tải danh sách kết quả dự giờ...</div>
-      <div v-else-if="sessions.length === 0" class="empty-state">
-        <div class="empty-icon">📊</div>
-        <p>Không có buổi dự giờ nào phù hợp với bộ lọc hiện tại.</p>
+    <!-- Bảng danh sách kết quả dự giờ (Card) -->
+    <div v-if="loading" class="card" style="text-align: center; padding: 40px; color: var(--text-muted);">
+      Đang tải danh sách kết quả dự giờ...
+    </div>
+
+    <div v-else-if="sessions.length === 0" class="empty-state card">
+      <div class="empty-icon">📊</div>
+      <div class="empty-title">Không tìm thấy kết quả dự giờ</div>
+      <div style="font-size: 13px;">Không có buổi dự giờ nào phù hợp với bộ lọc hiện tại.</div>
+    </div>
+
+    <div v-else class="card" style="padding: 0; overflow: hidden;">
+      <div style="padding: 14px 20px; background: #FFF; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+        <h2 class="card-title" style="margin-bottom: 0;">
+          Danh sách buổi dự giờ & Kết quả đánh giá
+        </h2>
+        <span class="badge badge-gray">{{ sessions.length }} buổi</span>
       </div>
-      <div v-else class="table-responsive">
+
+      <div class="table-responsive">
         <table class="data-table">
           <thead>
             <tr>
               <th style="width: 50px;">STT</th>
-              <th style="width: 170px;">Mã kế hoạch</th>
+              <th>Mã kế hoạch</th>
               <th>Giảng viên được dự</th>
               <th>Môn học & Lớp</th>
-              <th style="width: 160px;">Thời gian & Phòng</th>
+              <th>Thời gian & Phòng</th>
               <th>Người dự giờ phân công</th>
-              <th style="width: 160px; text-align: center;">Kết quả chấm</th>
-              <th style="width: 130px; text-align: center;">Trạng thái</th>
-              <th style="width: 110px; text-align: center;">Thao tác</th>
+              <th style="text-align: center;">Kết quả chấm</th>
+              <th style="text-align: center;">Trạng thái</th>
+              <th style="text-align: center;">Thao tác</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="(s, idx) in sessions"
               :key="s.id"
-              :class="{ 'row-overdue': s.isOverdue }"
+              :style="{ background: s.isOverdue ? 'var(--danger-bg)' : undefined }"
             >
               <td class="text-center font-mono">{{ idx + 1 }}</td>
-              <td>
-                <router-link :to="`/plans/${s.planId}`" class="plan-link" :title="`Xem chi tiết kế hoạch ${s.planCode}`">
+              <td style="font-weight: 600;">
+                <router-link :to="`/plans/${s.planId}`" class="badge badge-blue" style="text-decoration: none;" :title="`Xem chi tiết kế hoạch ${s.planCode}`">
                   {{ s.planCode }}
                 </router-link>
               </td>
               <td>
-                <div class="teacher-info">
-                  <div class="teacher-name">{{ s.teacherName }}</div>
-                  <div class="teacher-sub font-mono">({{ s.teacherAccount }}) &bull; {{ s.facultyName }}</div>
+                <div style="font-weight: 600; color: var(--text-main);">{{ s.teacherName }}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">({{ s.teacherAccount }}) &bull; {{ s.facultyName }}</div>
+              </td>
+              <td>
+                <div style="font-weight: 600; color: var(--text-main); margin-bottom: 4px;">{{ s.subjectName }}</div>
+                <div style="display: flex; gap: 6px; font-size: 11px;">
+                  <span class="badge badge-blue">{{ s.subjectCode }}</span>
+                  <span class="badge badge-gray">{{ s.classCode }}</span>
                 </div>
               </td>
               <td>
-                <div class="subject-title">{{ s.subjectName }}</div>
-                <div class="subject-meta font-mono">
-                  <span class="badge-code">{{ s.subjectCode }}</span>
-                  <span class="badge-class">{{ s.classCode }}</span>
-                </div>
+                <div style="font-weight: 600;">{{ formatDate(s.plannedDate) }}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Ca {{ s.shift }} &bull; P.{{ s.room || 'F201' }}</div>
               </td>
               <td>
-                <div class="time-primary">📅 {{ formatDate(s.plannedDate) }}</div>
-                <div class="time-sub">Ca {{ s.shift }} &bull; P.{{ s.room || 'F201' }}</div>
-              </td>
-              <td>
-                <div class="inspectors-list">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
                   <div
                     v-for="ins in s.assignedInspectors"
                     :key="ins.account"
-                    class="inspector-chip"
-                    :class="{ submitted: ins.isSubmitted }"
+                    style="font-size: 12px; display: flex; align-items: center; gap: 6px;"
                   >
-                    <span class="chip-role">{{ ins.roleLabel }}:</span>
+                    <span style="font-weight: 600; color: var(--text-muted); font-size: 11px;">{{ ins.roleLabel }}:</span>
                     <span>{{ ins.fullName }}</span>
-                    <span class="chip-status">{{ ins.isSubmitted ? `✓ (${ins.evaluation?.score}đ)` : '⏳ Chưa nộp' }}</span>
+                    <span :style="{ color: ins.isSubmitted ? 'var(--success)' : 'var(--text-muted)', fontWeight: ins.isSubmitted ? '600' : '400', fontSize: '11px' }">
+                      {{ ins.isSubmitted ? `(✓ ${ins.evaluation?.score}đ)` : '(chưa nộp)' }}
+                    </span>
                   </div>
                 </div>
               </td>
-              <td class="text-center">
+              <td style="text-align: center;">
                 <template v-if="s.evaluations && s.evaluations.length > 0">
-                  <div class="score-summary">
-                    <span class="score-value font-mono">{{ s.avgScore }}/92đ</span>
-                    <span class="score-percent">({{ s.avgPercent }}%)</span>
-                  </div>
+                  <div style="font-weight: 700; font-size: 14px;">{{ s.avgScore }}/92đ</div>
                   <span
-                    class="badge-result"
-                    :class="s.avgPercent >= 75 ? 'badge-success' : 'badge-danger'"
+                    class="badge"
+                    :class="s.avgPercent >= 75 ? 'badge-green' : 'badge-red'"
+                    style="margin-top: 2px;"
                   >
-                    {{ s.avgPercent >= 75 ? 'ĐẠT (≥ 75%)' : 'CHƯA ĐẠT' }}
+                    {{ s.avgPercent >= 75 ? 'ĐẠT (' + s.avgPercent + '%)' : 'CHƯA ĐẠT (' + s.avgPercent + '%)' }}
                   </span>
                 </template>
                 <template v-else>
-                  <span class="badge-status badge-neutral">
-                    Chưa có phiếu
-                  </span>
+                  <span class="badge badge-gray">Chưa có phiếu</span>
                 </template>
               </td>
-              <td class="text-center">
-                <span v-if="s.isOverdue" class="badge-status badge-danger">
-                  ⚠️ Quá hạn 72h
+              <td style="text-align: center;">
+                <span v-if="s.isOverdue" class="badge badge-red">
+                  Quá hạn 72h
                 </span>
-                <span v-else-if="s.isCompleted" class="badge-status badge-success">
-                  ✓ Hoàn thành
+                <span v-else-if="s.isCompleted" class="badge badge-green">
+                  Hoàn thành
                 </span>
-                <span v-else class="badge-status badge-warning">
-                  ⏳ {{ s.submittedCount }}/{{ s.totalAssigned }} phiếu
+                <span v-else class="badge badge-gray">
+                  {{ s.submittedCount }}/{{ s.totalAssigned }} phiếu
                 </span>
               </td>
-              <td class="text-center">
+              <td style="text-align: center;">
                 <button
-                  class="btn-action btn-view"
+                  class="btn btn-secondary"
+                  style="padding: 4px 10px; font-size: 12px;"
                   :disabled="!s.evaluations || s.evaluations.length === 0"
                   :title="s.evaluations && s.evaluations.length > 0 ? 'Xem chi tiết phiếu đánh giá' : 'Chưa có phiếu nào được nộp'"
                   @click="openViewModal(s)"
                 >
-                  👁️ Xem phiếu
+                  Xem phiếu
                 </button>
               </td>
             </tr>
@@ -218,50 +220,51 @@
     </div>
 
     <!-- MODAL XEM PHIẾU ĐÁNH GIÁ (UC-17) -->
-    <div v-if="showViewModal" class="modal-backdrop" @click.self="closeViewModal">
-      <div class="modal-card modal-lg">
+    <div v-if="showViewModal" class="modal-overlay" @click.self="closeViewModal">
+      <div class="modal-content" style="max-width: 900px;">
         <div class="modal-header">
           <div>
-            <h2 class="modal-title">Chi Tiết Phiếu Đánh Giá Dự Giờ (UC-17)</h2>
-            <div class="modal-sub">
+            <div class="modal-title">Chi tiết phiếu đánh giá dự giờ (UC-17)</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
               Buổi dự: <strong>{{ activeSession?.classCode }} - {{ activeSession?.subjectName }}</strong> &bull;
               GV dạy: <strong>{{ activeSession?.teacherName }} ({{ activeSession?.teacherAccount }})</strong>
             </div>
           </div>
-          <button class="modal-close" @click="closeViewModal">&times;</button>
+          <button class="btn-icon" @click="closeViewModal">✕</button>
         </div>
 
         <div class="modal-body printable-area">
-          <div v-if="loadingView" class="empty-state">Đang tải phiếu đánh giá...</div>
-          <div v-else-if="sessionEvaluations.length === 0" class="empty-state">
+          <div v-if="loadingView" style="text-align: center; padding: 40px; color: var(--text-muted);">
+            Đang tải phiếu đánh giá...
+          </div>
+          <div v-else-if="sessionEvaluations.length === 0" class="empty-state" style="padding: 24px;">
             <p>Chưa có phiếu đánh giá nào được nộp cho buổi dự giờ này.</p>
           </div>
           <div v-else>
             <!-- Inspector selector tabs -->
-            <div class="eval-tabs">
+            <div class="tabs-nav" style="margin-bottom: 14px;">
               <button
                 v-for="(ev, index) in sessionEvaluations"
                 :key="ev.id"
-                class="eval-tab-btn"
+                class="tab-btn"
                 :class="{ active: selectedEvalIndex === index }"
                 @click="selectedEvalIndex = index"
               >
-                <span>Phiếu {{ index + 1 }}: {{ ev.inspectorName }} ({{ ev.inspectorAccount }})</span>
-                <span class="eval-score-pill font-mono">{{ ev.score }}/92đ ({{ ev.percentage }}%)</span>
+                Phiếu {{ index + 1 }}: {{ ev.inspectorName }} ({{ ev.score }}/92đ)
               </button>
             </div>
 
             <!-- Current Evaluation Summary -->
-            <div v-if="currentSelectedEval" class="eval-detail-sheet">
-              <div class="eval-meta-grid">
-                <div><strong>Người đánh giá:</strong> {{ currentSelectedEval.inspectorName }} ({{ currentSelectedEval.inspectorAccount }})</div>
-                <div><strong>Thời gian gửi phiếu:</strong> {{ formatDateTime(currentSelectedEval.submittedAt) }}</div>
-                <div><strong>Tổng điểm:</strong> <span class="font-mono text-bold">{{ currentSelectedEval.score }} / 92 điểm</span></div>
+            <div v-if="currentSelectedEval">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; padding: 12px; background: var(--gray-bg); border-radius: var(--radius); font-size: 13px; margin-bottom: 14px;">
+                <div>Người đánh giá: <strong>{{ currentSelectedEval.inspectorName }} ({{ currentSelectedEval.inspectorAccount }})</strong></div>
+                <div>Thời gian gửi: <strong>{{ formatDateTime(currentSelectedEval.submittedAt) }}</strong></div>
+                <div>Tổng điểm: <strong>{{ currentSelectedEval.score }} / 92 điểm</strong></div>
                 <div>
-                  <strong>Kết quả:</strong>
+                  Kết quả:
                   <span
-                    class="badge-result"
-                    :class="currentSelectedEval.percentage >= 75 ? 'badge-success' : 'badge-danger'"
+                    class="badge"
+                    :class="currentSelectedEval.percentage >= 75 ? 'badge-green' : 'badge-red'"
                   >
                     {{ currentSelectedEval.percentage }}% &bull; {{ currentSelectedEval.percentage >= 75 ? 'ĐẠT YÊU CẦU' : 'KHÔNG ĐẠT' }}
                   </span>
@@ -269,13 +272,13 @@
               </div>
 
               <!-- Nhận xét của người dự -->
-              <div class="eval-comment-box">
-                <div class="comment-heading">📝 Nhận xét & Đánh giá chung:</div>
-                <div class="comment-body">{{ currentSelectedEval.note || 'Không có nhận xét thêm.' }}</div>
+              <div class="card" style="padding: 12px 16px; margin-bottom: 14px; background: #FFF;">
+                <div style="font-weight: 600; font-size: 13px; margin-bottom: 6px;">Nhận xét & đánh giá chung:</div>
+                <div style="font-size: 13px; color: var(--text-main); line-height: 1.5;">{{ currentSelectedEval.note || 'Không có nhận xét thêm.' }}</div>
               </div>
 
               <!-- Chi tiết điểm 23 câu hỏi -->
-              <div class="eval-criteria-table-wrap">
+              <div class="table-responsive">
                 <table class="data-table print-table">
                   <thead>
                     <tr>
@@ -289,13 +292,11 @@
                     <tr v-for="c in ALL_CRITERIA" :key="c.id">
                       <td class="text-center font-mono">{{ c.index }}</td>
                       <td>{{ c.text }}</td>
-                      <td class="text-center font-mono text-bold">
+                      <td class="text-center font-mono" style="font-weight: 700;">
                         {{ currentSelectedEval.criteriaScores ? currentSelectedEval.criteriaScores[c.id] : 4 }} / 4
                       </td>
-                      <td>
-                        <span class="score-desc-sm">
-                          {{ SCORE_DESCRIPTIONS[currentSelectedEval.criteriaScores ? currentSelectedEval.criteriaScores[c.id] : 4] }}
-                        </span>
+                      <td style="font-size: 12px; color: var(--text-muted);">
+                        {{ SCORE_DESCRIPTIONS[currentSelectedEval.criteriaScores ? currentSelectedEval.criteriaScores[c.id] : 4] }}
                       </td>
                     </tr>
                   </tbody>
@@ -306,8 +307,8 @@
         </div>
 
         <div class="modal-footer">
-          <button class="btn btn-outline" @click="printEvaluation">
-            🖨️ In / Tải PDF
+          <button class="btn btn-secondary" @click="printEvaluation">
+            In / Tải PDF
           </button>
           <button class="btn btn-primary" @click="closeViewModal">
             Đóng
@@ -519,366 +520,18 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.inspection-results-view {
-  max-width: 1240px;
-  margin: 0 auto;
-}
-
-.view-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-
-.view-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 6px;
-}
-
-.view-desc {
-  font-size: 13px;
-  color: var(--text-muted);
-  max-width: 850px;
-  line-height: 1.5;
-}
-
-/* Stats Cards */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  background: #FFF;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  box-shadow: var(--shadow);
-}
-
-.stat-num {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 4px;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.text-success { color: var(--success); }
-.text-warning { color: #D97706; }
-.text-danger { color: var(--danger); }
-
-/* Overdue Banner */
-.overdue-banner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  border-left: 5px solid #F59E0B;
-  border-radius: var(--radius);
-  padding: 14px 18px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.1);
-}
-
-.overdue-icon { font-size: 24px; }
-.overdue-content { flex: 1; }
-.overdue-title { font-weight: 700; font-size: 14px; color: #B45309; margin-bottom: 2px; }
-.overdue-text { font-size: 13px; color: #92400E; }
-
-.btn-danger-banner {
-  background: #DC2626;
-  color: #FFF;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 12px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.btn-danger-banner:hover { background: #B91C1C; }
-
-/* Filter Card */
-.filter-card {
-  background: #FFF;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow);
-}
-
-.filter-grid {
-  display: grid;
-  grid-template-columns: 160px 120px 220px 190px 1fr;
-  gap: 14px;
-  align-items: flex-end;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.filter-group label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.filter-group select,
-.filter-group input {
-  height: 38px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0 12px;
-  font-size: 13px;
-  outline: none;
-  background: #FFF;
-}
-
-.filter-group select:focus,
-.filter-group input:focus {
-  border-color: var(--primary);
-}
-
-.search-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-input-wrapper input {
-  width: 100%;
-  padding-right: 30px;
-}
-
-.clear-search {
-  position: absolute;
-  right: 10px;
-  cursor: pointer;
-  color: var(--text-muted);
-}
-
-/* Card & Data Table */
-.card {
-  background: #FFF;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.data-table th {
-  background: #F9FAFB;
-  padding: 12px 14px;
-  text-align: left;
-  font-weight: 600;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
-}
-
-.data-table td {
-  padding: 14px;
-  border-bottom: 1px solid var(--border-light);
-  vertical-align: middle;
-}
-
-.data-table tr:hover { background: #F9FAFB; }
-.row-overdue { background: #FEF2F2 !important; }
-
-.plan-link {
-  font-family: monospace;
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--primary);
-  text-decoration: none;
-  background: var(--primary-bg);
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid #BFDBFE;
-  display: inline-block;
-}
-
-.plan-link:hover {
-  text-decoration: underline;
-  background: #DBEAFE;
-}
-
-.teacher-name { font-weight: 600; color: var(--text-main); }
-.teacher-sub { font-size: 12px; color: var(--text-muted); }
-
-.subject-title { font-weight: 600; color: var(--text-main); margin-bottom: 4px; }
-.subject-meta { display: flex; gap: 6px; font-size: 11px; }
-
-.badge-code { background: #EFF6FF; color: #1D4ED8; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-.badge-class { background: #F3F4F6; color: #374151; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-
-.time-primary { font-weight: 600; color: var(--text-main); }
-.time-sub { font-size: 12px; color: var(--text-muted); }
-
-.inspectors-list { display: flex; flex-direction: column; gap: 4px; }
-.inspector-chip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  padding: 2px 8px;
-  background: #F9FAFB;
-  border-radius: 4px;
-  border: 1px solid var(--border-light);
-}
-
-.inspector-chip.submitted {
-  background: #F0FDF4;
-  border-color: #DCFCE7;
-}
-
-.chip-role { font-weight: 700; color: var(--text-muted); font-size: 11px; }
-.chip-status { margin-left: auto; font-size: 11px; color: var(--text-muted); }
-.inspector-chip.submitted .chip-status { color: #16A34A; font-weight: 600; }
-
-.score-summary { display: flex; align-items: baseline; justify-content: center; gap: 4px; margin-bottom: 2px; }
-.score-value { font-size: 14px; font-weight: 700; color: var(--text-main); }
-.score-percent { font-size: 11px; color: var(--text-muted); }
-
-.badge-result { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
-
-.badge-status { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-.badge-danger { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
-.badge-success { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
-.badge-warning { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
-.badge-neutral { background: #F3F4F6; color: #6B7280; }
-
-.btn-action {
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  background: #F3F4F6;
-  color: #374151;
-  border: 1px solid var(--border);
-  transition: all 0.15s;
-}
-
-.btn-action:hover:not(:disabled) { background: #E5E7EB; }
-.btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Modal Styles */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-.modal-card {
-  background: #FFF;
-  border-radius: var(--radius);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-  width: 100%;
-}
-
-.modal-lg { max-width: 950px; }
-
-.modal-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  background: #FAFAFA;
-}
-
-.modal-title { font-size: 18px; font-weight: 700; color: var(--text-main); }
-.modal-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.modal-close { background: none; border: none; font-size: 24px; line-height: 1; color: var(--text-muted); cursor: pointer; }
-.modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
-.modal-footer { padding: 14px 24px; border-top: 1px solid var(--border); background: #FAFAFA; display: flex; justify-content: flex-end; gap: 12px; }
-
-.eval-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-.eval-tab-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: #F3F4F6;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.eval-tab-btn.active {
-  background: var(--primary);
-  color: #FFF;
-  border-color: var(--primary);
-}
-
-.eval-score-pill { background: rgba(0, 0, 0, 0.08); padding: 2px 6px; border-radius: 10px; font-size: 11px; }
-.eval-tab-btn.active .eval-score-pill { background: rgba(255, 255, 255, 0.25); }
-
-.eval-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px 20px;
-  background: #F9FAFB;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 14px;
-  font-size: 13px;
-  margin-bottom: 16px;
-}
-
-.eval-comment-box {
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  border-radius: 6px;
-  padding: 12px 16px;
-  margin-bottom: 20px;
-}
-
-.comment-heading { font-weight: 700; font-size: 13px; color: #92400E; margin-bottom: 4px; }
-.comment-body { font-size: 13px; color: #78350F; line-height: 1.5; }
-
-.eval-criteria-table-wrap { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-.score-desc-sm { font-size: 12px; color: var(--text-muted); }
-
-.empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
-.empty-icon { font-size: 32px; margin-bottom: 8px; }
-
 @media print {
-  body * { visibility: hidden; }
-  .printable-area, .printable-area * { visibility: visible; }
-  .printable-area { position: absolute; left: 0; top: 0; width: 100%; }
+  body * {
+    visibility: hidden;
+  }
+  .printable-area, .printable-area * {
+    visibility: visible;
+  }
+  .printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
 }
 </style>
