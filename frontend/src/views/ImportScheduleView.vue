@@ -13,7 +13,7 @@
     <div class="card">
       <div class="card-title-row">
         <h2 class="card-title">Tải lên file lịch dạy</h2>
-        <a :href="sampleUrl" class="btn btn-secondary" download>
+        <a :href="sampleUrl" class="btn btn-secondary" download="mau_import_lich_giang_day.xlsx">
           Tải file mẫu (.xlsx)
         </a>
       </div>

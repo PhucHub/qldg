@@ -42,7 +42,7 @@ public class ImportController {
     public ResponseEntity<byte[]> downloadSampleTemplate() throws Exception {
         byte[] bytes = importService.createSampleTemplate();
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Mau_LichDay_QLDG.xlsx")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=mau_import_lich_giang_day.xlsx")
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(bytes);
     }
