@@ -229,7 +229,7 @@ export const INITIAL_MOCK_PLANS = [
         subjectName: 'Lập trình Java 2',
         teacherAccount: 'linhdt',
         teacherName: 'Đặng Thùy Linh',
-        plannedDate: '2026-10-15',
+        plannedDate: '2026-10-24',
         shift: 3,
         inspector1: { account: 'namnv', fullName: 'Nguyễn Văn Nam', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
         inspector2: { account: 'dungpt', fullName: 'Phan Tiến Dũng', facultyName: 'Công nghệ thông tin', campusName: 'CĐ FPT Polytechnic Đà Nẵng' },
@@ -363,7 +363,7 @@ export const INITIAL_MOCK_PLANS = [
 // ==========================================
 // QUẢN LÝ LƯU TRỮ KẾ HOẠCH DỰ GIỜ (LOCAL STORAGE)
 // ==========================================
-const PLANS_STORAGE_KEY = 'qldg_mock_plans_store_v4'
+const PLANS_STORAGE_KEY = 'qldg_mock_plans_store_v5'
 
 function getMockStore() {
   try {

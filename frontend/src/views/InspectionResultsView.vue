@@ -12,18 +12,7 @@
       </div>
     </div>
 
-    <!-- Cảnh báo vi phạm SLA 72h của toàn đơn vị -->
-    <div v-if="overdueCount > 0" class="banner-warning" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 18px;">⚠️</span>
-        <div>
-          <strong>Cảnh báo vi phạm SLA 72 giờ:</strong> Có <strong>{{ overdueCount }}</strong> buổi dự giờ đã kết thúc quá hạn 72h nhưng giảng viên chưa nộp đủ phiếu đánh giá.
-        </div>
-      </div>
-      <button class="btn btn-danger" style="padding: 4px 12px; font-size: 12px;" @click="filterOverdue">
-        Lọc buổi trễ hạn ({{ overdueCount }})
-      </button>
-    </div>
+
 
     <!-- Thống kê nhanh (Quick Stats Cards) -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px;">
