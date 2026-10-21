@@ -2,11 +2,19 @@
   <div>
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
-        <h1 class="page-title">{{ editPlanId ? 'Chỉnh sửa kế hoạch dự giờ' : 'Lập kế hoạch dự giờ chính thức' }}</h1>
+        <h1 class="page-title">{{ editingPlan ? `Chỉnh sửa kế hoạch dự giờ: ${editingPlan.code}` : (editPlanId ? 'Chỉnh sửa kế hoạch dự giờ' : 'Lập kế hoạch dự giờ chính thức') }}</h1>
       </div>
       <router-link to="/plans/unscheduled" class="btn btn-outline-danger" style="font-weight: 600;">
         + KH dự giờ đột xuất
       </router-link>
+    </div>
+
+    <!-- Cảnh báo nếu kế hoạch đang cần sửa (REJECTED_NEED_EDIT) -->
+    <div v-if="editingPlan && editingPlan.status === 'REJECTED_NEED_EDIT'" class="banner-warning" style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 18px;">⚠️</span>
+      <div>
+        <strong>Kế hoạch {{ editingPlan.code }} được yêu cầu chỉnh sửa:</strong> {{ editingPlan.lastNote || 'Vui lòng bổ sung giảng viên dự giờ và gửi lại phê duyệt.' }}
+      </div>
     </div>
 
     <!-- Thanh bước -->
@@ -168,7 +176,7 @@
               <span class="class-code">{{ item.classCode }}</span>
               <span class="muted"> · {{ item.subjectCode }}</span>
             </div>
-            <div style="font-size: 13px;">GV được dự: <strong>{{ item.teacherName }}</strong></div>
+            <div style="font-size: 13px;">GV được dự: <strong>{{ item.teacherName }}</strong> <span class="muted" v-if="item.teacherAccount">({{ item.teacherAccount }})</span></div>
           </div>
 
           <div class="class-card-body">
@@ -202,7 +210,11 @@
                   @change="onInspectorSelect(item, slot, $event)"
                 >
                   <option value="">-- Chọn GV {{ slot }} --</option>
-                  <option v-for="ins in facultyInspectors" :key="ins.id" :value="ins.id">
+                  <option
+                    v-for="ins in getAvailableFacultyInspectors(item, slot)"
+                    :key="ins.id"
+                    :value="ins.id"
+                  >
                     {{ ins.account }} - {{ ins.fullName }}
                   </option>
                   <option value="__SEARCH_OTHER__">🔍 Tìm GV khác (chéo bộ môn/cơ sở)...</option>
@@ -239,7 +251,12 @@
       </div>
     </div>
 
-    <InspectorSearchModal :is-open="modalOpen" @close="modalOpen = false" @select="onCrossInspectorSelected" />
+    <InspectorSearchModal
+      :is-open="modalOpen"
+      :exclude-accounts="currentExcludeAccounts"
+      @close="modalOpen = false"
+      @select="onCrossInspectorSelected"
+    />
 
     <div v-if="showConfirmSubmit" class="modal-overlay" @click.self="showConfirmSubmit = false">
       <div class="modal-content" style="max-width: 440px;">
@@ -270,6 +287,7 @@ import InspectorSearchModal from '../components/InspectorSearchModal.vue'
 const router = useRouter()
 const route = useRoute()
 const editPlanId = route.query.editId ? Number(route.query.editId) : null
+const editingPlan = ref(null)
 
 const step = ref(1)
 const currentUser = ref({})
@@ -359,10 +377,38 @@ onMounted(async () => {
       selectedFacultyId.value = myFaculties.value[0].id
     }
     semesters.value = await api.getSemesters()
-    if (semesters.value && semesters.value.length > 0) {
-      selectedSemesterId.value = semesters.value[0].id // Mặc định: Fall 2026
+
+    // TC_PLANS_12: Nạp đúng dữ liệu của kế hoạch cũ khi Chỉnh sửa (/plans/create?editId=...)
+    if (editPlanId) {
+      try {
+        const plan = await api.getPlanDetail(editPlanId)
+        editingPlan.value = plan
+        selectedSemesterId.value = plan.semesterId
+        selectedBlock.value = plan.block
+        selectedFacultyId.value = plan.facultyId
+
+        // Tải danh sách lớp theo kỳ, block, bộ môn của kế hoạch
+        await fetchClassifications(true)
+
+        // Nạp đúng danh sách các lớp thuộc kế hoạch (không nạp toàn bộ 6 lớp mặc định)
+        const planTeachingIds = (plan.items || []).map(it => it.teachingId)
+        selectedTeachingIds.value = [...planTeachingIds]
+
+        // Tự động chuyển activeTab sang tab chứa lớp của kế hoạch
+        const inMandatory = mandatoryList.value.some(c => planTeachingIds.includes(c.teachingId))
+        const inOthers = othersList.value.some(c => planTeachingIds.includes(c.teachingId))
+        if (!inMandatory && inOthers) {
+          activeTab.value = 'others'
+        }
+      } catch (err) {
+        toast.error('Lỗi nạp dữ liệu kế hoạch cần sửa: ' + err.message)
+      }
+    } else {
+      if (semesters.value && semesters.value.length > 0) {
+        selectedSemesterId.value = semesters.value[0].id // Mặc định: Fall 2026
+      }
+      await fetchClassifications()
     }
-    await fetchClassifications()
   } catch (e) {
     console.error(e)
   }
@@ -373,14 +419,16 @@ function onFilterChange() {
   fetchClassifications()
 }
 
-async function fetchClassifications() {
+async function fetchClassifications(keepSelection = false) {
   try {
     const res = await api.getClassGroups(selectedSemesterId.value, selectedBlock.value, selectedFacultyId.value)
     quota.value = res.quota
     mandatoryList.value = res.mandatory || []
     othersList.value = res.others || []
     alreadyPlannedList.value = res.alreadyPlanned || []
-    selectedTeachingIds.value = mandatoryList.value.map(c => c.teachingId)
+    if (!keepSelection) {
+      selectedTeachingIds.value = mandatoryList.value.map(c => c.teachingId)
+    }
     // Tự động chuyển tab thông minh nếu nhóm hiện tại không có lớp để người dùng thấy ngay kết quả
     if (activeTab.value === 'mandatory' && mandatoryList.value.length === 0 && othersList.value.length > 0) {
       activeTab.value = 'others'
@@ -417,25 +465,38 @@ async function proceedToStep2() {
   } catch {
     facultyInspectors.value = []
   }
-  const chosen = [...mandatoryList.value, ...othersList.value]
-    .filter(c => selectedTeachingIds.value.includes(c.teachingId))
+  const allAvailable = [...mandatoryList.value, ...othersList.value, ...alreadyPlannedList.value]
+  const chosen = allAvailable.filter(c => selectedTeachingIds.value.includes(c.teachingId))
 
   planItems.value = await Promise.all(chosen.map(async c => {
     const sessions = await api.getValidSessions(c.teachingId)
-    const first = sessions[0]
+
+    // Khôi phục phân công đã có từ editingPlan (nếu đang sửa) hoặc từ planItems trước đó
+    const prevItem = planItems.value.find(p => p.teachingId === c.teachingId)
+    const existingInPlan = editingPlan.value?.items?.find(it => it.teachingId === c.teachingId || it.classCode === c.classCode)
+    const source = prevItem || existingInPlan
+
+    let matchedSession = null
+    if (source && source.plannedDate) {
+      matchedSession = sessions.find(s => s.date === source.plannedDate && (!source.shift || s.shift === source.shift))
+    }
+    const selectedSess = matchedSession || sessions[0]
+
     return {
       teachingId: c.teachingId,
       classCode: c.classCode,
       subjectCode: c.subjectCode,
+      subjectName: c.subjectName,
       teacherName: c.teacherName,
+      teacherAccount: c.teacherAccount,
       facultyId: c.facultyId,
       availableSessions: sessions,
-      selectedSessionId: first ? first.sessionId : null,
-      plannedDate: first ? first.date : null,
-      shift: first ? first.shift : null,
-      inspector1: null,
-      inspector2: null,
-      inspector3: null
+      selectedSessionId: selectedSess ? selectedSess.sessionId : (source?.selectedSessionId || null),
+      plannedDate: source ? source.plannedDate : (selectedSess ? selectedSess.date : null),
+      shift: source ? source.shift : (selectedSess ? selectedSess.shift : null),
+      inspector1: source ? source.inspector1 : null,
+      inspector2: source ? source.inspector2 : null,
+      inspector3: source ? source.inspector3 : null
     }
   }))
 }
@@ -467,6 +528,33 @@ function onSessionChange(item) {
   toast.info(`Đã chọn buổi dự cho lớp ${item.classCode}`)
 }
 
+// TC_CREATE_06: Lọc danh sách GV bộ môn khả dụng cho từng slot của lớp
+function getAvailableFacultyInspectors(item, slot) {
+  if (!facultyInspectors.value) return []
+  return facultyInspectors.value.filter(ins => {
+    // 1. Chặn GV tự dự giờ lớp của chính mình (UC-10)
+    if (item.teacherAccount && ins.account === item.teacherAccount) return false
+    // 2. Chặn chọn trùng 1 giảng viên cho các vị trí dự giờ trong cùng 1 lớp
+    for (const s of [1, 2, 3]) {
+      if (s !== slot && item['inspector' + s]?.account === ins.account) return false
+    }
+    return true
+  })
+}
+
+// Danh sách các account cần loại trừ khi mở modal tìm kiếm
+const currentExcludeAccounts = computed(() => {
+  if (!targetItem.value) return []
+  const accs = []
+  if (targetItem.value.teacherAccount) accs.push(targetItem.value.teacherAccount)
+  for (const s of [1, 2, 3]) {
+    if (s !== targetSlot.value && targetItem.value['inspector' + s]?.account) {
+      accs.push(targetItem.value['inspector' + s].account)
+    }
+  }
+  return accs
+})
+
 function onInspectorSelect(item, slot, event) {
   const val = event.target.value
   if (!val) {
@@ -479,10 +567,25 @@ function onInspectorSelect(item, slot, event) {
     return
   }
   const ins = facultyInspectors.value.find(x => x.id === Number(val))
-  if (ins) {
-    item['inspector' + slot] = ins
-    toast.success(`Đã phân công GV ${ins.account} vào lớp ${item.classCode}`)
+  if (!ins) return
+
+  // TC_CREATE_06 - Kiểm tra 1: Chặn GV tự dự giờ lớp của chính mình (UC-10)
+  if (item.teacherAccount && ins.account === item.teacherAccount) {
+    event.target.value = ''
+    toast.error(`Giảng viên ${ins.account} (${ins.fullName}) đứng lớp ${item.classCode}, không thể tự dự giờ lớp của chính mình!`)
+    return
   }
+
+  // TC_CREATE_06 - Kiểm tra 2: Chặn chọn trùng 1 giảng viên cho các vị trí dự giờ trong cùng 1 lớp
+  const duplicateSlot = [1, 2, 3].find(s => s !== slot && item['inspector' + s]?.account === ins.account)
+  if (duplicateSlot) {
+    event.target.value = ''
+    toast.error(`Giảng viên ${ins.account} (${ins.fullName}) đã được phân công ở vị trí GV ${duplicateSlot} của lớp ${item.classCode}! Không được phân công trùng!`)
+    return
+  }
+
+  item['inspector' + slot] = ins
+  toast.success(`Đã phân công GV ${ins.account} vào lớp ${item.classCode}`)
 }
 
 function removeInspector(item, slot) {
@@ -498,10 +601,23 @@ function openCrossSearch(item, slot) {
 }
 
 function onCrossInspectorSelected(user) {
-  if (targetItem.value) {
-    targetItem.value['inspector' + targetSlot.value] = user
-    toast.success(`Đã phân công GV ${user.account} vào lớp ${targetItem.value.classCode}`)
+  if (!targetItem.value || !user) return
+
+  // TC_CREATE_06 - Kiểm tra 1: Chặn GV tự dự giờ lớp của chính mình (UC-10)
+  if (targetItem.value.teacherAccount && user.account === targetItem.value.teacherAccount) {
+    toast.error(`Giảng viên ${user.account} (${user.fullName}) đứng lớp ${targetItem.value.classCode}, không thể tự dự giờ lớp của chính mình!`)
+    return
   }
+
+  // TC_CREATE_06 - Kiểm tra 2: Chặn chọn trùng 1 giảng viên cho các vị trí dự giờ trong cùng 1 lớp
+  const duplicateSlot = [1, 2, 3].find(s => s !== targetSlot.value && targetItem.value['inspector' + s]?.account === user.account)
+  if (duplicateSlot) {
+    toast.error(`Giảng viên ${user.account} (${user.fullName}) đã được phân công ở vị trí GV ${duplicateSlot} của lớp ${targetItem.value.classCode}! Không được phân công trùng!`)
+    return
+  }
+
+  targetItem.value['inspector' + targetSlot.value] = user
+  toast.success(`Đã phân công GV ${user.account} vào lớp ${targetItem.value.classCode}`)
   modalOpen.value = false
 }
 
@@ -514,8 +630,16 @@ async function savePlan(action) {
     unscheduled: false,
     items: planItems.value.map(it => ({
       teachingId: it.teachingId,
+      classCode: it.classCode,
+      subjectCode: it.subjectCode,
+      subjectName: it.subjectName,
+      teacherAccount: it.teacherAccount,
+      teacherName: it.teacherName,
       plannedDate: it.plannedDate,
       shift: it.shift,
+      inspector1: it.inspector1,
+      inspector2: it.inspector2,
+      inspector3: it.inspector3,
       inspector1Id: it.inspector1?.id ?? null,
       inspector2Id: it.inspector2?.id ?? null,
       inspector3Id: it.inspector3?.id ?? null
@@ -523,7 +647,7 @@ async function savePlan(action) {
   }
   try {
     if (action === 'DRAFT') {
-      await api.savePlanDraft(payload)
+      await api.savePlanDraft(payload, editPlanId)
       toast.success('Đã lưu bản nháp kế hoạch dự giờ thành công!')
     } else {
       await api.submitPlan(payload, editPlanId)

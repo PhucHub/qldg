@@ -74,7 +74,11 @@ import { ref, computed, watch } from 'vue'
 import { api } from '../services/api.js'
 
 const props = defineProps({
-  isOpen: Boolean
+  isOpen: Boolean,
+  excludeAccounts: {
+    type: Array,
+    default: () => []
+  }
 })
 const emit = defineEmits(['close', 'select'])
 
@@ -102,8 +106,12 @@ async function loadAllUsers() {
 
 const filteredResults = computed(() => {
   const q = keyword.value.trim().toLowerCase()
-  if (!q) return allUsers.value
-  return allUsers.value.filter(u =>
+  let list = allUsers.value
+  if (props.excludeAccounts && props.excludeAccounts.length > 0) {
+    list = list.filter(u => !props.excludeAccounts.includes(u.account))
+  }
+  if (!q) return list
+  return list.filter(u =>
     (u.account && u.account.toLowerCase().includes(q)) ||
     (u.fullName && u.fullName.toLowerCase().includes(q)) ||
     (u.facultyName && u.facultyName.toLowerCase().includes(q)) ||
@@ -113,6 +121,9 @@ const filteredResults = computed(() => {
 })
 
 function selectUser(user) {
+  if (props.excludeAccounts && props.excludeAccounts.includes(user.account)) {
+    return
+  }
   emit('select', user)
   close()
 }

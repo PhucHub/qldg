@@ -243,15 +243,17 @@ export const api = {
   },
 
   // UC-10, UC-12: Lưu & Gửi kế hoạch
-  async savePlanDraft(data) {
+  async savePlanDraft(data, planId = null) {
+    const url = planId ? `/plans/${planId}` : '/plans'
+    const method = planId ? 'PUT' : 'POST'
     try {
-      return await request('/plans', {
-        method: 'POST',
+      return await request(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, submitAction: 'DRAFT' })
       })
     } catch {
-      return mock.saveOrSubmitMockPlan(data, false)
+      return mock.saveOrSubmitMockPlan(data, false, planId)
     }
   },
 

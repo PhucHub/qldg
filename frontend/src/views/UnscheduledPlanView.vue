@@ -301,6 +301,7 @@
     <!-- Modal tìm người dự -->
     <InspectorSearchModal
       :is-open="modalOpen"
+      :exclude-accounts="currentExcludeAccounts"
       @close="modalOpen = false"
       @select="onInspectorSelected"
     />
@@ -513,6 +514,18 @@ function isItemComplete(item) {
   return !!(item.selectedSessionId && item.inspector1 && item.inspector2)
 }
 
+const currentExcludeAccounts = computed(() => {
+  if (!targetItem.value) return []
+  const accs = []
+  if (targetItem.value.teacherAccount) accs.push(targetItem.value.teacherAccount)
+  for (const s of [1, 2, 3]) {
+    if (s !== targetSlot.value && targetItem.value['inspector' + s]?.account) {
+      accs.push(targetItem.value['inspector' + s].account)
+    }
+  }
+  return accs
+})
+
 function openSearch(item, slot) {
   targetItem.value = item
   targetSlot.value = slot
@@ -520,10 +533,23 @@ function openSearch(item, slot) {
 }
 
 function onInspectorSelected(user) {
-  if (targetItem.value) {
-    targetItem.value['inspector' + targetSlot.value] = user
-    toast.success(`Đã gán GV ${user.account} cho lớp ${targetItem.value.classCode}`)
+  if (!targetItem.value || !user) return
+
+  // TC_CREATE_06 - Kiểm tra 1: Chặn GV tự dự giờ lớp của chính mình
+  if (targetItem.value.teacherAccount && user.account === targetItem.value.teacherAccount) {
+    toast.error(`Giảng viên ${user.account} (${user.fullName}) đứng lớp ${targetItem.value.classCode}, không thể tự dự giờ lớp của chính mình!`)
+    return
   }
+
+  // TC_CREATE_06 - Kiểm tra 2: Chặn chọn trùng 1 giảng viên cho các vị trí dự giờ trong cùng 1 lớp
+  const duplicateSlot = [1, 2, 3].find(s => s !== targetSlot.value && targetItem.value['inspector' + s]?.account === user.account)
+  if (duplicateSlot) {
+    toast.error(`Giảng viên ${user.account} (${user.fullName}) đã được phân công ở vị trí GV ${duplicateSlot} của lớp ${targetItem.value.classCode}! Không được phân công trùng!`)
+    return
+  }
+
+  targetItem.value['inspector' + targetSlot.value] = user
+  toast.success(`Đã gán GV ${user.account} cho lớp ${targetItem.value.classCode}`)
   modalOpen.value = false
 }
 
