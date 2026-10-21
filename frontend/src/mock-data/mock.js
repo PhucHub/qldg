@@ -473,8 +473,8 @@ export function saveOrSubmitMockPlan(data, isSubmit = false, planId = null) {
     return p
   } else {
     const newId = all.length > 0 ? Math.max(...all.map(x => x.id)) + 1 : 1
-    const prefix = data.unscheduled ? 'KH-DX' : 'KH'
-    const newCode = `${prefix}-${fac.code}-${sem.shortCode}-B${data.block || 1}-${String(newId).padStart(3, '0')}`
+    const suffix = data.unscheduled ? '-DX' : ''
+    const newCode = `KH-${fac.code}-${sem.shortCode}-B${data.block || 1}-${String(newId).padStart(3, '0')}${suffix}`
     const newPlan = {
       id: newId,
       code: newCode,

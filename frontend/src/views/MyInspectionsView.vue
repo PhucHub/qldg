@@ -73,224 +73,227 @@
       </div>
     </div>
 
-    <!-- Tabs Navigation -->
-    <div class="tabs-nav">
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'INSPECTOR' }"
-        @click="switchTab('INSPECTOR')"
-      >
-        Tôi đi dự giờ ({{ totalInspector }})
-      </button>
+    <!-- Unified Card: Tích hợp Tabs và Danh sách thành 1 khối duy nhất (không tách riêng) -->
+    <div class="card" style="padding: 0; overflow: hidden; margin-top: 20px;">
+      <!-- Tabs Navigation nằm ở đỉnh Card -->
+      <div class="tabs-nav" style="border-bottom: 1px solid var(--border); background: #FFF; padding: 0 16px;">
+        <button
+          class="tab-btn"
+          :class="{ active: activeTab === 'INSPECTOR' }"
+          @click="switchTab('INSPECTOR')"
+        >
+          Tôi đi dự giờ ({{ totalInspector }})
+        </button>
 
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'TEACHER' }"
-        @click="switchTab('TEACHER')"
-      >
-        Tôi được dự giờ ({{ totalTeacher }})
-      </button>
-    </div>
+        <button
+          class="tab-btn"
+          :class="{ active: activeTab === 'TEACHER' }"
+          @click="switchTab('TEACHER')"
+        >
+          Tôi được dự giờ ({{ totalTeacher }})
+        </button>
+      </div>
 
-    <!-- TAB 1: TÔI ĐI DỰ GIỜ -->
-    <div v-if="activeTab === 'INSPECTOR'">
-      <div v-if="loading" class="card" style="text-align: center; padding: 40px; color: var(--text-muted);">
-        Đang tải lịch dự giờ...
-      </div>
-      <div v-else-if="asInspectorList.length === 0" class="empty-state card">
-        <div class="empty-icon">📋</div>
-        <div class="empty-title">Không tìm thấy buổi dự giờ</div>
-        <div style="font-size: 13px;">Không có buổi dự giờ nào phù hợp với bộ lọc.</div>
-      </div>
-      <div v-else class="card" style="padding: 0; overflow: hidden;">
-        <div style="padding: 14px 20px; background: #FFF; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
-          <h2 class="card-title" style="margin-bottom: 0;">
-            Danh sách buổi đi dự giờ
-          </h2>
-          <span class="badge badge-gray">{{ asInspectorList.length }} buổi</span>
+      <!-- TAB 1: TÔI ĐI DỰ GIỜ -->
+      <div v-if="activeTab === 'INSPECTOR'">
+        <div v-if="loading" style="text-align: center; padding: 48px; color: var(--text-muted);">
+          Đang tải lịch dự giờ...
         </div>
-
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th style="width: 50px;">STT</th>
-                <th>Mã kế hoạch</th>
-                <th>Giảng viên dạy</th>
-                <th>Môn học & Lớp</th>
-                <th>Thời gian & Phòng</th>
-                <th style="text-align: center;">Vai trò</th>
-                <th style="text-align: center;">Trạng thái phiếu</th>
-                <th style="text-align: center;">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(item, idx) in asInspectorList"
-                :key="item.id"
-                :style="{ background: item.isOverdue ? 'var(--danger-bg)' : undefined }"
-              >
-                <td class="text-center font-mono">{{ idx + 1 }}</td>
-                <td style="font-weight: 600;">
-                  <span class="badge badge-gray">{{ item.planCode }}</span>
-                </td>
-                <td>
-                  <div style="font-weight: 600; color: var(--text-main);">{{ item.teacherName }}</div>
-                  <div style="font-size: 12px; color: var(--text-muted);">({{ item.teacherAccount }})</div>
-                </td>
-                <td>
-                  <div style="font-weight: 600; color: var(--text-main); margin-bottom: 4px;">{{ item.subjectName }}</div>
-                  <div style="display: flex; gap: 6px; font-size: 11px;">
-                    <span class="badge badge-blue">{{ item.subjectCode }}</span>
-                    <span class="badge badge-gray">{{ item.classCode }}</span>
-                  </div>
-                </td>
-                <td>
-                  <div style="font-weight: 600;">{{ formatDate(item.plannedDate) }}</div>
-                  <div style="font-size: 12px; color: var(--text-muted);">Ca {{ item.shift }} &bull; P.{{ item.room || 'F201' }}</div>
-                </td>
-                <td style="text-align: center;">
-                  <span class="badge" :class="item.myRole === 'GV 1' ? 'badge-blue' : 'badge-gray'">
-                    {{ item.myRole }}
-                  </span>
-                </td>
-                <td style="text-align: center;">
-                  <span v-if="item.isOverdue" class="badge badge-red">
-                    Quá hạn 72h
-                  </span>
-                  <span v-else-if="item.isSubmitted" class="badge badge-green">
-                    Đã gửi ({{ item.evaluation?.score }}/92đ)
-                  </span>
-                  <span v-else class="badge badge-gray">
-                    Chưa gửi phiếu
-                  </span>
-                </td>
-                <td style="text-align: center;">
-                  <button
-                    v-if="!item.isSubmitted"
-                    class="btn btn-primary"
-                    style="padding: 4px 10px; font-size: 12px;"
-                    @click="openEvaluationModal(item)"
-                  >
-                    Nhập phiếu
-                  </button>
-                  <button
-                    v-else
-                    class="btn btn-secondary"
-                    style="padding: 4px 10px; font-size: 12px;"
-                    @click="openViewModal(item)"
-                  >
-                    Xem phiếu
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-else-if="asInspectorList.length === 0" class="empty-state" style="border: none; box-shadow: none; padding: 48px 20px;">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">Không tìm thấy buổi dự giờ</div>
+          <div style="font-size: 13px;">Không có buổi dự giờ nào phù hợp với bộ lọc.</div>
         </div>
-      </div>
-    </div>
+        <div v-else>
+          <div style="padding: 14px 20px; background: #FFF; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+            <h2 class="card-title" style="margin-bottom: 0; font-size: 14px;">
+              Danh sách buổi đi dự giờ
+            </h2>
+            <span class="badge badge-gray">{{ asInspectorList.length }} buổi</span>
+          </div>
 
-    <!-- TAB 2: TÔI ĐƯỢC DỰ GIỜ -->
-    <div v-if="activeTab === 'TEACHER'">
-      <div v-if="loading" class="card" style="text-align: center; padding: 40px; color: var(--text-muted);">
-        Đang tải lịch dự giờ...
-      </div>
-      <div v-else-if="asTeacherList.length === 0" class="empty-state card">
-        <div class="empty-icon">🎯</div>
-        <div class="empty-title">Không tìm thấy buổi dự giờ</div>
-        <div style="font-size: 13px;">Bạn chưa có buổi dạy nào được phân công dự giờ trong kỳ này.</div>
-      </div>
-      <div v-else class="card" style="padding: 0; overflow: hidden;">
-        <div style="padding: 14px 20px; background: #FFF; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
-          <h2 class="card-title" style="margin-bottom: 0;">
-            Danh sách buổi được dự giờ
-          </h2>
-          <span class="badge badge-gray">{{ asTeacherList.length }} buổi</span>
-        </div>
-
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th style="width: 50px;">STT</th>
-                <th>Mã kế hoạch</th>
-                <th>Môn học & Lớp dạy</th>
-                <th>Thời gian & Phòng</th>
-                <th>Người dự giờ phân công</th>
-                <th style="text-align: center;">Kết quả đánh giá</th>
-                <th style="text-align: center;">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, idx) in asTeacherList" :key="item.id">
-                <td class="text-center font-mono">{{ idx + 1 }}</td>
-                <td style="font-weight: 600;">
-                  <span class="badge badge-gray">{{ item.planCode }}</span>
-                </td>
-                <td>
-                  <div style="font-weight: 600; color: var(--text-main); margin-bottom: 4px;">{{ item.subjectName }}</div>
-                  <div style="display: flex; gap: 6px; font-size: 11px;">
-                    <span class="badge badge-blue">{{ item.subjectCode }}</span>
-                    <span class="badge badge-gray">{{ item.classCode }}</span>
-                  </div>
-                </td>
-                <td>
-                  <div style="font-weight: 600;">{{ formatDate(item.plannedDate) }}</div>
-                  <div style="font-size: 12px; color: var(--text-muted);">Ca {{ item.shift }} &bull; P.{{ item.room || 'F201' }}</div>
-                </td>
-                <td>
-                  <div style="display: flex; flex-direction: column; gap: 4px;">
-                    <div v-if="item.inspector1" style="font-size: 12px; display: flex; align-items: center; gap: 6px;">
-                      <span style="font-weight: 600; color: var(--text-muted); font-size: 11px;">GV1:</span>
-                      <span>{{ item.inspector1.fullName }}</span>
-                      <span :style="{ color: item.inspector1Submitted ? 'var(--success)' : 'var(--text-muted)', fontWeight: item.inspector1Submitted ? '600' : '400', fontSize: '11px' }">
-                        {{ item.inspector1Submitted ? '(✓ đã nộp)' : '(chưa nộp)' }}
-                      </span>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">STT</th>
+                  <th>Mã kế hoạch</th>
+                  <th>Giảng viên dạy</th>
+                  <th>Môn học & Lớp</th>
+                  <th>Thời gian & Phòng</th>
+                  <th style="text-align: center;">Vai trò</th>
+                  <th style="text-align: center;">Trạng thái phiếu</th>
+                  <th style="text-align: center;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(item, idx) in asInspectorList"
+                  :key="item.id"
+                  :style="{ background: item.isOverdue ? 'var(--danger-bg)' : undefined }"
+                >
+                  <td class="text-center font-mono">{{ idx + 1 }}</td>
+                  <td style="font-weight: 600;">
+                    <span class="badge badge-gray">{{ item.planCode }}</span>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600; color: var(--text-main);">{{ item.teacherName }}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">({{ item.teacherAccount }})</div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600; color: var(--text-main); margin-bottom: 4px;">{{ item.subjectName }}</div>
+                    <div style="display: flex; gap: 6px; font-size: 11px;">
+                      <span class="badge badge-blue">{{ item.subjectCode }}</span>
+                      <span class="badge badge-gray">{{ item.classCode }}</span>
                     </div>
-                    <div v-if="item.inspector2" style="font-size: 12px; display: flex; align-items: center; gap: 6px;">
-                      <span style="font-weight: 600; color: var(--text-muted); font-size: 11px;">GV2:</span>
-                      <span>{{ item.inspector2.fullName }}</span>
-                      <span :style="{ color: item.inspector2Submitted ? 'var(--success)' : 'var(--text-muted)', fontWeight: item.inspector2Submitted ? '600' : '400', fontSize: '11px' }">
-                        {{ item.inspector2Submitted ? '(✓ đã nộp)' : '(chưa nộp)' }}
-                      </span>
-                    </div>
-                    <div v-if="item.inspector3" style="font-size: 12px; display: flex; align-items: center; gap: 6px;">
-                      <span style="font-weight: 600; color: var(--text-muted); font-size: 11px;">GV3:</span>
-                      <span>{{ item.inspector3.fullName }}</span>
-                      <span :style="{ color: item.inspector3Submitted ? 'var(--success)' : 'var(--text-muted)', fontWeight: item.inspector3Submitted ? '600' : '400', fontSize: '11px' }">
-                        {{ item.inspector3Submitted ? '(✓ đã nộp)' : '(chưa nộp)' }}
-                      </span>
-                    </div>
-                  </div>
-                </td>
-                <td style="text-align: center;">
-                  <template v-if="item.hasEvaluations">
-                    <div style="font-weight: 700; font-size: 14px;">{{ getAverageScore(item.evaluations) }}/92đ</div>
-                    <span
-                      class="badge"
-                      :class="getAveragePercent(item.evaluations) >= 75 ? 'badge-green' : 'badge-red'"
-                      style="margin-top: 2px;"
-                    >
-                      {{ getAveragePercent(item.evaluations) >= 75 ? 'ĐẠT (' + getAveragePercent(item.evaluations) + '%)' : 'CHƯA ĐẠT (' + getAveragePercent(item.evaluations) + '%)' }}
+                  </td>
+                  <td>
+                    <div style="font-weight: 600;">{{ formatDate(item.plannedDate) }}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Ca {{ item.shift }} &bull; P.{{ item.room || 'F201' }}</div>
+                  </td>
+                  <td style="text-align: center;">
+                    <span class="badge" :class="item.myRole === 'GV 1' ? 'badge-blue' : 'badge-gray'">
+                      {{ item.myRole }}
                     </span>
-                  </template>
-                  <template v-else>
-                    <span class="badge badge-gray">Chờ đánh giá</span>
-                  </template>
-                </td>
-                <td style="text-align: center;">
-                  <button
-                    class="btn btn-secondary"
-                    style="padding: 4px 10px; font-size: 12px;"
-                    :disabled="!item.hasEvaluations"
-                    @click="openViewModal(item)"
-                  >
-                    Xem phiếu ({{ item.evaluations?.length || 0 }})
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                  <td style="text-align: center;">
+                    <span v-if="item.isOverdue" class="badge badge-red">
+                      Quá hạn 72h
+                    </span>
+                    <span v-else-if="item.isSubmitted" class="badge badge-green">
+                      Đã gửi ({{ item.evaluation?.score }}/92đ)
+                    </span>
+                    <span v-else class="badge badge-gray">
+                      Chưa gửi phiếu
+                    </span>
+                  </td>
+                  <td style="text-align: center;">
+                    <button
+                      v-if="!item.isSubmitted"
+                      class="btn btn-primary"
+                      style="padding: 4px 10px; font-size: 12px;"
+                      @click="openEvaluationModal(item)"
+                    >
+                      Nhập phiếu
+                    </button>
+                    <button
+                      v-else
+                      class="btn btn-secondary"
+                      style="padding: 4px 10px; font-size: 12px;"
+                      @click="openViewModal(item)"
+                    >
+                      Xem phiếu
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: TÔI ĐƯỢC DỰ GIỜ -->
+      <div v-if="activeTab === 'TEACHER'">
+        <div v-if="loading" style="text-align: center; padding: 48px; color: var(--text-muted);">
+          Đang tải lịch dự giờ...
+        </div>
+        <div v-else-if="asTeacherList.length === 0" class="empty-state" style="border: none; box-shadow: none; padding: 48px 20px;">
+          <div class="empty-icon">🎯</div>
+          <div class="empty-title">Không tìm thấy buổi dự giờ</div>
+          <div style="font-size: 13px;">Bạn chưa có buổi dạy nào được phân công dự giờ trong kỳ này.</div>
+        </div>
+        <div v-else>
+          <div style="padding: 14px 20px; background: #FFF; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+            <h2 class="card-title" style="margin-bottom: 0; font-size: 14px;">
+              Danh sách buổi được dự giờ
+            </h2>
+            <span class="badge badge-gray">{{ asTeacherList.length }} buổi</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">STT</th>
+                  <th>Mã kế hoạch</th>
+                  <th>Môn học & Lớp dạy</th>
+                  <th>Thời gian & Phòng</th>
+                  <th>Người dự giờ phân công</th>
+                  <th style="text-align: center;">Kết quả đánh giá</th>
+                  <th style="text-align: center;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, idx) in asTeacherList" :key="item.id">
+                  <td class="text-center font-mono">{{ idx + 1 }}</td>
+                  <td style="font-weight: 600;">
+                    <span class="badge badge-gray">{{ item.planCode }}</span>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600; color: var(--text-main); margin-bottom: 4px;">{{ item.subjectName }}</div>
+                    <div style="display: flex; gap: 6px; font-size: 11px;">
+                      <span class="badge badge-blue">{{ item.subjectCode }}</span>
+                      <span class="badge badge-gray">{{ item.classCode }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600;">{{ formatDate(item.plannedDate) }}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Ca {{ item.shift }} &bull; P.{{ item.room || 'F201' }}</div>
+                  </td>
+                  <td>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <div v-if="item.inspector1" style="font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                        <span style="font-weight: 600; color: var(--text-muted); font-size: 11px;">GV1:</span>
+                        <span>{{ item.inspector1.fullName }}</span>
+                        <span :style="{ color: item.inspector1Submitted ? 'var(--success)' : 'var(--text-muted)', fontWeight: item.inspector1Submitted ? '600' : '400', fontSize: '11px' }">
+                          {{ item.inspector1Submitted ? '(✓ đã nộp)' : '(chưa nộp)' }}
+                        </span>
+                      </div>
+                      <div v-if="item.inspector2" style="font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                        <span style="font-weight: 600; color: var(--text-muted); font-size: 11px;">GV2:</span>
+                        <span>{{ item.inspector2.fullName }}</span>
+                        <span :style="{ color: item.inspector2Submitted ? 'var(--success)' : 'var(--text-muted)', fontWeight: item.inspector2Submitted ? '600' : '400', fontSize: '11px' }">
+                          {{ item.inspector2Submitted ? '(✓ đã nộp)' : '(chưa nộp)' }}
+                        </span>
+                      </div>
+                      <div v-if="item.inspector3" style="font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                        <span style="font-weight: 600; color: var(--text-muted); font-size: 11px;">GV3:</span>
+                        <span>{{ item.inspector3.fullName }}</span>
+                        <span :style="{ color: item.inspector3Submitted ? 'var(--success)' : 'var(--text-muted)', fontWeight: item.inspector3Submitted ? '600' : '400', fontSize: '11px' }">
+                          {{ item.inspector3Submitted ? '(✓ đã nộp)' : '(chưa nộp)' }}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="text-align: center;">
+                    <template v-if="item.hasEvaluations">
+                      <div style="font-weight: 700; font-size: 14px;">{{ getAverageScore(item.evaluations) }}/92đ</div>
+                      <span
+                        class="badge"
+                        :class="getAveragePercent(item.evaluations) >= 75 ? 'badge-green' : 'badge-red'"
+                        style="margin-top: 2px;"
+                      >
+                        {{ getAveragePercent(item.evaluations) >= 75 ? 'ĐẠT (' + getAveragePercent(item.evaluations) + '%)' : 'CHƯA ĐẠT (' + getAveragePercent(item.evaluations) + '%)' }}
+                      </span>
+                    </template>
+                    <template v-else>
+                      <span class="badge badge-gray">Chờ đánh giá</span>
+                    </template>
+                  </td>
+                  <td style="text-align: center;">
+                    <button
+                      class="btn btn-secondary"
+                      style="padding: 4px 10px; font-size: 12px;"
+                      :disabled="!item.hasEvaluations"
+                      @click="openViewModal(item)"
+                    >
+                      Xem phiếu ({{ item.evaluations?.length || 0 }})
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
