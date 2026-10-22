@@ -16,7 +16,8 @@ export const MOCK_USERS = [
   { id: 9, account: 'tunglt', fullName: 'Lê Thanh Tùng', role: 'GV', staffCode: '00246933', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: 'CNTT', label: 'tunglt - Lê Thanh Tùng (GV CNTT, DNA)' },
   { id: 10, account: 'hah7', fullName: 'Hoàng Anh Huy', role: 'GV', staffCode: '00246934', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: 'CNTT', label: 'hah7 - Hoàng Anh Huy (GV CNTT, DNA)' },
   { id: 11, account: 'huongnt', fullName: 'Nguyễn Thị Hương', role: 'GV', staffCode: '00246935', campusCode: 'dna', campusName: 'CĐ FPT Polytechnic Đà Nẵng', facultyCode: 'CB', label: 'huongnt - Nguyễn Thị Hương (GV Nhóm CB, DNA)' },
-  { id: 12, account: 'minhtv', fullName: 'Trần Văn Minh', role: 'GV', staffCode: '00388902', campusCode: 'hcm', campusName: 'CĐ FPT Polytechnic TP.HCM', facultyCode: 'CNTT', label: 'minhtv - Trần Văn Minh (GV CNTT, TP.HCM)' }
+  { id: 12, account: 'minhtv', fullName: 'Trần Văn Minh', role: 'GV', staffCode: '00388902', campusCode: 'hcm', campusName: 'CĐ FPT Polytechnic TP.HCM', facultyCode: 'CNTT', label: 'minhtv - Trần Văn Minh (GV CNTT, TP.HCM)' },
+  { id: 13, account: 'nhungpt_hn', fullName: 'Phạm Thu Nhung', role: 'GV', staffCode: '00112233', campusCode: 'hn', campusName: 'CĐ FPT Polytechnic Hà Nội', facultyCode: 'CB', label: 'nhungpt_hn - Phạm Thu Nhung (GV Cơ bản, Hà Nội)' }
 ]
 
 export const MOCK_SEMESTERS = [
@@ -109,7 +110,8 @@ export const MOCK_JOB_ROWS = [
   { id: 2, rowNo: 3, classCode: 'WD18301', subjectCode: 'COM108', teacherAccount: 'namnv', sessionNo: 2, result: 'UPDATED_ROOM', oldValue: 'F201', newValue: 'B203', message: 'Đổi phòng từ F201 sang B203' },
   { id: 3, rowNo: 4, classCode: 'WD18301', subjectCode: 'COM108', teacherAccount: 'namnv', sessionNo: 3, result: 'UPDATED_TIME', oldValue: '2026-10-24 Ca 2', newValue: '2026-10-25 Ca 3', message: 'Đổi ngày và ca học' },
   { id: 4, rowNo: 5, classCode: 'CP18301', subjectCode: 'COM1081', teacherAccount: 'linhdt', sessionNo: 1, result: 'INSERTED', newValue: '2026-10-21 (Ca 3, F202)', message: 'Thêm mới buổi học' },
-  { id: 5, rowNo: 6, classCode: 'IT18399', subjectCode: 'COM999', teacherAccount: 'unknowngv', sessionNo: 1, result: 'ERROR', message: 'Không tìm thấy giảng viên unknowngv tại cơ sở' }
+  { id: 5, rowNo: 6, classCode: 'IT18399', subjectCode: 'COM999', teacherAccount: 'unknowngv', sessionNo: 1, result: 'ERROR', message: 'Không tìm thấy giảng viên unknowngv tại cơ sở' },
+  { id: 6, rowNo: 7, classCode: 'WD18301', subjectCode: 'COM108', teacherAccount: 'namnv', sessionNo: 4, result: 'SWAPPED', oldValue: '2026-10-26 Ca 2 F201', newValue: '2026-10-20 Ca 2 F201', message: 'Hoán đổi ngày/ca qua Temp Swap (1970-01-01) với buổi 1' }
 ]
 
 export const MOCK_JOB_ALERTS = [
@@ -245,7 +247,7 @@ export const INITIAL_MOCK_PLANS = [
   },
   {
     id: 3,
-    code: 'KH-DX-CNTT-FA26-001',
+    code: 'KH-CNTT-FA26-B1-DX',
     semesterId: 1,
     semesterName: 'Fall 2026',
     block: 1,
@@ -363,7 +365,7 @@ export const INITIAL_MOCK_PLANS = [
 // ==========================================
 // QUẢN LÝ LƯU TRỮ KẾ HOẠCH DỰ GIỜ (LOCAL STORAGE)
 // ==========================================
-const PLANS_STORAGE_KEY = 'qldg_mock_plans_store_v5'
+const PLANS_STORAGE_KEY = 'qldg_mock_plans_store_v6'
 
 function getMockStore() {
   try {
@@ -429,35 +431,86 @@ export function getMockPlanDetail(id) {
   return p
 }
 
+function resolveMockInspector(insObj, insId, defaultFacName) {
+  if (insObj && insObj.account) return insObj
+  if (!insId) return null
+  const found = MOCK_USERS.find(u => u.id === Number(insId))
+  if (!found) return null
+  const facObj = MOCK_FACULTIES.find(f => f.code === found.facultyCode)
+  return {
+    id: found.id,
+    account: found.account,
+    fullName: found.fullName,
+    facultyName: facObj ? facObj.name : (defaultFacName || 'Chuyên môn'),
+    campusName: found.campusName
+  }
+}
+
 export function saveOrSubmitMockPlan(data, isSubmit = false, planId = null) {
   const all = [...getMockStore()]
   let existingIndex = planId ? all.findIndex(x => x.id === Number(planId)) : -1
 
+  if (existingIndex >= 0) {
+    const existingPlan = all[existingIndex]
+    if (existingPlan.status === 'APPROVED' || existingPlan.status === 'CANCELLED') {
+      throw new Error('Chỉ được chỉnh sửa kế hoạch ở trạng thái Bản nháp (DRAFT) hoặc Yêu cầu sửa (REJECTED_NEED_EDIT)!')
+    }
+  }
+
   const sem = MOCK_SEMESTERS.find(s => s.id === Number(data.semesterId)) || MOCK_SEMESTERS[0]
   const fac = MOCK_FACULTIES.find(f => f.id === Number(data.facultyId)) || MOCK_FACULTIES[0]
 
-  const mappedItems = (data.items || []).map((it, idx) => ({
-    id: it.id || Date.now() + idx,
-    teachingId: it.teachingId || idx + 1,
-    classCode: it.classCode || 'Lớp ' + (idx + 1),
-    subjectCode: it.subjectCode || 'MH00' + (idx + 1),
-    subjectName: it.subjectName || 'Môn học mẫu',
-    teacherAccount: it.teacherAccount || 'namnv',
-    teacherName: it.teacherName || 'Nguyễn Văn Nam',
-    plannedDate: it.plannedDate || '2026-10-25',
-    shift: it.shift || 2,
-    inspector1: it.inspector1 || { account: 'dungpt', fullName: 'Phan Tiến Dũng', facultyName: fac.name, campusName: 'Đà Nẵng' },
-    inspector2: it.inspector2 || null,
-    inspector3: it.inspector3 || null,
-    reason: it.reason || ''
-  }))
+  const mappedItems = (data.items || []).map((it, idx) => {
+    const clsInfo = ALL_MOCK_CLASSES.find(c => c.teachingId === Number(it.teachingId))
+    const classCode = it.classCode || clsInfo?.classCode || ('Lớp ' + (idx + 1))
+    const subjectCode = it.subjectCode || clsInfo?.subjectCode || ('MH00' + (idx + 1))
+    const subjectName = it.subjectName || clsInfo?.subjectName || 'Môn học chuyên ngành'
+    const teacherAccount = it.teacherAccount || clsInfo?.teacherAccount || 'namnv'
+    const teacherName = it.teacherName || clsInfo?.teacherName || 'Nguyễn Văn Nam'
+
+    const ins1 = resolveMockInspector(it.inspector1, it.inspector1Id, fac.name)
+    const ins2 = resolveMockInspector(it.inspector2, it.inspector2Id, fac.name)
+    const ins3 = resolveMockInspector(it.inspector3, it.inspector3Id, fac.name)
+
+    // Kiểm tra không tự dự giờ lớp chính mình dạy
+    for (const ins of [ins1, ins2, ins3]) {
+      if (ins && ins.account === teacherAccount) {
+        throw new Error(`Giảng viên ${ins.account} không thể tự dự giờ lớp ${classCode} của chính mình!`)
+      }
+    }
+    // Kiểm tra không trùng người dự trong cùng 1 lớp
+    if (ins1 && ins2 && ins1.account === ins2.account) {
+      throw new Error(`Lớp ${classCode} có GV 1 và GV 2 trùng nhau (${ins1.account})!`)
+    }
+    if (ins1 && ins3 && ins1.account === ins3.account) {
+      throw new Error(`Lớp ${classCode} có GV 1 và GV 3 trùng nhau (${ins1.account})!`)
+    }
+    if (ins2 && ins3 && ins2.account === ins3.account) {
+      throw new Error(`Lớp ${classCode} có GV 2 và GV 3 trùng nhau (${ins2.account})!`)
+    }
+
+    return {
+      id: it.id || Date.now() + idx,
+      teachingId: it.teachingId || idx + 1,
+      classCode,
+      subjectCode,
+      subjectName,
+      teacherAccount,
+      teacherName,
+      plannedDate: it.plannedDate || '2026-10-25',
+      shift: it.shift || 2,
+      inspector1: ins1,
+      inspector2: ins2,
+      inspector3: ins3,
+      reason: it.reason || ''
+    }
+  })
 
   const status = isSubmit ? 'SUBMITTED' : 'DRAFT'
   const now = new Date().toISOString()
 
   if (existingIndex >= 0) {
     const p = all[existingIndex]
-    // Kiểm tra nếu có cập nhật code thủ công mà trùng với kế hoạch khác
     if (data.code && data.code.trim() && data.code.trim() !== p.code) {
       const customCode = data.code.trim()
       const isDuplicate = all.some(x => x.id !== Number(planId) && x.code.toLowerCase() === customCode.toLowerCase())
@@ -465,6 +518,9 @@ export function saveOrSubmitMockPlan(data, isSubmit = false, planId = null) {
         throw new Error(`Mã kế hoạch '${customCode}' đã tồn tại trong hệ thống! Không thể sửa trùng mã kế hoạch.`)
       }
       p.code = customCode
+    }
+    if (data.unscheduled !== undefined) {
+      p.unscheduled = !!data.unscheduled
     }
     p.items = mappedItems
     p.classCount = mappedItems.length
@@ -474,7 +530,7 @@ export function saveOrSubmitMockPlan(data, isSubmit = false, planId = null) {
     p.histories.push({
       id: Date.now(),
       action: isSubmit ? 'SUBMIT' : 'UPDATE_DRAFT',
-      actorName: 'Người dùng',
+      actorName: 'Phan Tiến Dũng',
       note: isSubmit ? 'Trình duyệt kế hoạch' : 'Cập nhật bản nháp',
       createdAt: now
     })
@@ -482,16 +538,17 @@ export function saveOrSubmitMockPlan(data, isSubmit = false, planId = null) {
     return p
   } else {
     const newId = all.length > 0 ? Math.max(...all.map(x => x.id)) + 1 : 1
-    const basePrefix = data.unscheduled
-      ? `KH-DX-${fac.code}-${sem.shortCode}`
-      : `KH-${fac.code}-${sem.shortCode}-B${data.block || 1}`
-    
-    // Tự động kiểm tra trùng lặp mã kế hoạch và sinh mã duy nhất kế tiếp
+    const basePrefix = `KH-${fac.code}-${sem.shortCode}-B${data.block || 1}`
+
     let seq = 1
-    let newCode = `${basePrefix}-${String(seq).padStart(3, '0')}`
-    while (all.some(x => x.code === newCode)) {
+    let newCode = data.unscheduled
+      ? `${basePrefix}-DX`
+      : `${basePrefix}-${String(seq).padStart(3, '0')}`
+    while (all.some(x => x.code.toLowerCase() === newCode.toLowerCase())) {
       seq++
-      newCode = `${basePrefix}-${String(seq).padStart(3, '0')}`
+      newCode = data.unscheduled
+        ? `${basePrefix}-${seq}-DX`
+        : `${basePrefix}-${String(seq).padStart(3, '0')}`
     }
 
     if (data.code && data.code.trim()) {
@@ -634,6 +691,50 @@ export const ALL_MOCK_CLASSES = [
     sessionCount: 4,
     groupType: 'OTHERS'
   },
+  {
+    teachingId: 22,
+    classCode: 'CP18303',
+    subjectCode: 'PRO2113',
+    subjectName: 'Dự án tốt nghiệp (CNTT)',
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 1,
+    block: 1,
+    teacherAccount: 'hah7',
+    teacherName: 'Hoàng Anh Huy',
+    sessionCount: 4,
+    groupType: 'MANDATORY',
+    reasonBadge: 'Môn đồ án / thực tập'
+  },
+  {
+    teachingId: 23,
+    classCode: 'WD18304',
+    subjectCode: 'COM1081',
+    subjectName: 'Nhập môn lập trình nâng cao',
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 1,
+    block: 1,
+    teacherAccount: 'dungpt',
+    teacherName: 'Phan Tiến Dũng',
+    sessionCount: 4,
+    groupType: 'MANDATORY',
+    reasonBadge: 'Lần đầu dạy môn mới'
+  },
+  {
+    teachingId: 24,
+    classCode: 'IT18305',
+    subjectCode: 'COM108',
+    subjectName: 'Nhập môn lập trình',
+    facultyId: 1,
+    facultyName: 'Công nghệ thông tin',
+    semesterId: 1,
+    block: 1,
+    teacherAccount: 'namnv',
+    teacherName: 'Nguyễn Văn Nam',
+    sessionCount: 4,
+    groupType: 'OTHERS'
+  },
 
   // --- CNTT (facultyId: 1) - Fall 2026 (semesterId: 1) - Block 2 ---
   {
@@ -659,8 +760,8 @@ export const ALL_MOCK_CLASSES = [
     facultyName: 'Công nghệ thông tin',
     semesterId: 1,
     block: 2,
-    teacherAccount: 'minhtv',
-    teacherName: 'Trần Văn Minh',
+    teacherAccount: 'hah7',
+    teacherName: 'Hoàng Anh Huy',
     sessionCount: 4,
     groupType: 'OTHERS'
   },
@@ -721,8 +822,8 @@ export const ALL_MOCK_CLASSES = [
     facultyName: 'Cơ bản',
     semesterId: 1,
     block: 2,
-    teacherAccount: 'nhungpt_hn',
-    teacherName: 'Phạm Thu Nhung',
+    teacherAccount: 'huongnt',
+    teacherName: 'Nguyễn Thị Hương',
     sessionCount: 3,
     groupType: 'OTHERS'
   },
@@ -752,8 +853,8 @@ export const ALL_MOCK_CLASSES = [
     facultyName: 'Tiếng Anh',
     semesterId: 1,
     block: 2,
-    teacherAccount: 'nhungpt_hn',
-    teacherName: 'Phạm Thu Nhung',
+    teacherAccount: 'huongnt',
+    teacherName: 'Nguyễn Thị Hương',
     sessionCount: 3,
     groupType: 'OTHERS'
   },
@@ -903,37 +1004,67 @@ export const ALL_MOCK_CLASSES = [
 export function getMockClassGroups(semesterId, block, facultyId) {
   let list = [...ALL_MOCK_CLASSES]
 
-  // Lọc theo kỳ học: nếu có chọn kỳ học cụ thể
   if (semesterId && Number(semesterId) > 0) {
     list = list.filter(c => Number(c.semesterId) === Number(semesterId))
   }
 
-  // Lọc theo Block: 0 = tất cả, 1 = Block 1, 2 = Block 2
   if (block && Number(block) > 0) {
     list = list.filter(c => Number(c.block) === Number(block))
   }
 
-  // Lọc theo Bộ môn: nếu có chọn bộ môn cụ thể
   if (facultyId && Number(facultyId) > 0) {
     list = list.filter(c => Number(c.facultyId) === Number(facultyId))
   }
 
-  const mandatory = list.filter(c => c.groupType === 'MANDATORY')
-  const others = list.filter(c => c.groupType === 'OTHERS')
-  const alreadyPlanned = list.filter(c => c.groupType === 'ALREADY_PLANNED')
+  // Tìm các lớp đã thuộc kế hoạch đang hiệu lực (DRAFT, SUBMITTED, REJECTED_NEED_EDIT, APPROVED)
+  const activePlans = getMockStore().filter(p => {
+    if (p.status === 'CANCELLED') return false
+    if (semesterId && Number(semesterId) > 0 && Number(p.semesterId) !== Number(semesterId)) return false
+    if (block && Number(block) > 0 && Number(p.block) !== Number(block)) return false
+    return true
+  })
+
+  const plannedMap = new Map()
+  const plannedTeacherSet = new Set()
+  for (const p of activePlans) {
+    for (const it of (p.items || [])) {
+      if (it.teachingId && !plannedMap.has(Number(it.teachingId))) {
+        plannedMap.set(Number(it.teachingId), p.code)
+      }
+    }
+  }
+
+  const mandatory = []
+  const others = []
+  const alreadyPlanned = []
+
+  for (const c of list) {
+    if (plannedMap.has(Number(c.teachingId))) {
+      alreadyPlanned.push({
+        ...c,
+        groupType: 'ALREADY_PLANNED',
+        existingPlanCode: plannedMap.get(Number(c.teachingId))
+      })
+      plannedTeacherSet.add(c.teacherAccount)
+    } else if (c.groupType === 'MANDATORY') {
+      mandatory.push({ ...c })
+    } else {
+      others.push({ ...c })
+    }
+  }
 
   const teacherSet = new Set(list.map(c => c.teacherAccount))
   const totalTeachers = teacherSet.size
-  const requiredQuota = totalTeachers > 0 ? Math.max(1, Math.ceil(totalTeachers * 0.15)) : 0
-  const plannedTeachers = totalTeachers > 0 ? Math.min(totalTeachers, Math.round(requiredQuota * 0.6)) : 0
-  const percent = requiredQuota > 0 ? Math.min(100, Math.round((plannedTeachers / requiredQuota) * 100)) : 0
+  const requiredQuota = totalTeachers > 0 ? Math.ceil(totalTeachers * 0.15) : 0
+  const plannedTeachers = plannedTeacherSet.size
+  const percent = requiredQuota > 0 ? Math.min(100, Math.round((plannedTeachers / requiredQuota) * 100)) : 100
 
   return {
     quota: {
-      totalTeachers: totalTeachers || (list.length > 0 ? list.length : 0),
-      requiredQuota: requiredQuota,
-      plannedTeachers: plannedTeachers,
-      percent: percent
+      totalTeachers,
+      requiredQuota,
+      plannedTeachers,
+      percent
     },
     mandatory,
     others,
@@ -941,7 +1072,7 @@ export function getMockClassGroups(semesterId, block, facultyId) {
   }
 }
 
-// Hàm lọc lớp cho kế hoạch đột xuất (UC-12)
+// Hàm lọc lớp cho kế hoạch đột xuất (UC-12 / SRS UC-13)
 export function getMockUnscheduledCandidates(semesterId, block, facultyId) {
   let list = [...ALL_MOCK_CLASSES]
 
@@ -957,6 +1088,21 @@ export function getMockUnscheduledCandidates(semesterId, block, facultyId) {
     list = list.filter(c => Number(c.facultyId) === Number(facultyId))
   }
 
+  const activePlans = getMockStore().filter(p => {
+    if (p.status === 'CANCELLED') return false
+    if (semesterId && Number(semesterId) > 0 && Number(p.semesterId) !== Number(semesterId)) return false
+    if (block && Number(block) > 0 && Number(p.block) !== Number(block)) return false
+    return true
+  })
+  const plannedMap = new Map()
+  for (const p of activePlans) {
+    for (const it of (p.items || [])) {
+      if (it.teachingId && !plannedMap.has(Number(it.teachingId))) {
+        plannedMap.set(Number(it.teachingId), p.code)
+      }
+    }
+  }
+
   // Nhóm theo từng giảng viên theo format UnscheduledPlanView yêu cầu
   const groupMap = new Map()
   for (const c of list) {
@@ -969,6 +1115,7 @@ export function getMockUnscheduledCandidates(semesterId, block, facultyId) {
         classes: []
       })
     }
+    const existingCode = plannedMap.get(Number(c.teachingId)) || null
     groupMap.get(c.teacherAccount).classes.push({
       teachingId: c.teachingId,
       classCode: c.classCode,
@@ -977,6 +1124,8 @@ export function getMockUnscheduledCandidates(semesterId, block, facultyId) {
       facultyId: c.facultyId,
       facultyName: c.facultyName,
       sessionCount: c.sessionCount,
+      alreadyPlanned: !!existingCode,
+      existingPlanCode: existingCode,
       plannedDate: '2026-10-25',
       shift: 2
     })
@@ -1140,11 +1289,26 @@ export async function importScheduleFileMock(file) {
     list = [...MOCK_JOBS]
   }
 
-  // UC-8-1: Chống trùng lặp (Check Duplicate schedule)
-  // Nếu file đã từng import thì chặn lại và không tạo thêm lần import trùng
-  const isDuplicate = list.some(j => j.fileName.toLowerCase() === file.name.toLowerCase())
-  if (isDuplicate) {
-    throw new Error(`File lịch dạy '${file.name}' đã được import trước đó. Hệ thống tự động phát hiện và chặn trùng lặp (UC-8-1). Không tạo thêm lần import trùng.`)
+  // UC-08: Đối soát dữ liệu lịch dạy khi import lại file (Re-import reconciliation)
+  const isReimport = list.some(j => j.fileName.toLowerCase() === file.name.toLowerCase())
+  const finalInserted = isReimport ? 0 : inserted
+  const finalUpdated = isReimport ? Math.min(totalRows, Math.max(1, Math.round(totalRows * 0.15))) : updated
+  const finalSkipped = isReimport ? Math.max(0, totalRows - finalUpdated) : skipped
+
+  if (isReimport && generatedRows.length > 0) {
+    generatedRows = generatedRows.map((r, idx) => ({
+      ...r,
+      result: idx === 0 ? 'SWAPPED' : idx % 5 === 0 ? 'UPDATED_ROOM' : idx % 7 === 0 ? 'UPDATED_TIME' : 'SKIPPED',
+      oldValue: idx === 0 ? '2026-10-22 Ca 2 F201' : idx % 5 === 0 ? 'F201' : '2026-10-20 Ca 2 F201',
+      newValue: idx === 0 ? '2026-10-20 Ca 2 F201' : idx % 5 === 0 ? 'B203' : r.newValue,
+      message: idx === 0
+        ? 'Hoán đổi ngày/ca qua Temp Swap (1970-01-01)'
+        : idx % 5 === 0
+          ? 'Đổi phòng từ F201 sang B203'
+          : idx % 7 === 0
+            ? 'Đổi ngày/ca học'
+            : 'Trùng hoàn toàn buổi học đã có (SKIPPED)'
+    }))
   }
 
   const newId = list.length > 0 ? Math.max(...list.map(j => j.id)) + 1 : 1
@@ -1154,12 +1318,12 @@ export async function importScheduleFileMock(file) {
     fileSize: file.size,
     status: 'DONE',
     totalRows,
-    inserted,
-    updated,
-    skipped,
+    inserted: finalInserted,
+    updated: finalUpdated,
+    skipped: finalSkipped,
     errors: 0,
     progress: 100,
-    message: `Thành công: ${inserted}, Cập nhật: ${updated}, Bỏ qua: ${skipped}, Lỗi: 0`,
+    message: `Thành công: ${finalInserted}, Cập nhật: ${finalUpdated}, Bỏ qua: ${finalSkipped}, Lỗi: 0`,
     createdAt: new Date().toISOString(),
     finishedAt: new Date().toISOString(),
     uploader: { fullName: 'Nguyễn Anh Tuấn', account: 'tuanna' }

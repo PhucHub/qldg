@@ -43,7 +43,7 @@ public class SecurityScopeService {
 
     /**
      * Quy tắc my_faculties() theo tài liệu:
-     * - TBĐT, TC&QLĐT, Super Admin: MỌI bộ môn is_active = true của cơ sở
+     * - TBĐT, TC&QLĐT, TP.ĐT, Admin, Super Admin (Head Office): MỌI bộ môn is_active = true của cơ sở
      * - CNBM: CẢ NHÓM bộ môn có cùng group_key với bộ môn của mình
      * - TM: ĐÚNG bộ môn mình phụ trách
      * - GV: Bộ môn của mình
@@ -53,30 +53,49 @@ public class SecurityScopeService {
         Long campusId = user.campus.id;
         List<CampusFaculty> activeList = campusFacultyRepo.findByCampusIdAndActiveTrue(campusId);
 
-        if (user.headOffice || "TBDT".equals(user.role) || "TCQLDT".equals(user.role)) {
+        if (user.headOffice
+                || "HEAD_OFFICE".equalsIgnoreCase(user.role)
+                || "ADMIN".equalsIgnoreCase(user.role)
+                || "TBDT".equalsIgnoreCase(user.role)
+                || "TCQLDT".equalsIgnoreCase(user.role)
+                || "TP.ĐT".equalsIgnoreCase(user.role)
+                || "TPDT".equalsIgnoreCase(user.role)) {
             return activeList.stream().map(cf -> cf.faculty).toList();
         }
 
-        if ("CNBM".equals(user.role)) {
-            // Tìm group_key bộ môn của CNBM
-            Optional<CampusFaculty> own = activeList.stream()
+        if ("CNBM".equalsIgnoreCase(user.role)) {
+            // Tìm bộ môn/nhóm group_key của CNBM tại cơ sở
+            List<CampusFaculty> ownList = activeList.stream()
                     .filter(cf -> (cf.cnbm != null && cf.cnbm.id.equals(user.id)) ||
                                   (user.faculty != null && cf.faculty.id.equals(user.faculty.id)))
-                    .findFirst();
-            if (own.isPresent() && own.get().groupKey != null && !own.get().groupKey.isBlank()) {
-                String gk = own.get().groupKey;
-                return activeList.stream()
-                        .filter(cf -> gk.equalsIgnoreCase(cf.groupKey))
-                        .map(cf -> cf.faculty).toList();
+                    .toList();
+            Set<String> groupKeys = new HashSet<>();
+            for (CampusFaculty cf : ownList) {
+                if (cf.groupKey != null && !cf.groupKey.isBlank()) {
+                    groupKeys.add(cf.groupKey.trim().toUpperCase());
+                }
             }
-            return own.map(cf -> List.of(cf.faculty)).orElse(List.of());
+            if (!groupKeys.isEmpty()) {
+                return activeList.stream()
+                        .filter(cf -> (cf.groupKey != null && groupKeys.contains(cf.groupKey.trim().toUpperCase()))
+                                || ownList.contains(cf))
+                        .map(cf -> cf.faculty)
+                        .distinct()
+                        .toList();
+            }
+            return ownList.stream().map(cf -> cf.faculty).distinct().toList();
         }
 
-        if ("TM".equals(user.role)) {
+        if ("TM".equalsIgnoreCase(user.role)) {
+            List<Faculty> byTm = activeList.stream()
+                    .filter(cf -> cf.tm != null && cf.tm.id.equals(user.id))
+                    .map(cf -> cf.faculty)
+                    .toList();
+            if (!byTm.isEmpty()) return byTm;
             return activeList.stream()
-                    .filter(cf -> (cf.tm != null && cf.tm.id.equals(user.id)) ||
-                                  (user.faculty != null && cf.faculty.id.equals(user.faculty.id)))
-                    .map(cf -> cf.faculty).toList();
+                    .filter(cf -> user.faculty != null && cf.faculty.id.equals(user.faculty.id))
+                    .map(cf -> cf.faculty)
+                    .toList();
         }
 
         if (user.faculty != null) {

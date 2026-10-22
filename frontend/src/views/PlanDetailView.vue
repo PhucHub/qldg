@@ -28,7 +28,7 @@
       </div>
       <router-link
         v-if="canEditPlan"
-        :to="`/plans/create?editId=${plan.id}`"
+        :to="plan.unscheduled ? `/plans/unscheduled?editId=${plan.id}` : `/plans/create?editId=${plan.id}`"
         class="btn btn-primary"
         style="white-space: nowrap; margin-left: 16px;"
       >
@@ -41,7 +41,11 @@
       <div>
         <strong>Bản nháp kế hoạch:</strong> Kế hoạch này chưa được gửi trình duyệt tới Trưởng ban Đào tạo.
       </div>
-      <router-link :to="`/plans/create?editId=${plan.id}`" class="btn btn-outline-primary" style="white-space: nowrap;">
+      <router-link
+        :to="plan.unscheduled ? `/plans/unscheduled?editId=${plan.id}` : `/plans/create?editId=${plan.id}`"
+        class="btn btn-outline-primary"
+        style="white-space: nowrap;"
+      >
         Tiếp tục chỉnh sửa bản nháp →
       </router-link>
     </div>
@@ -62,6 +66,9 @@
         <div>Ngày gửi: <strong>{{ formatDate(plan.submittedAt || plan.createdAt) }}</strong></div>
       </div>
     </div>
+
+    <!-- Widget đối chiếu chỉ tiêu 15% (UC-14 Bước 4) -->
+    <QuotaWidget v-if="quota && quota.totalTeachers > 0" :quota="quota" />
 
     <!-- BẢNG CHI TIẾT TỪNG BUỔI DỰ GIỜ -->
     <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
@@ -268,12 +275,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../services/api.js'
 import { toast } from '../services/toast.js'
+import QuotaWidget from '../components/QuotaWidget.vue'
 
 const route = useRoute()
 const planId = route.params.id
 
 const currentUser = ref({})
 const plan = ref({})
+const quota = ref(null)
 const loading = ref(true)
 
 const showApproveModal = ref(false)
@@ -305,6 +314,14 @@ onMounted(async () => {
 async function loadPlan() {
   try {
     plan.value = await api.getPlanDetail(planId)
+    if (plan.value && plan.value.semesterId && plan.value.facultyId) {
+      try {
+        const clsRes = await api.getClassGroups(plan.value.semesterId, plan.value.block || 1, plan.value.facultyId)
+        if (clsRes && clsRes.quota) {
+          quota.value = clsRes.quota
+        }
+      } catch {}
+    }
   } catch (e) {
     toast.error('Lỗi tải kế hoạch: ' + e.message)
   }

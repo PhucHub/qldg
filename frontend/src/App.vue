@@ -19,15 +19,7 @@
         </div>
 
         <ul class="sidebar-menu">
-          <!-- 1. Lịch dự giờ của tôi (UC-15, UC-16 cá nhân): Dành cho GV, CNBM, TM, TBDT (những người tham gia dự giờ hoặc được dự) -->
-          <li v-if="canViewMyInspections" class="menu-item">
-            <router-link to="/my-inspections" active-class="active">
-              <span class="menu-icon">📅</span>
-              <span v-if="!isSidebarCollapsed">Lịch dự giờ của tôi</span>
-            </router-link>
-          </li>
-
-          <!-- 2. TC&QLĐT, TBĐT, Super Admin mới thấy Import lịch dạy (UC-07) -->
+          <!-- 1. TC&QLĐT, TBĐT, Super Admin mới thấy Import lịch dạy (UC-07) -->
           <li v-if="canViewImport" class="menu-item">
             <router-link to="/import" active-class="active">
               <span class="menu-icon">📥</span>
@@ -35,7 +27,7 @@
             </router-link>
           </li>
 
-          <!-- 3. CNBM, TM, TBĐT (lập thay): UC-11, UC-13 Lập KH dự giờ (Admin không lập kế hoạch bộ môn) -->
+          <!-- 2. CNBM, TM, TBĐT, HEAD_OFFICE: UC-09, UC-10, UC-11, UC-12 Lập KH dự giờ -->
           <li v-if="canCreatePlan" class="menu-item">
             <router-link to="/plans/create" active-class="active">
               <span class="menu-icon">✍️</span>
@@ -43,7 +35,7 @@
             </router-link>
           </li>
 
-          <!-- 4. CNBM, TM, TBĐT, TC&QLĐT, Super Admin thấy Quản lý KH dự giờ -->
+          <!-- 3. CNBM, TM, TBĐT, TC&QLĐT, Super Admin thấy Quản lý KH dự giờ (UC-13) -->
           <li v-if="canViewPlans" class="menu-item">
             <router-link to="/plans" active-class="active">
               <span class="menu-icon">📋</span>
@@ -51,12 +43,10 @@
             </router-link>
           </li>
 
-          <!-- 5. Các vai Quản lý (CNBM, TM, TBĐT, TC&QLĐT, HeadOffice) thấy Kết quả dự giờ (HDSD mục 4.4, SRS UC-15, UC-17) -->
-          <li v-if="currentUser.role !== 'GV'" class="menu-item">
-            <router-link to="/inspection-results" active-class="active">
-              <span class="menu-icon">📊</span>
-              <span v-if="!isSidebarCollapsed">Kết quả dự giờ</span>
-            </router-link>
+          <!-- Thông báo khi tài khoản GV đăng nhập (Test Case 1.4) -->
+          <li v-if="currentUser.role === 'GV' && !currentUser.headOffice" style="padding: 14px 12px; font-size: 12px; color: var(--text-muted); line-height: 1.5; background: #F9FAFB; border-radius: var(--radius); border: 1px dashed var(--border);">
+            <span v-if="!isSidebarCollapsed">Tài khoản GV không có menu trong phân hệ Lập KH &amp; Import</span>
+            <span v-else title="Tài khoản GV không có menu trong phân hệ Lập KH & Import">ℹ️</span>
           </li>
         </ul>
       </aside>
@@ -164,19 +154,19 @@ const showNotiDropdown = ref(false)
 
 const ALL_CAMPUSES = [
   { id: 1, code: 'dna', name: 'CĐ FPT Polytechnic Đà Nẵng' },
-  { id: 2, code: 'hni', name: 'CĐ FPT Polytechnic Hà Nội' },
+  { id: 2, code: 'hn', name: 'CĐ FPT Polytechnic Hà Nội' },
   { id: 3, code: 'hcm', name: 'CĐ FPT Polytechnic TP.HCM' },
-  { id: 4, code: 'cth', name: 'CĐ FPT Polytechnic Cần Thơ' },
-  { id: 5, code: 'tng', name: 'CĐ FPT Polytechnic Tây Nguyên' },
-  { id: 6, code: 'hpg', name: 'CĐ FPT Polytechnic Hải Phòng' },
-  { id: 7, code: 'tha', name: 'CĐ FPT Polytechnic Thanh Hóa' },
-  { id: 8, code: 'tna', name: 'CĐ FPT Polytechnic Thái Nguyên' },
-  { id: 9, code: 'dni', name: 'CĐ FPT Polytechnic Đồng Nai' },
-  { id: 10, code: 'bdh', name: 'CĐ FPT Polytechnic Bình Định' },
-  { id: 11, code: 'ntg', name: 'CĐ FPT Polytechnic Nha Trang' },
-  { id: 12, code: 'vtu', name: 'CĐ FPT Polytechnic Vũng Tàu' },
-  { id: 13, code: 'kgg', name: 'CĐ FPT Polytechnic Kiên Giang' },
-  { id: 14, code: 'ndi', name: 'CĐ FPT Polytechnic Nam Định' }
+  { id: 4, code: 'ct', name: 'CĐ FPT Polytechnic Cần Thơ' },
+  { id: 5, code: 'tn', name: 'CĐ FPT Polytechnic Tây Nguyên' },
+  { id: 6, code: 'hp', name: 'CĐ FPT Polytechnic Hải Phòng' },
+  { id: 7, code: 'bd', name: 'CĐ FPT Polytechnic Bình Định' },
+  { id: 8, code: 'th', name: 'CĐ FPT Polytechnic Thanh Hóa' },
+  { id: 9, code: 'qn', name: 'CĐ FPT Polytechnic Quảng Ninh' },
+  { id: 10, code: 'dn', name: 'CĐ FPT Polytechnic Đồng Nai' },
+  { id: 11, code: 'vt', name: 'CĐ FPT Polytechnic Vũng Tàu' },
+  { id: 12, code: 'nt', name: 'CĐ FPT Polytechnic Nha Trang' },
+  { id: 13, code: 'bdu', name: 'CĐ FPT Polytechnic Bình Dương' },
+  { id: 14, code: 'gl', name: 'CĐ FPT Polytechnic Gia Lai' }
 ]
 
 const selectedCampusCode = ref(localStorage.getItem('qldg_head_office_campus') || 'dna')
@@ -202,30 +192,23 @@ const userInitials = computed(() => {
 
 const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
 
-// Phân quyền menu theo vai trò (Prompt & SRS):
-// 1. Lịch dự giờ của tôi: Dành cho những ai tham gia dự giờ hoặc được dự (GV, CNBM, TM, TBDT)
-// TC&QLĐT và HeadOffice (Super Admin) không đi dự giờ nên không thấy menu này
-const canViewMyInspections = computed(() => {
-  const r = currentUser.value.role
-  return r === 'GV' || r === 'CNBM' || r === 'TM' || r === 'TBDT'
-})
-
-// 2. TC&QLĐT, TBĐT, Super Admin: UC-07, 08 (Import lịch dạy)
+// Phân quyền menu theo vai trò (UC-07 -> UC-13):
+// 1. TC&QLĐT, TBĐT, Super Admin: UC-07, 08 (Import lịch dạy)
 const canViewImport = computed(() => {
   const r = currentUser.value.role
-  return r === 'TCQLDT' || r === 'TBDT' || currentUser.value.headOffice
+  return r === 'TCQLDT' || r === 'TBDT' || r === 'HEAD_OFFICE' || currentUser.value.headOffice
 })
 
-// 3. CNBM, TM, TBĐT: UC-11, 13 (Lập KH dự giờ). Admin và TCQLDT không lập kế hoạch bộ môn
+// 2. CNBM, TM, TBĐT, Super Admin: UC-09, 10, 11, 12 (Lập KH dự giờ)
 const canCreatePlan = computed(() => {
   const r = currentUser.value.role
-  return r === 'CNBM' || r === 'TM' || r === 'TBDT'
+  return r === 'CNBM' || r === 'TM' || r === 'TBDT' || r === 'HEAD_OFFICE' || currentUser.value.headOffice
 })
 
-// 4. CNBM, TM, TBĐT, TC&QLĐT, Super Admin: Quản lý KH dự giờ
+// 3. CNBM, TM, TBĐT, TC&QLĐT, Super Admin: UC-13 (Quản lý KH dự giờ)
 const canViewPlans = computed(() => {
   const r = currentUser.value.role
-  return r === 'CNBM' || r === 'TM' || r === 'TBDT' || r === 'TCQLDT' || currentUser.value.headOffice
+  return r === 'CNBM' || r === 'TM' || r === 'TBDT' || r === 'TCQLDT' || r === 'HEAD_OFFICE' || currentUser.value.headOffice
 })
 
 let initialNotiLoad = true

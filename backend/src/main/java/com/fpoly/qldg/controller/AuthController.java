@@ -62,6 +62,8 @@ public class AuthController {
             m.put("account", u.account);
             m.put("fullName", u.fullName);
             m.put("role", u.role);
+            m.put("staffCode", u.staffCode);
+            m.put("headOffice", u.headOffice);
             m.put("campusCode", u.campus.code);
             m.put("campusName", u.campus.name);
             m.put("facultyCode", u.faculty != null ? u.faculty.code : "");

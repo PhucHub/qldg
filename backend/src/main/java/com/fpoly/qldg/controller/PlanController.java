@@ -88,7 +88,7 @@ public class PlanController {
         return ResponseEntity.ok(planService.getValidSessionsForTeaching(teachingId));
     }
 
-    /** Giảng viên trong bộ môn hoặc cơ sở */
+    /** Giảng viên trong bộ môn hoặc nhóm bộ môn (my_faculties) tại cơ sở */
     @GetMapping("/inspectors/in-faculty")
     public ResponseEntity<?> getInspectorsInFaculty(
             @RequestParam(required = false) Long facultyId,
@@ -100,6 +100,13 @@ public class PlanController {
         if (facultyId != null && facultyId > 0) {
             String fCode = facultyRepo.findById(facultyId).map(f -> f.code).orElse("");
             stream = stream.filter(c -> fCode.equalsIgnoreCase(c.facultyCode()));
+        } else {
+            Set<String> myCodes = scopeService.myFaculties(u).stream()
+                    .map(f -> f.code.toUpperCase())
+                    .collect(java.util.stream.Collectors.toSet());
+            if (!myCodes.isEmpty()) {
+                stream = stream.filter(c -> c.facultyCode() != null && myCodes.contains(c.facultyCode().toUpperCase()));
+            }
         }
         return ResponseEntity.ok(stream.toList());
     }
@@ -114,7 +121,17 @@ public class PlanController {
         return ResponseEntity.ok(planService.searchInspectorsGlobal(keyword, campusId));
     }
 
-    /** UC-13: Danh sách kế hoạch dự giờ gom theo bộ môn */
+    /** Kiểm tra trùng mã kế hoạch */
+    @GetMapping("/check-code")
+    public ResponseEntity<?> checkCode(
+            @RequestParam String code,
+            @RequestParam(required = false) Long excludeId) {
+        Optional<Inspection> opt = inspectionRepo.findByCode(code.trim());
+        boolean dup = opt.isPresent() && (excludeId == null || !opt.get().id.equals(excludeId));
+        return ResponseEntity.ok(Map.of("isDuplicate", dup));
+    }
+
+    /** UC-13: Danh sách kế hoạch dự giờ gom theo bộ môn (tuân thủ my_faculties) */
     @GetMapping
     public ResponseEntity<?> listPlans(
             @RequestParam(required = false) Long semesterId,
@@ -127,11 +144,12 @@ public class PlanController {
         if ("GV".equalsIgnoreCase(u.role)) {
             return ResponseEntity.status(403).body(Map.of("message", "Tài khoản Giảng viên không có quyền truy cập kế hoạch dự giờ"));
         }
+        List<Long> allowedFacultyIds = scopeService.myFaculties(u).stream().map(f -> f.id).toList();
         List<Long> scopeIds;
         if (facultyId != null && facultyId > 0) {
-            scopeIds = List.of(facultyId);
+            scopeIds = allowedFacultyIds.contains(facultyId) ? List.of(facultyId) : List.of(-1L);
         } else {
-            scopeIds = facultyRepo.findAll().stream().map(f -> f.id).toList();
+            scopeIds = allowedFacultyIds.isEmpty() ? List.of(-1L) : allowedFacultyIds;
         }
 
         List<Inspection> list = inspectionRepo.findList(u.campus.id, semesterId, block, scopeIds);
@@ -275,6 +293,8 @@ public class PlanController {
         try {
             Inspection p = planService.approvePlan(id, u);
             return ResponseEntity.ok(Map.of("id", p.id, "status", p.status));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (SecurityException e) {
             return ResponseEntity.status(403).body(Map.of("message", e.getMessage()));
         }

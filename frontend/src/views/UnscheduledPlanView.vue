@@ -4,7 +4,9 @@
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
         <div style="display: flex; align-items: center; gap: 10px;">
-          <h1 class="page-title" style="color: var(--danger);">Lập kế hoạch dự giờ đột xuất</h1>
+          <h1 class="page-title" style="color: var(--danger);">
+            {{ editingPlanId ? `Chỉnh sửa kế hoạch đột xuất (${editingPlanCode})` : 'Lập kế hoạch dự giờ đột xuất' }}
+          </h1>
           <span class="badge badge-red" style="font-size: 13px;">MÃ -DX</span>
         </div>
       </div>
@@ -20,9 +22,8 @@
       <div class="step" :class="{ active: step === 2 }"><span>2</span> Phân công người dự</div>
     </div>
 
-    <!-- BƯỚC 1: CHỌN LỚP & NHẬP LÝ DO -->
+    <!-- BƯỚC 1: CHỌN LỚP & NHẬP LÝ DO (GOM NHÓM THEO GIẢNG VIÊN - UC-13) -->
     <div v-if="step === 1">
-      <!-- Bộ lọc mặc định -- Chọn bộ môn -- -->
       <div class="card filter-bar">
         <div class="form-group">
           <label class="form-label">Kỳ học</label>
@@ -53,7 +54,7 @@
       </div>
 
       <div class="hint-banner">
-        ⚠️ Áp dụng khi có phản ánh hoặc kiểm tra đột xuất. Hiển thị tất cả lớp học trong kỳ &amp; block đã chọn. <strong>Bắt buộc nhập lý do cho từng lớp chọn</strong>.
+        ⚠️ Áp dụng khi có phản ánh hoặc kiểm tra đột xuất. Hiển thị tất cả lớp học trong kỳ &amp; block đã chọn gom theo giảng viên. <strong>Bắt buộc nhập lý do cho từng lớp chọn</strong>.
       </div>
 
       <!-- Trạng thái tải / Trống -->
@@ -61,96 +62,115 @@
         Đang tải danh sách lớp học phần...
       </div>
 
-      <div v-else-if="flatClasses.length === 0" class="empty-state card">
+      <div v-else-if="filteredGroups.length === 0" class="empty-state card">
         <div class="empty-icon">📂</div>
         <div class="empty-title">Không tìm thấy lớp học phần phù hợp</div>
         <div class="muted" style="font-size: 13px;">Thử đổi từ khóa tìm kiếm hoặc kiểm tra lại lịch dạy đã import.</div>
       </div>
 
-      <!-- Bảng danh sách lớp có phân trang 4 lớp 1 trang -->
-      <div v-else class="card" style="padding: 0; overflow: hidden;">
-        <div class="table-toolbar">
-          <div style="font-size: 13px; font-weight: 600;">
-            Danh sách lớp học phần (Tổng {{ flatClasses.length }} lớp)
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-secondary" style="font-size: 12px; padding: 5px 12px;" @click="toggleSelectAllPage">
-              {{ allPageSelected ? 'Bỏ chọn trang này' : 'Chọn 4 lớp trang này' }}
-            </button>
-          </div>
-        </div>
-
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th style="width: 44px; text-align: center;">Chọn</th>
-                <th style="width: 130px;">Mã lớp</th>
-                <th>Môn học</th>
-                <th>Bộ môn</th>
-                <th>Giảng viên</th>
-                <th style="width: 140px;">Trạng thái</th>
-                <th style="min-width: 280px;">Lý do dự giờ đột xuất <span class="req">*</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="cls in pagedClasses"
-                :key="cls.teachingId"
-                :class="{ 'row-selected': selectedTeachingIds.includes(cls.teachingId) }"
-                @click="toggleSelectClass(cls, !selectedTeachingIds.includes(cls.teachingId))"
+      <!-- Danh sách lớp gom nhóm theo từng Giảng viên (SRS UC-13 & HDSD 4.2 & Test Case 7.2) -->
+      <div v-else>
+        <div
+          v-for="grp in pagedGroups"
+          :key="grp.teacherAccount"
+          class="card teacher-group-card"
+          style="padding: 0; overflow: hidden; margin-bottom: 16px;"
+        >
+          <!-- Header Giảng viên -->
+          <div class="teacher-group-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="teacher-avatar">
+                {{ (grp.teacherName || grp.teacherAccount || 'G').charAt(0).toUpperCase() }}
+              </div>
+              <div>
+                <div style="font-weight: 700; font-size: 14px; color: var(--text-main);">
+                  {{ grp.teacherName }}
+                  <span class="muted" style="font-weight: 500;">({{ grp.teacherAccount }})</span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">
+                  Bộ môn: <strong>{{ grp.facultyName || 'Chuyên môn' }}</strong> · Đang dạy <strong>{{ grp.classes.length }}</strong> lớp học phần
+                </div>
+              </div>
+            </div>
+            <div>
+              <button
+                class="btn btn-secondary"
+                style="font-size: 12px; padding: 5px 12px;"
+                @click="toggleSelectTeacherGroup(grp)"
               >
-                <td style="text-align: center;" @click.stop>
-                  <input
-                    type="checkbox"
-                    :checked="selectedTeachingIds.includes(cls.teachingId)"
-                    @change="toggleSelectClass(cls, $event.target.checked)"
-                  />
-                </td>
-                <td>
-                  <span class="class-code">{{ cls.classCode }}</span>
-                </td>
-                <td>
-                  <div style="font-weight: 500;">{{ cls.subjectCode }}</div>
-                  <div class="muted" style="font-size: 11px;">{{ cls.subjectName }}</div>
-                </td>
-                <td>
-                  <span class="badge badge-gray">{{ cls.facultyName || 'N/A' }}</span>
-                </td>
-                <td>
-                  <strong>{{ cls.teacherName }}</strong>
-                  <div class="muted" style="font-size: 11px;">({{ cls.teacherAccount }})</div>
-                </td>
-                <td>
-                  <span v-if="cls.alreadyPlanned" class="badge badge-gray" :title="'Đã thuộc kế hoạch ' + cls.existingPlanCode">
-                    Đã có KH ({{ cls.existingPlanCode }})
-                  </span>
-                  <span v-else class="badge badge-blue">Chưa có KH</span>
-                </td>
-                <td @click.stop>
-                  <div class="reason-input-wrapper">
+                {{ isAllGroupSelected(grp) ? `Bỏ chọn ${grp.classes.length} lớp` : `+ Chọn cả ${grp.classes.length} lớp` }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Bảng lớp của Giảng viên -->
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 44px; text-align: center;">Chọn</th>
+                  <th style="width: 130px;">Mã lớp</th>
+                  <th>Môn học</th>
+                  <th>Bộ môn</th>
+                  <th style="width: 160px;">Trạng thái</th>
+                  <th style="min-width: 300px;">Lý do dự giờ đột xuất <span class="req">*</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="cls in grp.classes"
+                  :key="cls.teachingId"
+                  :class="{ 'row-selected': selectedTeachingIds.includes(cls.teachingId) }"
+                  @click="toggleSelectClass(cls, !selectedTeachingIds.includes(cls.teachingId))"
+                >
+                  <td style="text-align: center;" @click.stop>
                     <input
-                      v-model="reasonsMap[cls.teachingId]"
-                      class="form-control reason-input"
-                      :class="{ 'reason-error': attempted && selectedTeachingIds.includes(cls.teachingId) && !getReason(cls.teachingId) }"
-                      :placeholder="selectedTeachingIds.includes(cls.teachingId) ? 'Ghi rõ lý do (VD: Sinh viên phản ánh giảng dạy, KT đột xuất)...' : 'Tích chọn để nhập lý do'"
-                      :disabled="!selectedTeachingIds.includes(cls.teachingId)"
-                      @focus="onReasonFocus(cls)"
+                      type="checkbox"
+                      :checked="selectedTeachingIds.includes(cls.teachingId)"
+                      @change="toggleSelectClass(cls, $event.target.checked)"
                     />
-                    <span v-if="attempted && selectedTeachingIds.includes(cls.teachingId) && !getReason(cls.teachingId)" class="reason-error-hint">
-                      Bắt buộc nhập lý do
+                  </td>
+                  <td>
+                    <span class="class-code">{{ cls.classCode }}</span>
+                  </td>
+                  <td>
+                    <div style="font-weight: 500;">{{ cls.subjectCode }}</div>
+                    <div class="muted" style="font-size: 11px;">{{ cls.subjectName }}</div>
+                  </td>
+                  <td>
+                    <span class="badge badge-gray">{{ cls.facultyName || grp.facultyName || 'N/A' }}</span>
+                  </td>
+                  <td>
+                    <span v-if="cls.alreadyPlanned" class="badge badge-gray" :title="'Đã thuộc kế hoạch ' + cls.existingPlanCode">
+                      Đã có KH ({{ cls.existingPlanCode }})
                     </span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                    <span v-else class="badge badge-blue">Chưa có KH</span>
+                  </td>
+                  <td @click.stop>
+                    <div class="reason-input-wrapper">
+                      <input
+                        v-model="reasonsMap[cls.teachingId]"
+                        class="form-control reason-input"
+                        :class="{ 'reason-error': attempted && selectedTeachingIds.includes(cls.teachingId) && !getReason(cls.teachingId) }"
+                        :placeholder="selectedTeachingIds.includes(cls.teachingId) ? 'Ghi rõ lý do (VD: Sinh viên phản ánh giảng dạy, KT đột xuất)...' : 'Tích chọn để nhập lý do'"
+                        :disabled="!selectedTeachingIds.includes(cls.teachingId)"
+                        @focus="onReasonFocus(cls)"
+                      />
+                      <span v-if="attempted && selectedTeachingIds.includes(cls.teachingId) && !getReason(cls.teachingId)" class="reason-error-hint">
+                        Bắt buộc nhập lý do
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- Phân trang 4 lớp 1 trang -->
-        <div v-if="totalPages > 1" class="pagination-bar">
+        <!-- Phân trang theo nhóm giảng viên -->
+        <div v-if="totalPages > 1" class="card pagination-bar" style="margin-bottom: 16px;">
           <div class="pagination-info">
-            Trang <strong>{{ currentPage }}</strong> / <strong>{{ totalPages }}</strong> (Tổng <strong>{{ flatClasses.length }}</strong> lớp)
+            Trang <strong>{{ currentPage }}</strong> / <strong>{{ totalPages }}</strong> (Tổng <strong>{{ filteredGroups.length }}</strong> giảng viên - <strong>{{ flatClasses.length }}</strong> lớp)
           </div>
           <div class="pagination-controls">
             <button class="pagination-btn" :disabled="currentPage <= 1" @click="currentPage--">« Trước</button>
@@ -186,120 +206,240 @@
       </div>
     </div>
 
-    <!-- BƯỚC 2: PHÂN CÔNG NGƯỜI DỰ GIỜ -->
+    <!-- BƯỚC 2: PHÂN CÔNG NGƯỜI DỰ GIỜ (KÉO THẢ / CHỌN GV + TÌM CHÉO - UC-11, UC-12, UC-13) -->
     <div v-if="step === 2">
-      <div class="card" style="padding: 0; overflow: hidden; border-top: 4px solid var(--danger);">
-        <div class="table-toolbar">
-          <div>
-            <span class="badge badge-red" style="font-size: 12px; margin-right: 8px;">ĐỘT XUẤT</span>
-            <strong>Phân công dự giờ đột xuất</strong>
-            <span class="muted" style="margin-left: 8px;">({{ assignItems.length }} lớp)</span>
+      <div class="step2-layout">
+        <!-- Cột trái: Danh sách giảng viên trong bộ môn để kéo thả -->
+        <div class="card inspector-sidebar">
+          <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px; color: var(--text-main);">
+            Giảng viên trong bộ môn
           </div>
-          <button class="btn btn-secondary" style="font-size: 12px;" @click="step = 1">← Chọn lại lớp</button>
-        </div>
-
-        <div style="padding: 16px;">
-          <!-- Thẻ lớp phân công dạng Card gọn gàng (phân trang 4 lớp) -->
-          <div
-            v-for="item in pagedAssignItems"
-            :key="item.teachingId"
-            class="assign-card"
-            :class="{ complete: isItemComplete(item), invalid: submitAttempted && !isItemComplete(item) }"
-          >
-            <div class="assign-card-head">
-              <div>
-                <span class="class-code">{{ item.classCode }}</span>
-                <span class="muted"> · {{ item.subjectCode }}</span>
-                <span class="muted" style="margin-left: 10px;">GV: <strong>{{ item.teacherName }}</strong> ({{ item.teacherAccount }})</span>
-              </div>
-              <span class="badge badge-red" style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" :title="item.reason">
-                Lý do: {{ item.reason }}
-              </span>
-            </div>
-
-            <div class="assign-card-body">
-              <div>
-                <div class="slot-label">Buổi dự (Lịch thật) <span class="req">*</span></div>
-                <select v-model="item.selectedSessionId" class="form-control" style="font-size: 12px;" @change="onSessionChange(item)">
-                  <option :value="null">-- Chọn buổi thật --</option>
-                  <option v-for="s in item.availableSessions" :key="s.sessionId" :value="s.sessionId">
-                    {{ s.label }}
-                  </option>
-                </select>
-              </div>
-
-              <!-- GV 1 -->
-              <div>
-                <div class="slot-label">GV 1 <span class="req">*</span></div>
-                <div class="slot-box" :class="{ 'has-val': item.inspector1, 'is-invalid': submitAttempted && !item.inspector1 }">
-                  <div v-if="item.inspector1" class="assigned-chip">
-                    <span>{{ item.inspector1.account }}</span>
-                    <button class="chip-remove" @click="removeSlotInspector(item, 1)">✕</button>
-                  </div>
-                  <button v-else class="btn-link" @click="openSearch(item, 1)">+ Tìm gán</button>
-                </div>
-              </div>
-
-              <!-- GV 2 -->
-              <div>
-                <div class="slot-label">GV 2 <span class="req">*</span></div>
-                <div class="slot-box" :class="{ 'has-val': item.inspector2, 'is-invalid': submitAttempted && !item.inspector2 }">
-                  <div v-if="item.inspector2" class="assigned-chip">
-                    <span>{{ item.inspector2.account }}</span>
-                    <button class="chip-remove" @click="removeSlotInspector(item, 2)">✕</button>
-                  </div>
-                  <button v-else class="btn-link" @click="openSearch(item, 2)">+ Tìm gán</button>
-                </div>
-              </div>
-
-              <!-- GV 3 -->
-              <div>
-                <div class="slot-label">GV 3 <span class="muted">(tùy chọn)</span></div>
-                <div class="slot-box" :class="{ 'has-val': item.inspector3 }">
-                  <div v-if="item.inspector3" class="assigned-chip">
-                    <span>{{ item.inspector3.account }}</span>
-                    <button class="chip-remove" @click="removeSlotInspector(item, 3)">✕</button>
-                  </div>
-                  <button v-else class="btn-link" @click="openSearch(item, 3)">+ Tìm gán</button>
-                </div>
-              </div>
-            </div>
+          <div class="muted" style="font-size: 11px; margin-bottom: 10px;">
+            Kéo thả giảng viên vào ô GV 1 / GV 2 / GV 3 bên phải hoặc chọn trực tiếp
           </div>
-
-          <!-- Phân trang Step 2 nếu > 4 lớp -->
-          <div v-if="totalStep2Pages > 1" class="pagination-bar" style="border-top: none; padding: 12px 0;">
-            <div class="pagination-info">
-              Trang <strong>{{ step2Page }}</strong> / <strong>{{ totalStep2Pages }}</strong>
+          <input
+            v-model="inspectorFilter"
+            class="form-control"
+            style="font-size: 12px; margin-bottom: 10px;"
+            placeholder="Lọc tên / tài khoản GV..."
+          />
+          <div class="inspector-list">
+            <div
+              v-for="ins in filteredFacultyInspectors"
+              :key="ins.id || ins.account"
+              class="inspector-chip-draggable"
+              draggable="true"
+              @dragstart="onDragStart($event, ins)"
+            >
+              <div>
+                <div style="font-weight: 600; font-size: 12px;">{{ ins.fullName }}</div>
+                <div class="muted" style="font-size: 11px;">{{ ins.account }} · {{ ins.facultyName }}</div>
+              </div>
+              <span class="drag-handle" title="Kéo thả vào lớp">⠿</span>
             </div>
-            <div class="pagination-controls">
-              <button class="pagination-btn" :disabled="step2Page <= 1" @click="step2Page--">« Trước</button>
-              <button
-                v-for="p in totalStep2Pages"
-                :key="p"
-                class="pagination-btn"
-                :class="{ active: step2Page === p }"
-                @click="step2Page = p"
-              >
-                {{ p }}
-              </button>
-              <button class="pagination-btn" :disabled="step2Page >= totalStep2Pages" @click="step2Page++">Sau »</button>
+            <div v-if="filteredFacultyInspectors.length === 0" class="muted" style="font-size: 12px; text-align: center; padding: 12px;">
+              Không có giảng viên phù hợp
             </div>
           </div>
         </div>
 
-        <div class="sticky-footer" style="justify-content: flex-end; gap: 12px; margin: 0; border-radius: 0;">
-          <button class="btn btn-secondary" :disabled="submitting" @click="step = 1">Xem lại lớp</button>
-          <button class="btn btn-secondary" :disabled="submitting" @click="savePlan('DRAFT')">
-            {{ submitting ? 'Đang lưu...' : 'Lưu bản nháp' }}
-          </button>
-          <button class="btn btn-danger" :disabled="submitting" @click="submitPlan">
-            {{ submitting ? 'Đang gửi...' : 'Gửi trình duyệt TBĐT →' }}
-          </button>
+        <!-- Cột phải: Danh sách lớp cần phân công -->
+        <div class="card" style="padding: 0; overflow: hidden; border-top: 4px solid var(--danger);">
+          <div class="table-toolbar">
+            <div>
+              <span class="badge badge-red" style="font-size: 12px; margin-right: 8px;">ĐỘT XUẤT</span>
+              <strong>Phân công dự giờ đột xuất</strong>
+              <span class="muted" style="margin-left: 8px;">({{ assignItems.length }} lớp)</span>
+            </div>
+            <button class="btn btn-secondary" style="font-size: 12px;" @click="step = 1">← Chọn lại lớp</button>
+          </div>
+
+          <div style="padding: 16px;">
+            <div
+              v-for="item in pagedAssignItems"
+              :key="item.teachingId"
+              class="assign-card"
+              :class="{ complete: isItemComplete(item), invalid: submitAttempted && !isItemComplete(item) }"
+            >
+              <div class="assign-card-head">
+                <div>
+                  <span class="class-code">{{ item.classCode }}</span>
+                  <span class="muted"> · {{ item.subjectCode }}</span>
+                  <span class="muted" style="margin-left: 10px;">GV: <strong>{{ item.teacherName }}</strong> ({{ item.teacherAccount }})</span>
+                </div>
+                <span class="badge badge-red" style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" :title="item.reason">
+                  Lý do: {{ item.reason }}
+                </span>
+              </div>
+
+              <div class="assign-card-body">
+                <div>
+                  <div class="slot-label">Buổi dự (Lịch thật) <span class="req">*</span></div>
+                  <select v-model="item.selectedSessionId" class="form-control" style="font-size: 12px;" @change="onSessionChange(item)">
+                    <option :value="null">-- Chọn buổi thật --</option>
+                    <option v-for="s in item.availableSessions" :key="s.sessionId" :value="s.sessionId">
+                      {{ s.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- GV 1 -->
+                <div>
+                  <div class="slot-label">GV 1 <span class="req">*</span></div>
+                  <div
+                    class="slot-box"
+                    :class="{ 'has-val': item.inspector1, 'is-invalid': submitAttempted && !item.inspector1 }"
+                    @dragover.prevent
+                    @drop="onDropInspector($event, item, 1)"
+                  >
+                    <div v-if="item.inspector1" class="assigned-chip">
+                      <span>{{ item.inspector1.account }} ({{ item.inspector1.fullName }})</span>
+                      <button class="chip-remove" @click="removeSlotInspector(item, 1)">✕</button>
+                    </div>
+                    <div v-else class="slot-picker-row">
+                      <select
+                        class="form-control slot-select"
+                        :value="''"
+                        @change="onSelectDropdownInspector(item, 1, $event.target.value); $event.target.value = ''"
+                      >
+                        <option value="">-- Kéo thả / Chọn GV 1 --</option>
+                        <option
+                          v-for="ins in getEligibleFacultyInspectors(item, 1)"
+                          :key="ins.account"
+                          :value="ins.account"
+                        >
+                          {{ ins.account }} - {{ ins.fullName }}
+                        </option>
+                      </select>
+                      <button
+                        type="button"
+                        class="btn-cross-plus"
+                        title="Tìm giảng viên bộ môn khác / cơ sở khác (Dự giờ chéo)"
+                        @click="openSearch(item, 1)"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- GV 2 -->
+                <div>
+                  <div class="slot-label">GV 2 <span class="req">*</span></div>
+                  <div
+                    class="slot-box"
+                    :class="{ 'has-val': item.inspector2, 'is-invalid': submitAttempted && !item.inspector2 }"
+                    @dragover.prevent
+                    @drop="onDropInspector($event, item, 2)"
+                  >
+                    <div v-if="item.inspector2" class="assigned-chip">
+                      <span>{{ item.inspector2.account }} ({{ item.inspector2.fullName }})</span>
+                      <button class="chip-remove" @click="removeSlotInspector(item, 2)">✕</button>
+                    </div>
+                    <div v-else class="slot-picker-row">
+                      <select
+                        class="form-control slot-select"
+                        :value="''"
+                        @change="onSelectDropdownInspector(item, 2, $event.target.value); $event.target.value = ''"
+                      >
+                        <option value="">-- Kéo thả / Chọn GV 2 --</option>
+                        <option
+                          v-for="ins in getEligibleFacultyInspectors(item, 2)"
+                          :key="ins.account"
+                          :value="ins.account"
+                        >
+                          {{ ins.account }} - {{ ins.fullName }}
+                        </option>
+                      </select>
+                      <button
+                        type="button"
+                        class="btn-cross-plus"
+                        title="Tìm giảng viên bộ môn khác / cơ sở khác (Dự giờ chéo)"
+                        @click="openSearch(item, 2)"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- GV 3 -->
+                <div>
+                  <div class="slot-label">GV 3 <span class="muted">(tùy chọn)</span></div>
+                  <div
+                    class="slot-box"
+                    :class="{ 'has-val': item.inspector3 }"
+                    @dragover.prevent
+                    @drop="onDropInspector($event, item, 3)"
+                  >
+                    <div v-if="item.inspector3" class="assigned-chip">
+                      <span>{{ item.inspector3.account }} ({{ item.inspector3.fullName }})</span>
+                      <button class="chip-remove" @click="removeSlotInspector(item, 3)">✕</button>
+                    </div>
+                    <div v-else class="slot-picker-row">
+                      <select
+                        class="form-control slot-select"
+                        :value="''"
+                        @change="onSelectDropdownInspector(item, 3, $event.target.value); $event.target.value = ''"
+                      >
+                        <option value="">-- Kéo thả / Chọn GV 3 --</option>
+                        <option
+                          v-for="ins in getEligibleFacultyInspectors(item, 3)"
+                          :key="ins.account"
+                          :value="ins.account"
+                        >
+                          {{ ins.account }} - {{ ins.fullName }}
+                        </option>
+                      </select>
+                      <button
+                        type="button"
+                        class="btn-cross-plus"
+                        title="Tìm giảng viên bộ môn khác / cơ sở khác (Dự giờ chéo)"
+                        @click="openSearch(item, 3)"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Phân trang Step 2 nếu > 4 lớp -->
+            <div v-if="totalStep2Pages > 1" class="pagination-bar" style="border-top: none; padding: 12px 0;">
+              <div class="pagination-info">
+                Trang <strong>{{ step2Page }}</strong> / <strong>{{ totalStep2Pages }}</strong>
+              </div>
+              <div class="pagination-controls">
+                <button class="pagination-btn" :disabled="step2Page <= 1" @click="step2Page--">« Trước</button>
+                <button
+                  v-for="p in totalStep2Pages"
+                  :key="p"
+                  class="pagination-btn"
+                  :class="{ active: step2Page === p }"
+                  @click="step2Page = p"
+                >
+                  {{ p }}
+                </button>
+                <button class="pagination-btn" :disabled="step2Page >= totalStep2Pages" @click="step2Page++">Sau »</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sticky-footer" style="justify-content: flex-end; gap: 12px; margin: 0; border-radius: 0;">
+            <button class="btn btn-secondary" :disabled="submitting" @click="step = 1">Xem lại lớp</button>
+            <button class="btn btn-secondary" :disabled="submitting" @click="savePlan('DRAFT')">
+              {{ submitting ? 'Đang lưu...' : 'Lưu bản nháp' }}
+            </button>
+            <button class="btn btn-danger" :disabled="submitting" @click="submitPlan">
+              {{ submitting ? 'Đang gửi...' : 'Gửi trình duyệt TBĐT →' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal tìm người dự -->
+    <!-- Modal tìm người dự chéo -->
     <InspectorSearchModal
       :is-open="modalOpen"
       :exclude-accounts="currentExcludeAccounts"
@@ -311,20 +451,25 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { api } from '../services/api.js'
 import { toast } from '../services/toast.js'
 import InspectorSearchModal from '../components/InspectorSearchModal.vue'
 
 const router = useRouter()
+const route = useRoute()
 const step = ref(1)
 const semesters = ref([])
 const myFaculties = ref([])
 
 const selectedSemesterId = ref(null)
-const selectedBlock = ref(0) // Mặc định: -- Tất cả block --
-const selectedFacultyId = ref(null) // Mặc định: -- Chọn bộ môn --
+const selectedBlock = ref(0)
+const selectedFacultyId = ref(null)
 const searchQuery = ref('')
+
+const editingPlanId = ref(null)
+const editingPlanCode = ref('')
+const existingPlanItemsMap = ref({})
 
 const teacherGroups = ref([])
 const loading = ref(false)
@@ -332,7 +477,6 @@ const attempted = ref(false)
 const submitAttempted = ref(false)
 const submitting = ref(false)
 
-// Phân trang 4 lớp 1 trang
 const pageSize = 4
 const currentPage = ref(1)
 const step2Page = ref(1)
@@ -341,6 +485,8 @@ const selectedTeachingIds = ref([])
 const reasonsMap = ref({})
 
 const assignItems = ref([])
+const facultyInspectors = ref([])
+const inspectorFilter = ref('')
 const modalOpen = ref(false)
 const currentUser = ref({})
 const targetItem = ref(null)
@@ -363,11 +509,51 @@ onMounted(async () => {
     if (semesters.value && semesters.value.length > 0) {
       selectedSemesterId.value = semesters.value[0].id
     }
-    await fetchCandidates()
+
+    if (route.query.editId) {
+      await loadEditingPlan(route.query.editId)
+    } else {
+      await fetchCandidates()
+    }
   } catch (e) {
     console.error(e)
   }
 })
+
+async function loadEditingPlan(planId) {
+  try {
+    const plan = await api.getPlanDetail(planId)
+    if (plan.status !== 'DRAFT' && plan.status !== 'REJECTED_NEED_EDIT') {
+      toast.error('Chỉ được phép chỉnh sửa kế hoạch ở trạng thái Bản nháp hoặc Yêu cầu sửa!')
+      router.push(`/plans/${planId}`)
+      return
+    }
+    editingPlanId.value = plan.id
+    editingPlanCode.value = plan.code
+    selectedSemesterId.value = plan.semesterId
+    selectedBlock.value = plan.block || 1
+    selectedFacultyId.value = plan.facultyId
+
+    await fetchCandidates()
+
+    const ids = []
+    const rMap = {}
+    const itemMap = {}
+    for (const it of (plan.items || [])) {
+      if (it.teachingId) {
+        ids.push(it.teachingId)
+        rMap[it.teachingId] = it.reason || 'Dự giờ đột xuất'
+        itemMap[it.teachingId] = it
+      }
+    }
+    selectedTeachingIds.value = ids
+    reasonsMap.value = rMap
+    existingPlanItemsMap.value = itemMap
+  } catch (e) {
+    toast.error('Không thể tải kế hoạch cần sửa: ' + e.message)
+    await fetchCandidates()
+  }
+}
 
 function getReason(id) {
   return (reasonsMap.value[id] || '').trim()
@@ -389,8 +575,10 @@ async function fetchCandidates() {
       selectedFacultyId.value
     )
     teacherGroups.value = res || []
-    selectedTeachingIds.value = []
-    reasonsMap.value = {}
+    if (!editingPlanId.value) {
+      selectedTeachingIds.value = []
+      reasonsMap.value = {}
+    }
     currentPage.value = 1
   } catch (e) {
     toast.error('Lỗi tải danh sách lớp: ' + e.message)
@@ -421,7 +609,7 @@ const filteredGroups = computed(() => {
 
 const flatClasses = computed(() => {
   const list = []
-  filteredGroups.value.forEach(grp => {
+  teacherGroups.value.forEach(grp => {
     grp.classes.forEach(c => {
       list.push({
         ...c,
@@ -434,11 +622,11 @@ const flatClasses = computed(() => {
   return list
 })
 
-const totalPages = computed(() => Math.ceil(flatClasses.value.length / pageSize) || 1)
+const totalPages = computed(() => Math.ceil(filteredGroups.value.length / pageSize) || 1)
 
-const pagedClasses = computed(() => {
+const pagedGroups = computed(() => {
   const start = (currentPage.value - 1) * pageSize
-  return flatClasses.value.slice(start, start + pageSize)
+  return filteredGroups.value.slice(start, start + pageSize)
 })
 
 const selectedClasses = computed(() => {
@@ -454,15 +642,15 @@ const missingReasonCount = computed(() => {
   return selectedClasses.value.filter(c => !c.reason).length
 })
 
-const allPageSelected = computed(() => {
-  if (pagedClasses.value.length === 0) return false
-  return pagedClasses.value.every(c => selectedTeachingIds.value.includes(c.teachingId))
-})
+function isAllGroupSelected(grp) {
+  if (!grp.classes || grp.classes.length === 0) return false
+  return grp.classes.every(c => selectedTeachingIds.value.includes(c.teachingId))
+}
 
-function toggleSelectAllPage() {
-  const target = !allPageSelected.value
+function toggleSelectTeacherGroup(grp) {
+  const target = !isAllGroupSelected(grp)
   const set = new Set(selectedTeachingIds.value)
-  pagedClasses.value.forEach(c => {
+  grp.classes.forEach(c => {
     if (target) {
       set.add(c.teachingId)
     } else {
@@ -471,6 +659,9 @@ function toggleSelectAllPage() {
     }
   })
   selectedTeachingIds.value = Array.from(set)
+  if (target) {
+    toast.info(`Đã chọn cả ${grp.classes.length} lớp của GV ${grp.teacherName}`)
+  }
 }
 
 function toggleSelectClass(cls, checked) {
@@ -504,27 +695,100 @@ async function proceedToAssign() {
 
   step.value = 2
   step2Page.value = 1
+
+  try {
+    const facId = selectedFacultyId.value || selectedClasses.value[0]?.facultyId || (myFaculties.value[0]?.id ?? 1)
+    facultyInspectors.value = await api.getInspectorsInFaculty(facId)
+  } catch {
+    facultyInspectors.value = []
+  }
+
   const items = []
   for (const c of selectedClasses.value) {
     const sessions = await api.getValidSessions(c.teachingId)
+    const prev = existingPlanItemsMap.value[c.teachingId]
+    const matchedSession = prev
+      ? sessions.find(s => s.date === prev.plannedDate && Number(s.shift) === Number(prev.shift))
+      : null
+    const chosenSession = matchedSession || (sessions.length > 0 ? sessions[0] : null)
+
     items.push({
       teachingId: c.teachingId,
       classCode: c.classCode,
       subjectCode: c.subjectCode,
+      subjectName: c.subjectName,
       teacherName: c.teacherName,
       teacherAccount: c.teacherAccount,
       facultyId: c.facultyId,
       reason: c.reason.trim(),
       availableSessions: sessions,
-      selectedSessionId: sessions.length > 0 ? sessions[0].sessionId : null,
-      plannedDate: sessions.length > 0 ? sessions[0].date : null,
-      shift: sessions.length > 0 ? sessions[0].shift : null,
-      inspector1: null,
-      inspector2: null,
-      inspector3: null
+      selectedSessionId: chosenSession ? chosenSession.sessionId : null,
+      plannedDate: chosenSession ? chosenSession.date : (prev?.plannedDate || null),
+      shift: chosenSession ? chosenSession.shift : (prev?.shift || null),
+      inspector1: prev?.inspector1 || null,
+      inspector2: prev?.inspector2 || null,
+      inspector3: prev?.inspector3 || null
     })
   }
   assignItems.value = items
+}
+
+const filteredFacultyInspectors = computed(() => {
+  const q = inspectorFilter.value.trim().toLowerCase()
+  if (!q) return facultyInspectors.value
+  return facultyInspectors.value.filter(ins =>
+    (ins.account && ins.account.toLowerCase().includes(q)) ||
+    (ins.fullName && ins.fullName.toLowerCase().includes(q))
+  )
+})
+
+function getEligibleFacultyInspectors(item, slot) {
+  return facultyInspectors.value.filter(ins => {
+    if (item.teacherAccount && ins.account === item.teacherAccount) return false
+    for (const s of [1, 2, 3]) {
+      if (s !== slot && item['inspector' + s]?.account === ins.account) return false
+    }
+    return true
+  })
+}
+
+function assignInspectorToSlot(item, slot, user) {
+  if (!item || !user) return
+  if (item.teacherAccount && user.account === item.teacherAccount) {
+    toast.error(`Giảng viên ${user.account} (${user.fullName}) đứng lớp ${item.classCode}, không thể tự dự giờ lớp của chính mình!`)
+    return false
+  }
+  const duplicateSlot = [1, 2, 3].find(s => s !== slot && item['inspector' + s]?.account === user.account)
+  if (duplicateSlot) {
+    toast.error(`Giảng viên ${user.account} (${user.fullName}) đã được phân công ở vị trí GV ${duplicateSlot} của lớp ${item.classCode}! Không được phân công trùng!`)
+    return false
+  }
+  item['inspector' + slot] = user
+  toast.success(`Đã gán GV ${user.account} vào vị trí GV ${slot} lớp ${item.classCode}`)
+  return true
+}
+
+function onSelectDropdownInspector(item, slot, account) {
+  if (!account) return
+  const found = facultyInspectors.value.find(x => x.account === account)
+  if (found) {
+    assignInspectorToSlot(item, slot, found)
+  }
+}
+
+function onDragStart(event, inspector) {
+  event.dataTransfer.setData('application/json', JSON.stringify(inspector))
+}
+
+function onDropInspector(event, item, slot) {
+  try {
+    const raw = event.dataTransfer.getData('application/json')
+    if (!raw) return
+    const inspector = JSON.parse(raw)
+    assignInspectorToSlot(item, slot, inspector)
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const totalStep2Pages = computed(() => Math.ceil(assignItems.value.length / 4) || 1)
@@ -564,23 +828,9 @@ function openSearch(item, slot) {
 
 function onInspectorSelected(user) {
   if (!targetItem.value || !user) return
-
-  // TC_CREATE_06 - Kiểm tra 1: Chặn GV tự dự giờ lớp của chính mình
-  if (targetItem.value.teacherAccount && user.account === targetItem.value.teacherAccount) {
-    toast.error(`Giảng viên ${user.account} (${user.fullName}) đứng lớp ${targetItem.value.classCode}, không thể tự dự giờ lớp của chính mình!`)
-    return
+  if (assignInspectorToSlot(targetItem.value, targetSlot.value, user)) {
+    modalOpen.value = false
   }
-
-  // TC_CREATE_06 - Kiểm tra 2: Chặn chọn trùng 1 giảng viên cho các vị trí dự giờ trong cùng 1 lớp
-  const duplicateSlot = [1, 2, 3].find(s => s !== targetSlot.value && targetItem.value['inspector' + s]?.account === user.account)
-  if (duplicateSlot) {
-    toast.error(`Giảng viên ${user.account} (${user.fullName}) đã được phân công ở vị trí GV ${duplicateSlot} của lớp ${targetItem.value.classCode}! Không được phân công trùng!`)
-    return
-  }
-
-  targetItem.value['inspector' + targetSlot.value] = user
-  toast.success(`Đã gán GV ${user.account} cho lớp ${targetItem.value.classCode}`)
-  modalOpen.value = false
 }
 
 function removeSlotInspector(item, slot) {
@@ -599,20 +849,28 @@ async function savePlan(status) {
       unscheduled: true,
       items: assignItems.value.map(it => ({
         teachingId: it.teachingId,
+        classCode: it.classCode,
+        subjectCode: it.subjectCode,
+        subjectName: it.subjectName,
+        teacherAccount: it.teacherAccount,
+        teacherName: it.teacherName,
         plannedDate: it.plannedDate,
         shift: it.shift,
         inspector1Id: it.inspector1?.id ?? null,
         inspector2Id: it.inspector2?.id ?? null,
         inspector3Id: it.inspector3?.id ?? null,
+        inspector1: it.inspector1,
+        inspector2: it.inspector2,
+        inspector3: it.inspector3,
         reason: it.reason
       }))
     }
 
     if (status === 'DRAFT') {
-      await api.savePlanDraft(payload)
+      await api.savePlanDraft(payload, editingPlanId.value)
       toast.success('Đã lưu bản nháp kế hoạch đột xuất thành công!')
     } else {
-      await api.submitPlan(payload, null)
+      await api.submitPlan(payload, editingPlanId.value)
       toast.success('Đã gửi trình duyệt kế hoạch đột xuất thành công!')
     }
     setTimeout(() => {
@@ -661,6 +919,28 @@ async function submitPlan() {
   border-radius: var(--radius); padding: 12px 16px; font-size: 13px; color: #9A3412; margin-bottom: 16px;
 }
 
+.teacher-group-header {
+  padding: 12px 20px;
+  background: #FFF5F5;
+  border-bottom: 1px solid #FED7D7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.teacher-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #FFF;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .table-toolbar {
   padding: 12px 20px; background: #FAFAFA; border-bottom: 1px solid var(--border);
   display: flex; justify-content: space-between; align-items: center;
@@ -683,6 +963,48 @@ async function submitPlan() {
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); z-index: 5;
 }
 
+/* Step 2 Layout */
+.step2-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.inspector-sidebar {
+  padding: 14px;
+  position: sticky;
+  top: 16px;
+}
+
+.inspector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 460px;
+  overflow-y: auto;
+}
+
+.inspector-chip-draggable {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #FAFAFA;
+  cursor: grab;
+  transition: all 0.15s;
+}
+.inspector-chip-draggable:hover {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+}
+.drag-handle {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
 /* Thẻ phân công Step 2 */
 .assign-card {
   background: #FFF; border: 1px solid var(--border); border-left: 4px solid var(--border);
@@ -694,7 +1016,7 @@ async function submitPlan() {
   display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border-light, #F3F4F6);
 }
 .assign-card-body {
-  display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 12px; padding: 12px 16px; align-items: start;
+  display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 12px; padding: 12px 16px; align-items: start;
 }
 
 .slot-label { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
@@ -706,13 +1028,41 @@ async function submitPlan() {
 .slot-box.has-val { border-style: solid; border-color: var(--primary); background: #FFF; }
 .slot-box.is-invalid { border-color: var(--danger); background: #FEF2F2; }
 
+.slot-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+.slot-select {
+  font-size: 11px;
+  padding: 4px 6px;
+  flex: 1;
+  min-width: 0;
+}
+.btn-cross-plus {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--primary);
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.btn-cross-plus:hover {
+  background: var(--primary);
+  color: #FFF;
+}
+
 .assigned-chip {
   display: inline-flex; align-items: center; justify-content: space-between; width: 100%;
   background: var(--primary-bg); color: var(--primary); padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 600;
 }
 .chip-remove { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 12px; font-weight: bold; padding: 0 4px; }
-
-.btn-link {
-  background: none; border: none; color: var(--primary); font-size: 12px; font-weight: 600; cursor: pointer;
-}
 </style>

@@ -4,7 +4,10 @@
       <div>
         <h1 class="page-title">Quản lý kế hoạch dự giờ</h1>
       </div>
-      <div v-if="canCreatePlan">
+      <div v-if="canCreatePlan" style="display: flex; gap: 10px;">
+        <router-link to="/plans/unscheduled" class="btn btn-danger">
+          + KH dự giờ đột xuất
+        </router-link>
         <router-link to="/plans/create" class="btn btn-primary">
           + Lập kế hoạch mới
         </router-link>
@@ -120,7 +123,7 @@
                   <!-- Nút Sửa & Gửi lại (CNBM/TM khi DRAFT hoặc REJECTED_NEED_EDIT) -->
                   <router-link
                     v-if="canEdit(p)"
-                    :to="`/plans/create?editId=${p.id}`"
+                    :to="p.unscheduled ? `/plans/unscheduled?editId=${p.id}` : `/plans/create?editId=${p.id}`"
                     class="btn btn-outline-primary"
                     style="padding: 4px 10px; font-size: 12px;"
                   >
@@ -215,7 +218,7 @@ const currentPage = ref(1)
 
 const canCreatePlan = computed(() => {
   const role = currentUser.value.role
-  return role === 'CNBM' || role === 'TM' || role === 'TBDT'
+  return role === 'CNBM' || role === 'TM' || role === 'TBDT' || currentUser.value.headOffice
 })
 
 onMounted(async () => {

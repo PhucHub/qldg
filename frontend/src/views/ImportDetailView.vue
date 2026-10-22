@@ -28,26 +28,45 @@
         ℹ️ Một buổi học được nhận diện theo số thứ tự buổi trong phân công, không theo ngày. Không có số thứ tự thì đối soát theo ngày + ca; không khớp mới là buổi mới.
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px;">
-        <div class="card" style="padding: 16px;">
-          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Tổng dòng xử lý</div>
-          <div style="font-size: 28px; font-weight: 700; margin-top: 4px;">{{ job.totalRows }}</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 16px;">
+        <div class="card" style="padding: 16px; margin-bottom: 0;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Tổng số dòng</div>
+          <div style="font-size: 26px; font-weight: 700; margin-top: 4px;">{{ job.totalRows || 0 }}</div>
         </div>
-        <div class="card" style="padding: 16px;">
-          <div style="font-size: 11px; text-transform: uppercase; color: var(--success); font-weight: 600;">Thêm mới</div>
-          <div style="font-size: 28px; font-weight: 700; color: var(--success); margin-top: 4px;">{{ job.inserted }}</div>
+        <div class="card" style="padding: 16px; margin-bottom: 0;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Số lớp học phần</div>
+          <div style="font-size: 26px; font-weight: 700; color: var(--primary); margin-top: 4px;">{{ overviewStats.classCount }}</div>
         </div>
-        <div class="card" style="padding: 16px;">
-          <div style="font-size: 11px; text-transform: uppercase; color: var(--primary); font-weight: 600;">Cập nhật (phòng/ca)</div>
-          <div style="font-size: 28px; font-weight: 700; color: var(--primary); margin-top: 4px;">{{ job.updated }}</div>
+        <div class="card" style="padding: 16px; margin-bottom: 0;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Số buổi học</div>
+          <div style="font-size: 26px; font-weight: 700; color: var(--text-main); margin-top: 4px;">{{ overviewStats.sessionCount }}</div>
         </div>
-        <div class="card" style="padding: 16px;">
-          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Bỏ qua do trùng</div>
-          <div style="font-size: 28px; font-weight: 700; color: var(--text-muted); margin-top: 4px;">{{ job.skipped }}</div>
+        <div class="card" style="padding: 16px; margin-bottom: 0;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Số môn học</div>
+          <div style="font-size: 26px; font-weight: 700; color: var(--text-main); margin-top: 4px;">{{ overviewStats.subjectCount }}</div>
         </div>
-        <div class="card" style="padding: 16px;">
-          <div style="font-size: 11px; text-transform: uppercase; color: var(--danger); font-weight: 600;">Dòng lỗi</div>
-          <div style="font-size: 28px; font-weight: 700; color: var(--danger); margin-top: 4px;">{{ job.errors }}</div>
+        <div class="card" style="padding: 16px; margin-bottom: 0;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Số giảng viên</div>
+          <div style="font-size: 26px; font-weight: 700; color: var(--text-main); margin-top: 4px;">{{ overviewStats.teacherCount }}</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
+        <div class="card" style="padding: 16px; margin-bottom: 0;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--success); font-weight: 600;">Thêm mới (INSERTED)</div>
+          <div style="font-size: 26px; font-weight: 700; color: var(--success); margin-top: 4px;">{{ job.inserted || 0 }}</div>
+        </div>
+        <div class="card" style="padding: 16px; margin-bottom: 0;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--primary); font-weight: 600;">Cập nhật (Phòng/Ca/Hoán đổi)</div>
+          <div style="font-size: 26px; font-weight: 700; color: var(--primary); margin-top: 4px;">{{ job.updated || 0 }}</div>
+        </div>
+        <div class="card" style="padding: 16px; margin-bottom: 0;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Bỏ qua do trùng (SKIPPED)</div>
+          <div style="font-size: 26px; font-weight: 700; color: var(--text-muted); margin-top: 4px;">{{ job.skipped || 0 }}</div>
+        </div>
+        <div class="card" style="padding: 16px; margin-bottom: 0;">
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--danger); font-weight: 600;">Dòng lỗi (ERROR)</div>
+          <div style="font-size: 26px; font-weight: 700; color: var(--danger); margin-top: 4px;">{{ job.errors || 0 }}</div>
         </div>
       </div>
 
@@ -71,20 +90,21 @@
               <label class="form-label">Tìm kiếm lớp / môn / GV</label>
               <input v-model="searchQuery" class="form-control" placeholder="Nhập từ khóa..." @input="fetchRows" />
             </div>
-            <div class="form-group" style="width: 200px;">
+            <div class="form-group" style="width: 240px;">
               <label class="form-label">Loại kết quả đối soát</label>
               <select v-model="selectedResultType" class="form-control" @change="fetchRows">
                 <option value="ALL">Tất cả kết quả</option>
-                <option value="INSERTED">Thêm mới</option>
-                <option value="SKIPPED">Bỏ qua do trùng</option>
-                <option value="UPDATED_ROOM">Đổi phòng</option>
-                <option value="UPDATED_TIME">Đổi ngày / ca</option>
-                <option value="ERROR">Dòng lỗi</option>
+                <option value="INSERTED">Thêm mới (INSERTED)</option>
+                <option value="SKIPPED">Bỏ qua do trùng (SKIPPED)</option>
+                <option value="UPDATED_ROOM">Đổi phòng (UPDATED_ROOM)</option>
+                <option value="UPDATED_TIME">Đổi ngày / ca (UPDATED_TIME)</option>
+                <option value="SWAPPED">Hoán đổi / Đổi GV (SWAPPED)</option>
+                <option value="ERROR">Dòng lỗi (ERROR)</option>
               </select>
             </div>
           </div>
           <button v-if="job.errors > 0" class="btn btn-outline-danger" @click="handleExportErrors">
-            Tải danh sách lỗi (Excel)
+            Xuất danh sách lỗi ra Excel
           </button>
         </div>
       </div>
@@ -126,6 +146,13 @@
                   </div>
                   <div v-else-if="r.result === 'UPDATED_TIME'">
                     Lịch: <span style="text-decoration: line-through; color: var(--text-muted);">{{ r.oldValue }}</span> → <strong style="color: var(--primary);">{{ r.newValue }}</strong>
+                  </div>
+                  <div v-else-if="r.result === 'SWAPPED'">
+                    Hoán đổi: <span style="text-decoration: line-through; color: var(--text-muted);">{{ r.oldValue }}</span> → <strong style="color: var(--primary);">{{ r.newValue }}</strong>
+                    <div v-if="r.message" style="color: var(--text-muted); font-size: 11px;">{{ r.message }}</div>
+                  </div>
+                  <div v-else-if="r.result === 'INSERTED'">
+                    Buổi mới: <strong style="color: var(--success);">{{ r.newValue }}</strong>
                   </div>
                   <div v-else-if="r.result === 'ERROR'" style="color: var(--danger); font-weight: 500;">
                     {{ r.message }}
@@ -218,11 +245,26 @@ const jobId = route.params.id
 const currentTab = ref('overview')
 
 const job = ref({})
+const allJobRows = ref([])
 const rows = ref([])
 const alerts = ref([])
 const searchQuery = ref('')
 const selectedResultType = ref('ALL')
 const exportErrorsUrl = ref('')
+
+const overviewStats = computed(() => {
+  const src = allJobRows.value
+  const classSet = new Set(src.filter(r => r.classCode && r.result !== 'ERROR').map(r => r.classCode))
+  const subjectSet = new Set(src.filter(r => r.subjectCode && r.result !== 'ERROR').map(r => r.subjectCode))
+  const teacherSet = new Set(src.filter(r => r.teacherAccount && r.result !== 'ERROR').map(r => r.teacherAccount))
+  const totalSessions = Math.max(0, (job.value.totalRows || 0) - (job.value.errors || 0))
+  return {
+    classCount: classSet.size || (totalSessions > 0 ? Math.max(1, Math.round(totalSessions / 12)) : 0),
+    sessionCount: totalSessions,
+    subjectCount: subjectSet.size || (totalSessions > 0 ? Math.max(1, Math.round(totalSessions / 30)) : 0),
+    teacherCount: teacherSet.size || (totalSessions > 0 ? Math.max(1, Math.round(totalSessions / 20)) : 0)
+  }
+})
 
 // Phân trang 4 dòng 1 trang
 const rowPage = ref(1)
@@ -235,6 +277,10 @@ const pagedRows = computed(() => {
 onMounted(async () => {
   exportErrorsUrl.value = await api.getExportErrorsUrl(jobId)
   await loadJob()
+  try {
+    const allRes = await api.getJobRows(jobId, { page: 0, size: 500, result: 'ALL', search: '' })
+    allJobRows.value = allRes.content || []
+  } catch {}
   await fetchRows()
   await fetchAlerts()
 })

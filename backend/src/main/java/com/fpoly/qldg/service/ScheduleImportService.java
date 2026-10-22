@@ -131,9 +131,10 @@ public class ScheduleImportService {
             notiRepo.save(noti);
 
             if (!alerts.isEmpty()) {
+                String joinedCodes = String.join(", ", alerts.keySet());
                 Notification alertNoti = new Notification();
                 alertNoti.user = job.uploader;
-                alertNoti.message = "Phát hiện " + alerts.size() + " môn học mới. Vui lòng vào Môn & Bộ môn để cập nhật tên chính thức.";
+                alertNoti.message = "Phát hiện môn học mới [" + joinedCodes + "]. Vui lòng vào Môn & Bộ môn để cập nhật tên chính thức";
                 alertNoti.link = "/import/" + job.id;
                 notiRepo.save(alertNoti);
             }
@@ -292,35 +293,90 @@ public class ScheduleImportService {
             ir.newValue = sessionDate + " (Ca " + shift + ", " + room + ")";
             job.inserted++;
         } else {
-            // Đối soát sự thay đổi
-            boolean sameRoom = existing.room.equalsIgnoreCase(room);
+            // Đối soát sự thay đổi (UC-08: Trùng hoàn toàn, Đổi phòng, Đổi ngày/ca, Hoán đổi ngày Temp Swap)
+            String targetRoom = room.isBlank() ? existing.room : room;
+            boolean sameRoom = existing.room.equalsIgnoreCase(targetRoom);
             boolean sameDate = existing.date.equals(sessionDate);
             boolean sameShift = existing.shift == shift;
+            boolean sameTeacher = existing.teacher != null && existing.teacher.id.equals(teacher.id);
 
-            if (sameRoom && sameDate && sameShift) {
+            if (sameRoom && sameDate && sameShift && sameTeacher) {
                 // Trùng hoàn toàn -> Bỏ qua
                 ir.result = "SKIPPED";
                 ir.oldValue = existing.date + " Ca " + existing.shift + " " + existing.room;
                 ir.message = "Trùng hoàn toàn buổi học đã có";
                 job.skipped++;
+            } else if (!sameTeacher && sameDate && sameShift) {
+                // Đổi giảng viên đứng lớp
+                ir.result = "SWAPPED";
+                ir.oldValue = existing.teacher != null ? existing.teacher.account : "N/A";
+                ir.newValue = teacher.account;
+                ir.message = "Đổi giảng viên từ " + ir.oldValue + " sang " + ir.newValue;
+                existing.teacher = teacher;
+                existing.room = targetRoom;
+                calendarRepo.saveAndFlush(existing);
+                job.updated++;
             } else if (!sameRoom && sameDate && sameShift) {
                 // Đổi phòng
                 ir.result = "UPDATED_ROOM";
                 ir.oldValue = existing.room;
-                ir.newValue = room;
-                existing.room = room;
-                calendarRepo.save(existing);
+                ir.newValue = targetRoom;
+                ir.message = "Đổi phòng từ " + existing.room + " sang " + targetRoom;
+                existing.room = targetRoom;
+                calendarRepo.saveAndFlush(existing);
                 job.updated++;
             } else {
-                // Đổi ngày/ca hoặc hoán đổi
-                ir.result = "UPDATED_TIME";
-                ir.oldValue = existing.date + " Ca " + existing.shift;
-                ir.newValue = sessionDate + " Ca " + shift;
-                existing.date = sessionDate;
-                existing.shift = shift;
-                if (!room.isBlank()) existing.room = room;
-                calendarRepo.save(existing);
-                job.updated++;
+                // Kiểm tra tình huống: Hai buổi hoán đổi ngày cho nhau -> Xử lý qua bước trung gian (Temp Swap)
+                // để không vi phạm ràng buộc Unique DB (teaching_id, teacher_id, date, shift, room)
+                List<CalendarSession> conflicts = calendarRepo.findByTeachingIdAndDateAndShift(
+                        teaching.id, sessionDate, shift);
+                final Long existingId = existing.id;
+                CalendarSession conflict = conflicts.stream()
+                        .filter(c -> !c.id.equals(existingId))
+                        .findFirst()
+                        .orElse(null);
+
+                LocalDate oldDate = existing.date;
+                int oldShift = existing.shift;
+                String oldRoom = existing.room;
+
+                if (conflict != null) {
+                    // Bước 1: Đưa buổi đang chiếm chỗ sang ngày trung gian tạm thời (Temp Swap)
+                    conflict.date = LocalDate.of(1970, 1, 1);
+                    conflict.shift = 99;
+                    conflict.room = "TEMP_" + conflict.id;
+                    calendarRepo.saveAndFlush(conflict);
+
+                    // Bước 2: Cập nhật buổi hiện tại sang ngày/ca/phòng thật
+                    existing.date = sessionDate;
+                    existing.shift = shift;
+                    existing.room = targetRoom;
+                    calendarRepo.saveAndFlush(existing);
+
+                    // Bước 3: Chuyển buổi kia về ngày/ca/phòng cũ của buổi hiện tại
+                    conflict.date = oldDate;
+                    conflict.shift = oldShift;
+                    conflict.room = oldRoom;
+                    calendarRepo.saveAndFlush(conflict);
+
+                    ir.result = "SWAPPED";
+                    ir.oldValue = oldDate + " Ca " + oldShift + " (" + oldRoom + ")";
+                    ir.newValue = sessionDate + " Ca " + shift + " (" + targetRoom + ")";
+                    ir.message = "Hoán đổi lịch dạy qua bước trung gian (Temp Swap) với buổi " +
+                                 (conflict.sessionNo != null ? conflict.sessionNo : conflict.id);
+                    job.updated++;
+                } else {
+                    // Đổi ngày / ca thông thường
+                    ir.result = "UPDATED_TIME";
+                    ir.oldValue = oldDate + " Ca " + oldShift;
+                    ir.newValue = sessionDate + " Ca " + shift;
+                    ir.message = "Đổi lịch từ " + ir.oldValue + " sang " + ir.newValue;
+                    existing.date = sessionDate;
+                    existing.shift = shift;
+                    existing.room = targetRoom;
+                    calendarRepo.saveAndFlush(existing);
+                    job.updated++;
+                }
             }
         }
         rowRepo.save(ir);

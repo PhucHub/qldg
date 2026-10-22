@@ -188,8 +188,16 @@ public class DataInitializer implements CommandLineRunner {
             campusFacultyRepo.save(cf);
         }
 
-        // Bật thêm TKDH, QTKD tại Đà Nẵng
-        for (String fCode : List.of("TKDH", "QTKD", "UDPM")) {
+        // Bật thêm TKDH (thuộc nhóm CNTT của dungpt), QTKD, UDPM tại Đà Nẵng
+        CampusFaculty cfTkdh = new CampusFaculty();
+        cfTkdh.campus = dna;
+        cfTkdh.faculty = facultyMap.get("TKDH");
+        cfTkdh.active = true;
+        cfTkdh.groupKey = "CNTT";
+        cfTkdh.cnbm = cnbmCntt;
+        campusFacultyRepo.save(cfTkdh);
+
+        for (String fCode : List.of("QTKD", "UDPM")) {
             CampusFaculty cf = new CampusFaculty();
             cf.campus = dna;
             cf.faculty = facultyMap.get(fCode);
@@ -233,8 +241,9 @@ public class DataInitializer implements CommandLineRunner {
         createSessions(t5, gvHuong, List.of(
                 LocalDate.of(2026, 10, 20), LocalDate.of(2026, 10, 22)), 1, "T301");
 
-        // Tạo lịch sử quá khứ cho gvNam từng dạy COM108 ở Spring 2026 để kiểm tra logic
+        // Tạo lịch sử quá khứ cho gvNam từng dạy COM108 và gvHah từng dạy WEB1013 ở Spring 2026 để kiểm tra logic
         createTeaching("WD17301", com108, sp26, 1, gvNam, dna);
+        createTeaching("IT17303", web1013, sp26, 1, gvHah, dna);
     }
 
     private AppUser createUser(

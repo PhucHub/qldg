@@ -75,9 +75,15 @@ public class InspectionPlanService {
             }
         }
         final int curOrdinal = resolvedSemester.ordinal;
-        List<Long> targetFacultyIds = (facultyId != null && facultyId > 0) ? List.of(facultyId) : scopeFacultyIds;
-        if (targetFacultyIds == null || targetFacultyIds.isEmpty()) {
-            targetFacultyIds = facultyRepo.findAll().stream().map(f -> f.id).toList();
+        List<Long> allowedScopeIds = (scopeFacultyIds != null && !scopeFacultyIds.isEmpty())
+                ? scopeFacultyIds
+                : facultyRepo.findAll().stream().map(f -> f.id).toList();
+
+        List<Long> targetFacultyIds;
+        if (facultyId != null && facultyId > 0) {
+            targetFacultyIds = allowedScopeIds.contains(facultyId) ? List.of(facultyId) : List.of(facultyId);
+        } else {
+            targetFacultyIds = allowedScopeIds;
         }
 
         List<Teaching> teachings;
@@ -87,22 +93,30 @@ public class InspectionPlanService {
             teachings = teachingRepo.findForFaculties(campusId, semesterId, block, targetFacultyIds);
         }
 
-        // Lọc chỉ các lớp có lịch dạy thật (ca 1-6)
-        teachings = teachings.stream().filter(t -> calendarRepo.existsByTeachingId(t.id)).toList();
+        // Lọc chỉ các lớp có lịch dạy thật (ca 1-6) và giảng viên cùng cơ sở (overview mục 5 & GBR-03)
+        teachings = teachings.stream()
+                .filter(t -> calendarRepo.existsValidSessionByTeachingId(t.id))
+                .filter(t -> t.teacher != null && t.teacher.campus != null && t.teacher.campus.id.equals(campusId))
+                .toList();
 
         // 1. Mẫu số: Tổng số GV phân biệt có lớp dạy trong nhóm bộ môn trong block
         Set<Long> teacherIdsWithClasses = teachings.stream().map(t -> t.teacher.id).collect(Collectors.toSet());
         int totalTeachers = teacherIdsWithClasses.size();
         int requiredQuota = (int) Math.ceil(totalTeachers * 0.15);
 
-        // Giảng viên đã có trong kế hoạch đã duyệt / đang có
-        List<InspectionDetail> activeDetails = detailRepo.findActiveInBlock(semesterId, block);
+        // Giảng viên đã có trong kế hoạch của cơ sở & bộ môn đang xem trong block
+        List<InspectionDetail> activeDetails = detailRepo.findActiveInCampusAndBlock(campusId, semesterId, block);
         Map<Long, String> classToPlanCode = new HashMap<>();
         Set<Long> plannedTeacherIds = new HashSet<>();
+        Set<Long> targetFacSet = new HashSet<>(targetFacultyIds);
 
         for (InspectionDetail d : activeDetails) {
             classToPlanCode.put(d.teaching.id, d.inspection.code);
-            plannedTeacherIds.add(d.teaching.teacher.id);
+            if (d.teaching.subject != null && d.teaching.subject.faculty != null
+                    && targetFacSet.contains(d.teaching.subject.faculty.id)
+                    && teacherIdsWithClasses.contains(d.teaching.teacher.id)) {
+                plannedTeacherIds.add(d.teaching.teacher.id);
+            }
         }
         int plannedCount = plannedTeacherIds.size();
         int percent = (requiredQuota == 0) ? 100 : (int) Math.min(100, Math.round(((double) plannedCount / requiredQuota) * 100));
@@ -176,14 +190,15 @@ public class InspectionPlanService {
         } else {
             teachings = teachingRepo.findForFaculties(campusId, semesterId, block, targetFacultyIds);
         }
-        List<InspectionDetail> activeDetails = detailRepo.findActiveInBlock(semesterId, block);
+        List<InspectionDetail> activeDetails = detailRepo.findActiveInCampusAndBlock(campusId, semesterId, block);
         Map<Long, String> classToPlan = activeDetails.stream()
                 .collect(Collectors.toMap(d -> d.teaching.id, d -> d.inspection.code, (a, b) -> a));
 
-        // Gom theo giảng viên
+        // Gom theo giảng viên (chỉ lớp có lịch dạy ca 1-6 và GV cùng cơ sở)
         Map<AppUser, List<Teaching>> byTeacher = teachings.stream()
-                .filter(t -> calendarRepo.existsByTeachingId(t.id))
-                .collect(Collectors.groupingBy(t -> t.teacher));
+                .filter(t -> calendarRepo.existsValidSessionByTeachingId(t.id))
+                .filter(t -> t.teacher != null && t.teacher.campus != null && t.teacher.campus.id.equals(campusId))
+                .collect(Collectors.groupingBy(t -> t.teacher, LinkedHashMap::new, Collectors.toList()));
 
         List<Map<String, Object>> result = new ArrayList<>();
         for (var entry : byTeacher.entrySet()) {
@@ -282,6 +297,9 @@ public class InspectionPlanService {
         Inspection plan;
         if (planId != null && planId > 0) {
             plan = inspectionRepo.findById(planId).orElseThrow();
+            if ("APPROVED".equals(plan.status) || "CANCELLED".equals(plan.status)) {
+                throw new IllegalArgumentException("Không thể chỉnh sửa kế hoạch đã duyệt hoặc đã từ chối");
+            }
             // Xóa chi tiết cũ để ghi mới
             List<InspectionDetail> old = detailRepo.findByInspectionId(plan.id);
             detailRepo.deleteAll(old);
@@ -294,15 +312,15 @@ public class InspectionPlanService {
             plan.creator = actor;
             plan.unscheduled = req.unscheduled;
 
-            // Sinh mã kế hoạch: KH-DA-CNTT-FA26-B1 (hoặc thêm đuôi -DX)
+            // Sinh mã kế hoạch: KH-DNA-CNTT-FA26-B1 (Kế hoạch đột xuất luôn có hậu tố -DX ở cuối)
             String base = String.format("KH-%s-%s-%s-B%d",
                     actor.campus.code.toUpperCase(), faculty.code.toUpperCase(),
                     semester.shortCode(), targetBlock);
-            if (req.unscheduled) base += "-DX";
-            String code = base;
+            String code = req.unscheduled ? (base + "-DX") : base;
             int seq = 1;
             while (inspectionRepo.findByCode(code).isPresent()) {
-                code = base + "-" + (++seq);
+                seq++;
+                code = req.unscheduled ? (base + "-" + seq + "-DX") : (base + "-" + seq);
             }
             plan.code = code;
         }
@@ -326,7 +344,22 @@ public class InspectionPlanService {
             if (it.inspector3Id != null) d.inspector3 = userRepo.findById(it.inspector3Id).orElse(null);
             d.reason = it.reason;
 
-            // Ràng buộc khi Submit: GV1 và GV2 bắt buộc
+            // Ràng buộc 1: Chặn GV tự dự giờ lớp của chính mình
+            if ((d.inspector1 != null && d.inspector1.id.equals(t.teacher.id))
+                    || (d.inspector2 != null && d.inspector2.id.equals(t.teacher.id))
+                    || (d.inspector3 != null && d.inspector3.id.equals(t.teacher.id))) {
+                throw new IllegalArgumentException("Giảng viên " + t.teacher.account + " đứng lớp " + t.classCode + ", không thể tự dự giờ lớp của chính mình");
+            }
+
+            // Ràng buộc 2: Chặn chọn trùng giảng viên giữa các vị trí GV1, GV2, GV3 trong cùng 1 lớp
+            Set<Long> assignedIds = new HashSet<>();
+            for (AppUser ins : Arrays.asList(d.inspector1, d.inspector2, d.inspector3)) {
+                if (ins != null && !assignedIds.add(ins.id)) {
+                    throw new IllegalArgumentException("Lớp " + t.classCode + " có giảng viên dự giờ (" + ins.account + ") bị phân công trùng lặp");
+                }
+            }
+
+            // Ràng buộc khi Submit: GV1 và GV2 bắt buộc, ngày dự kiến bắt buộc, đột xuất bắt buộc có lý do
             if (submit) {
                 if (d.inspector1 == null || d.inspector2 == null) {
                     throw new IllegalArgumentException("Lớp " + t.classCode + " bắt buộc phân công cả GV1 và GV2");
@@ -334,7 +367,7 @@ public class InspectionPlanService {
                 if (d.plannedDate == null) {
                     throw new IllegalArgumentException("Lớp " + t.classCode + " chưa chọn ngày dự kiến");
                 }
-                if (req.unscheduled && (d.reason == null || d.reason.isBlank())) {
+                if (plan.unscheduled && (d.reason == null || d.reason.isBlank())) {
                     throw new IllegalArgumentException("Kế hoạch đột xuất: Lớp " + t.classCode + " bắt buộc nhập lý do");
                 }
             }
@@ -371,6 +404,9 @@ public class InspectionPlanService {
             throw new SecurityException("Chỉ Trưởng ban Đào tạo mới có quyền phê duyệt kế hoạch");
         }
         Inspection plan = inspectionRepo.findById(planId).orElseThrow();
+        if (!"SUBMITTED".equals(plan.status)) {
+            throw new IllegalArgumentException("Chỉ có thể phê duyệt kế hoạch đang ở trạng thái Chờ duyệt (SUBMITTED)");
+        }
         plan.status = "APPROVED";
         plan.lastNote = null;
         inspectionRepo.save(plan);
@@ -399,6 +435,9 @@ public class InspectionPlanService {
             throw new IllegalArgumentException("Yêu cầu sửa bắt buộc phải nhập ghi chú phản hồi");
         }
         Inspection plan = inspectionRepo.findById(planId).orElseThrow();
+        if (!"SUBMITTED".equals(plan.status)) {
+            throw new IllegalArgumentException("Chỉ có thể yêu cầu sửa kế hoạch đang ở trạng thái Chờ duyệt (SUBMITTED)");
+        }
         plan.status = "REJECTED_NEED_EDIT";
         plan.lastNote = note;
         inspectionRepo.save(plan);
@@ -427,6 +466,9 @@ public class InspectionPlanService {
             throw new IllegalArgumentException("Từ chối kế hoạch bắt buộc phải nhập lý do");
         }
         Inspection plan = inspectionRepo.findById(planId).orElseThrow();
+        if (!"SUBMITTED".equals(plan.status)) {
+            throw new IllegalArgumentException("Chỉ có thể từ chối kế hoạch đang ở trạng thái Chờ duyệt (SUBMITTED)");
+        }
         plan.status = "CANCELLED";
         plan.lastNote = reason;
         inspectionRepo.save(plan);

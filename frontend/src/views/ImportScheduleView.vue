@@ -18,6 +18,23 @@
         </a>
       </div>
 
+      <!-- Chọn Kỳ học & Block (README mục 2.1 Bước 2 & Test Case 2.3) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 260px)); gap: 14px; margin-bottom: 16px;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Kỳ học</label>
+          <select v-model="selectedSemesterId" class="form-control">
+            <option v-for="s in semesters" :key="s.id" :value="s.id">{{ s.name || (s.term + ' ' + s.year) }}</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Block</label>
+          <select v-model="selectedBlock" class="form-control">
+            <option :value="1">Block 1</option>
+            <option :value="2">Block 2</option>
+          </select>
+        </div>
+      </div>
+
       <div
         class="upload-dropzone"
         :class="{ dragging: isDragging, disabled: !semesterReady }"
@@ -133,7 +150,7 @@
               </td>
               <td>
                 <router-link :to="`/import/${job.id}`" class="btn btn-outline-primary" style="padding: 4px 10px; font-size: 12px;">
-                  Xem chi tiết
+                  Xem đối soát
                 </router-link>
               </td>
             </tr>
@@ -149,6 +166,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { api } from '../services/api.js'
 import { toast } from '../services/toast.js'
 
+const semesters = ref([])
+const selectedSemesterId = ref(null)
+const selectedBlock = ref(1)
 const semesterReady = ref(true)
 const selectedFile = ref(null)
 const fileInputRef = ref(null)
@@ -163,6 +183,16 @@ const loadingJobs = ref(false)
 let pollTimer = null
 
 onMounted(async () => {
+  try {
+    const semList = await api.getSemesters()
+    semesters.value = semList || []
+    semesterReady.value = semesters.value.length > 0
+    if (semesters.value.length > 0) {
+      selectedSemesterId.value = semesters.value[0].id
+    }
+  } catch {
+    semesterReady.value = true
+  }
   sampleUrl.value = await api.getSampleTemplateUrl()
   await fetchJobs()
   // Polling mỗi 4 giây để cập nhật tiến trình import

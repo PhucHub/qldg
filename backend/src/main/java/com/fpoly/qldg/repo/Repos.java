@@ -82,6 +82,9 @@ public interface Repos {
         List<CalendarSession> findByTeachingIdAndSessionNo(Long teachingId, Integer sessionNo);
         List<CalendarSession> findByTeachingIdAndDateAndShift(Long teachingId, java.time.LocalDate date, int shift);
         boolean existsByTeachingId(Long teachingId);
+
+        @Query("SELECT COUNT(c) > 0 FROM CalendarSession c WHERE c.teaching.id = :teachingId AND c.shift BETWEEN 1 AND 6")
+        boolean existsValidSessionByTeachingId(@Param("teachingId") Long teachingId);
     }
 
     interface ImportJobRepo extends JpaRepository<ImportJob, Long> {
@@ -128,6 +131,15 @@ public interface Repos {
         @Query("SELECT d FROM InspectionDetail d WHERE d.teaching.semester.id = :semesterId " +
                "AND (:block = 0 OR d.teaching.block = :block) AND d.inspection.status <> 'CANCELLED'")
         List<InspectionDetail> findActiveInBlock(
+                @Param("semesterId") Long semesterId,
+                @Param("block") int block);
+
+        @Query("SELECT d FROM InspectionDetail d WHERE d.inspection.campus.id = :campusId " +
+               "AND d.teaching.semester.id = :semesterId " +
+               "AND (:block = 0 OR d.teaching.block = :block) " +
+               "AND d.inspection.status <> 'CANCELLED'")
+        List<InspectionDetail> findActiveInCampusAndBlock(
+                @Param("campusId") Long campusId,
                 @Param("semesterId") Long semesterId,
                 @Param("block") int block);
     }

@@ -86,6 +86,16 @@ public class ImportController {
         return ResponseEntity.ok(p);
     }
 
+    /** Khôi phục danh sách job import mặc định (UC-7-3) */
+    @PostMapping("/jobs/reset")
+    public ResponseEntity<?> resetJobs(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        AppUser u = scopeService.resolveUser(authHeader);
+        if (u == null) return ResponseEntity.status(401).body("Chưa xác thực");
+        Page<ImportJob> p = jobRepo.findByCampusIdOrderByCreatedAtDesc(u.campus.id, PageRequest.of(0, 10));
+        return ResponseEntity.ok(p);
+    }
+
     /** Chi tiết một lần import: Tab Tổng quan (UC-08) */
     @GetMapping("/jobs/{id}")
     public ResponseEntity<?> getJobDetail(
